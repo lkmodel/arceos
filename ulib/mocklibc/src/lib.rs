@@ -6,28 +6,26 @@ mod abi;
 #[cfg(not(test))]
 use core::panic::PanicInfo;
 
-use abi::{ABI_TABLE_ADDR, init_abis};
+use abi::ABI_ENTRY;
 pub use abi::{
+	hello,
 	exit,
 	putchar,
-	puts,
 };
-
-unsafe extern "C" {
-    fn main();
-}
 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn _start() {
-    unsafe {
+    unsafe { 
         core::arch::asm!("
-            mv      {abi_table}, a7",
-            abi_table = out(reg) ABI_TABLE_ADDR,
+            mv      {abi_table}, a2",
+            abi_table = out(reg) ABI_ENTRY,
         );
-        init_abis();
+		main();
+	}
+}
 
-        main();
-    }
+unsafe extern "C" {
+    fn main();
 }
 
 #[cfg(not(test))]

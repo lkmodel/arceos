@@ -25,33 +25,15 @@ Ensure Python and the musl cross-compilation environment are installed locally:
 Run the following command to check if Python is installed:
 
 ``` bash
-which python
+which python3
 ```
+
 If no output is returned, install Python (example for Ubuntu):
 
 ``` bash
 sudo apt-get update
 sudo apt-get install python3
 ```
-
-2. Install musl Cross-Compilation Environment
-
-Refer to the [musl-cross-make]((https://github.com/richfelker/musl-cross-make.git)):
-
-``` bash
-git clone https://github.com/richfelker/musl-cross-make.git
-cd musl-cross-make
-cp ./config.mak.list ./config.mak
-printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
-sed -i '15i\riscv64-linux-musl' config.mak
-sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
-make
-sudo make install
-export PATH=$PATH:/opt/musl_riscv64/bin >> ~/.zshrc
-source ~/.zshrc
-```
-
-Note: If the required tools are already installed, you can skip this step.
 
 ### Run the Project
 
@@ -68,6 +50,29 @@ git switch mocklibc
 ``` bash
 ./linux_abi.sh
 ```
+
+> Note: If the required tools are already installed, you can skip this step.
+> If you encounter network issues while running `.linux_abi.sh` or prefer to install the tools manually, follow the steps below:
+>
+> ``` bash
+> git clone https://github.com/richfelker/musl-cross-make.git
+> cd musl-cross-make
+> cp ./config.mak.list ./config.mak
+> printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
+> sed -i '15i\riscv64-linux-musl' config.mak
+> sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
+> make
+> sudo make install
+> export PATH=$PATH:/opt/musl_riscv64/bin
+> ```
+>
+> Refer to the [musl-cross-make]((https://github.com/richfelker/musl-cross-make.git))
+>
+> After completing the installation, you can verify whether the toolchain is installed correctly by running the following command:
+>
+> ``` bash
+> which riscv64-linux-musl-gcc
+> ```
 
 ## Features & TODOs
 

@@ -10,7 +10,11 @@
 
 核心问题：Linux应用假定自己将运行在Linux环境中，它本身以及依赖库以及工具链都遵循这一假定；现在我们要把应用放到ArceOS之上运行，让应用觉察不到自己的运行环境变化了；所以就需要ArceOS制造出这么一种运行环境。采取的方案是保持libc接口兼容前提下替换libc的实现。
 
-![](./doc/figures/libc.excalidraw.png)
+![libc](./doc/figures/libc.excalidraw.png)
+
+### 两种实现思路
+
+![mocklibc](./doc/figures/mocklibc.png)
 
 ### 后续工作总体规划
 
@@ -23,11 +27,12 @@
 2. 优化构建过程，能够体现出当前的组件化内核构建方法相对传统方法的便捷性。
 
 注：其中核心组件来自ArceOS公共组件，仅增加少量面向本场景组件。
+
 ## 整体架构
 
 主要函数是`load_elf()`，它负责整个ELF文件的加载过程，根据程序类型分为两个加载路径:`load_exec()`和`load_dyn()`，包含辅助函数如`load_segment()`和`modify_plt()`用于具体的加载和修改操作。
 
-### load_elf() 函数的主要流程:
+### load_elf() 函数的主要流程
 
 + 读取ELF文件大小
 + 解析ELF头部
@@ -35,12 +40,13 @@
 + 根据是否存在INTERP段选择不同的加载方式
 + 返回程序入口点地址
 
-### PIE检测机制:
+### PIE检测机制
+
 + 通过检查程序头(Program Headers)中是否存在PT_INTERP段来判断
 + 如果存在PT_INTERP段,则认为是PIE程序
 + 这影响了后续的加载方式和入口点地址计算
 
-### 两种加载方式:
+### 两种加载方式
 
 a) 静态加载 (load_exec):
 
@@ -49,12 +55,14 @@ a) 静态加载 (load_exec):
 + 直接使用ELF头中的入口点地址
 
 b) 动态加载 (load_dyn):
+
 + 针对动态链接的程序
 + 加载所有PT_LOAD类型的段
 + 需要处理PLT(Procedure Linkage Table)重定位
 + 入口点需要加上基地址偏移
 
-### PLT修改机制:
+### PLT修改机制
+
 + 解析动态符号表和字符串表
 + 处理.rela.plt重定位段
 + 将外部函数地址填入PLT表中
@@ -81,25 +89,6 @@ sudo apt-get install python3
 
 安装完成后，再次运行上述命令，验证是否已经成功安装 Python 环境。
 
-### 安装musl交叉编译环境
-
-参考链接：[https://github.com/richfelker/musl-cross-make.git](https://github.com/richfelker/musl-cross-make.git)
-
-``` bash
-git clone https://github.com/richfelker/musl-cross-make.git
-cd ./musl-cross-make
-cp ./config.mak.list ./config.mak
-printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
-sed -i '15i\riscv64-linux-musl' config.mak
-sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
-make
-sudo make install
-
-export PATH=$PATH:/opt/musl_riscv64/bin
-```
-
-注：该部分已经包含到`linux_abi.sh`中，方法不限，如已安装可略过
-
 ### 尝试运行
 
 ``` bash
@@ -109,13 +98,39 @@ git switch mocklibc
 ./linux_abi.sh
 ```
 
+> 注：如果所需工具已经安装，您可以跳过此步骤。
+> 如果在运行 .linux_abi.sh 时遇到网络问题，或希望手动安装工具，请按照以下步骤操作：
+>
+> ``` bash
+> git clone https://github.com/richfelker/musl-cross-make.git
+> cd ./musl-cross-make
+> cp ./config.mak.list ./config.mak
+> printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
+> sed -i '15i\riscv64-linux-musl' config.mak
+> sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
+> make
+> sudo make install
+> 
+> export PATH=$PATH:/opt/musl_riscv64/bin
+> ```
+>
+> 有关更多信息，请参考 [musl-cross-make](https://github.com/richfelker/musl-cross-make.git) 仓库。
+>
+> 安装完成后，您可以通过运行以下命令来验证工具链是否正确安装：
+>
+> ```bash
+> which riscv64-linux-musl-gcc
+> ```
+>
+
 对于`linux_abi.sh`文件
 
 可用参数:
-+ `ARCH`: 目标架构: x86_64, riscv64, aarch64, 目前仅支持riscv64
-+ `LOG`: 日志等级: warn, error, info, debug, trace, 默认为warn
-+ `QEMU_LOG`: 是否开启QMEU日志 (日志文件为 "qemu.log"), 默认为no
-+ `TTYPE`: 运行测试类型：static, dynamic, all, 默认为all
+
++ `ARCH`: 目标架构: `x86_64`, `riscv64`, `aarch64`, 目前仅支持`riscv64`。
++ `LOG`: 日志等级: `warn`, `error`, `info`, `debug`, `trace`, 默认为`warn`。
++ `QEMU_LOG`: 是否开启QMEU日志 (日志文件为 "qemu.log"), 默认为`no`。
++ `TTYPE`: 运行测试类型：`static`, `dynamic`, `all`, 默认为`dynamic`。
 
 `linux_abi.sh`的内容也可根据情况进行自行调整
 
@@ -123,16 +138,16 @@ git switch mocklibc
 
 在参与项目协作时，请按照以下步骤进行操作：
 
-1. Fork 和 Clone 仓库
-  首先，Fork [中心仓库](https://github.com/lkmodel/arceos)到自己的 GitHub 账号下，并 Clone 到本地环境。在后续开发中，基于 mocklibc 分支进行协作，所有的 Pull Request（PR）和合并操作都将在该分支上进行。
+1. Fork 和 Clone 仓库 <br>
+   首先，Fork [中心仓库](https://github.com/lkmodel/arceos)到自己的 GitHub 账号下，并 Clone 到本地环境。在后续开发中，基于 mocklibc 分支进行协作，所有的 Pull Request（PR）和合并操作都将在该分支上进行。
 
-2. 提出想法并讨论（建议）
-  在正式实现前，可以在项目 1 的微信群中提出自己的想法，与其他开发者进行讨论或协商，以确保思路清晰并避免重复开发。
+2. 提出想法并讨论（建议） <br>
+   在正式实现前，可以在项目 1 的微信群中提出自己的想法，与其他开发者进行讨论或协商，以确保思路清晰并避免重复开发。
 
-3. 本地实现与测试
-  根据讨论结果，在本地进行功能的开发与实现，并确保经过充分的本地测试，确保代码质量和功能的正确性。
+3. 本地实现与测试 <br>
+   根据讨论结果，在本地进行功能的开发与实现，并确保经过充分的本地测试，确保代码质量和功能的正确性。
 
-4. 同步中心仓库并解决冲突
+4. 同步中心仓库并解决冲突 <br>
    在提交 PR 之前，确保自己的 Fork 仓库与中心仓库保持同步。可以通过以下步骤实现：
    + 从中心仓库拉取最新代码，并在本地进行 Rebase：
 
@@ -142,7 +157,7 @@ git switch mocklibc
 
    + 如果存在冲突，解决冲突并重新测试代码。
 
-5. 推送到 Fork 仓库并提交 PR
+5. 推送到 Fork 仓库并提交 PR <br>
    将修改后的代码推送到自己 Fork 的仓库：
 
    ``` bash
@@ -155,9 +170,15 @@ git switch mocklibc
 
 ## 重点工作内容
 
-（1）扩大动态链接应用的支持范围，后面不再单独关注静态应用
-（2）优化内部实现，包括简化代码，提升效率，简化构建脚本等等
-（3）完善CI测试等，尤其支持新特性要先加上测试
-（4）对各种bug的fix
-（5）尽量复用arceos的现有组件
-（6）手册与文档的完善
+（1）扩大动态链接应用的支持范围，后面不再单独关注静态应用 <br>
+（2）优化内部实现，包括简化代码，提升效率，简化构建脚本等等 <br>
+（3）完善CI测试等，尤其支持新特性要先加上测试 <br>
+（4）对各种bug的fix <br>
+（5）尽量复用arceos的现有组件 <br>
+（6）手册与文档的完善 <br>
+
+## TODO
+
++ [ ] 扩大动态链接应用的支持范围
++ [ ] 构建一个成熟可用的CI测试框架
++ [ ] 支持启动运行简易的原生Linux应用

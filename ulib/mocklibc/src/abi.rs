@@ -1,51 +1,52 @@
 const SYS_HELLO: usize = 1;
 const SYS_PUTCHAR: usize = 2;
 const SYS_EXIT: usize = 3;
-pub static mut ABI_TABLE_ADDR: usize = 0;
-static mut ABI_TABLE: [usize; 16] = [0; 16];
+pub static mut ABI_ENTRY: usize = 0;
 
-pub unsafe fn init_abis(){
-    unsafe { 
-        ABI_TABLE[SYS_HELLO] = *((ABI_TABLE_ADDR + SYS_HELLO * 8) as *const usize);
-        ABI_TABLE[SYS_PUTCHAR] = *((ABI_TABLE_ADDR + SYS_PUTCHAR * 8) as *const usize);
-        ABI_TABLE[SYS_EXIT] = *((ABI_TABLE_ADDR + SYS_EXIT * 8) as *const usize);
-    }
+use core::arch::asm;
+
+#[macro_export]
+macro_rules! abi_call {
+    ($abi_num: expr, $arg0: expr) => {{
+        unsafe { asm!("
+            li      a0, {abi_num}
+            la      t1, {abi_entry}
+            ld      t1, (t1)
+            jalr    t1",
+            abi_num = const $abi_num,
+            abi_entry = sym ABI_ENTRY,
+            in("a1") $arg0,
+            clobber_abi("C"),
+        )}
+    }}
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn hello() {
-    unsafe {
-        let abi_hello: fn();
-        abi_hello = core::mem::transmute(ABI_TABLE[SYS_HELLO]);
-        abi_hello();
-    }
+    abi_call!(SYS_HELLO, 0);
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn putchar(c: usize){
-    unsafe {
-        let abi_putchar: fn(usize);
-        abi_putchar = core::mem::transmute(ABI_TABLE[SYS_PUTCHAR]);
-        abi_putchar(c);
-    }
+pub extern "C" fn putchar(c: u8) {
+    abi_call!(SYS_PUTCHAR, c as usize);
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn exit(){
-    unsafe {
-        let abi_exit: fn();
-        abi_exit = core::mem::transmute(ABI_TABLE[SYS_EXIT]);
-        abi_exit();
-    }
+pub extern "C" fn exit(exit_code: i32) {
+    abi_call!(SYS_EXIT, exit_code as usize);
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn puts(s: *const u8){
-    let mut i = 0;
-    unsafe {
-        while *s.offset(i) != 0 {
-            putchar(*s.offset(i) as usize);
-            i += 1;
-        }
-    }
+pub extern "C" fn pthread_create() {
+    abi_call!(4, 0);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pthread_join() {
+    abi_call!(5, 0);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pthread_exit() {
+    abi_call!(6, 0);
 }

@@ -1,31 +1,36 @@
 #![no_std]
 #![no_main]
-    
+#![feature(c_variadic)]
+#![feature(alloc_error_handler)]
+
+extern crate alloc;
+
+use abi::abi_entry;
 use axlog::info;
 use axstd::println;
 
 mod abi;
-use abi::{init_abis, ABI_TABLE};
-
+mod elf;
 mod load;
+
+// use heap_allocator::init_heap;
 use load::load_elf;
 
 #[unsafe(no_mangle)]
 fn main() {
-    init_abis();
+    // init_heap();
 
     let entry = load_elf();
 
-	println!("Entry {:?}", entry);
+	println!("Entry 0x{:x}", entry);
 
     info!("Execute app ...");
-    unsafe {
-        core::arch::asm!("
-			la      a7, {abi_table}
-			mv      t2, {entry}
-			jalr    t2",
-            entry = in(reg) entry,
-            abi_table = sym ABI_TABLE,
-        )
-    }
+    unsafe { core::arch::asm!("
+        la      a2, {abi_entry}
+        mv      t2, {run_start}
+        jalr    t2",
+        abi_entry = sym abi_entry,
+        run_start = in(reg) entry,
+        clobber_abi("C"),
+    )}
 }

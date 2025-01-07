@@ -6,13 +6,16 @@ use core::{
 use axlog::debug;
 
 use elf::{
-    endian::LittleEndian,
+    abi::{PT_LOAD, STT_FUNC},
+	endian::LittleEndian,
     ElfBytes,
 };
 
-const PLASH_START: usize = 0xffff_ffc0_2200_0000;
+use crate::{abi::get_abi_function, elf::{verify_elf_header, LoadError}};
+
+pub const PLASH_START: usize = 0xffff_ffc0_2200_0000;
+pub const EXEC_ZONE_START: usize = 0xffff_ffc0_8010_0000;
 const MAX_APP_SIZE: usize = 0x100000;
-const EXEC_ZONE_START: usize = 0xffff_ffc0_8010_0000;
 
 pub fn load_elf() -> u64 {
     debug!("Load payload ...");
@@ -38,34 +41,66 @@ pub fn load_elf() -> u64 {
         }
     };
 
+    debug!("Dynamic interpreter (.interp section) exists: {}", is_need_interp);
+
     let run_code =
         unsafe { from_raw_parts_mut(EXEC_ZONE_START as *mut u8, MAX_APP_SIZE) };
 
-    // debug_elf(&elf, elf_slice);
-
-    let entry: u64;
-    if is_need_interp == false {
-        // static and position independent executable
-        load_exec(&elf, elf_slice, run_code);
-        entry = elf_hdr.e_entry;
-    } else {
-        load_dyn(&elf, elf_slice, run_code);
-        entry = EXEC_ZONE_START as u64 + elf_hdr.e_entry;
-    }
+    let entry: u64 = {
+        if is_need_interp == false {
+            // static and position independent executable
+            let _ = load_exec(&elf, elf_slice, run_code);
+            elf_hdr.e_entry
+        } else {
+            load_dyn(&elf, elf_slice, run_code);
+            EXEC_ZONE_START as u64 + elf_hdr.e_entry
+        }
+    };
     debug!("Entry: 0x{:x}", entry);
+    
     return entry;
 }
 
-fn load_exec(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8]) {
-    let text_shdr = elf
-        .section_header_by_name(".text")
-        .expect("section table should be parseable")
-        .expect("elf should have a .text section");
-    let text_slice = elf_slice
-        .get(text_shdr.sh_offset as usize..)
-        .expect("text section should be in bounds");
-    let copy_size = min(run_code.len(), text_slice.len());
-    run_code[..copy_size].copy_from_slice(&text_slice[..copy_size]);
+fn load_exec(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8]) -> Result<(), LoadError> {
+    // 检查 ELF 头
+    verify_elf_header(elf).expect("Failed to verify ELF header");
+
+    if let Some(phs) = elf.segments() {
+        for ph in phs {
+            if ph.p_type != PT_LOAD {
+                debug!("skipping segment type: {}", ph.p_type);
+                continue;
+            }
+            
+            let offset = ph.p_offset as usize;
+            let filesz = ph.p_filesz as usize;
+            let memsz = ph.p_memsz as usize;
+            
+            // 计算在内存中的实际地址
+            let vaddr = ph.p_vaddr as usize;
+            let dest_addr = vaddr - EXEC_ZONE_START;
+            
+            debug!("Loading segment: offset=0x{:x}, filesz=0x{:x}, memsz=0x{:x}, vaddr=0x{:x}", 
+                offset, filesz, memsz, vaddr);
+
+            debug!("dest_addr: {}", dest_addr);
+            
+            // 复制段内容
+            if filesz > 0 {
+                let src: &[u8] = &elf_slice[offset..offset + filesz];
+                let dest = &mut run_code[dest_addr..dest_addr + filesz];
+                dest.copy_from_slice(src);
+            }
+            
+            // 处理 .bss 等需要零初始化的部分
+            if memsz > filesz {
+                let dest = &mut run_code[dest_addr + filesz..dest_addr + memsz];
+                dest.fill(0);
+            }
+        }
+    }
+    
+    Ok(())
 }
 
 fn load_dyn(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8]) {
@@ -74,13 +109,11 @@ fn load_dyn(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8])
         if phdr.p_type != elf::abi::PT_LOAD {
             continue;
         }
-        debug!("phdr offset: 0x{:x}", phdr.p_offset);
-        debug!("phdr vaddr: 0x{:x}", phdr.p_vaddr);
-        debug!("phdr paddr: 0x{:x}", phdr.p_paddr);
-        debug!("phdr filesz: 0x{:x}", phdr.p_filesz);
-        debug!("phdr memsz: 0x{:x}\n", phdr.p_memsz);
+        debug!("Loading segment: offset=0x{:x}, filesz=0x{:x}, memsz=0x{:x}, vaddr=0x{:x}, paddr=0x{:x}", 
+        phdr.p_offset, phdr.p_filesz, phdr.p_memsz, phdr.p_vaddr, phdr.p_paddr);
         load_segment(run_code, elf_slice, phdr.p_vaddr as usize, phdr.p_offset as usize, phdr.p_filesz as usize, phdr.p_memsz as usize);
     }
+    inner_func(elf);
     modify_plt(elf);
 }
 
@@ -116,10 +149,31 @@ fn modify_plt(elf: &ElfBytes<LittleEndian>) {
         let sym = dynsym_table.get(rela.r_sym as usize).expect("Failed to get symbol");
         let rela_name = dynstr_table.get(sym.st_name as usize).expect("Failed to get symbol name");
         debug!("Rela sym: {}", rela_name);
-        let func = super::abi::AbiFunction::from_name(rela_name).expect("Failed to find abi function");
+        let func_addr = get_abi_function(rela_name).expect("Failed to find abi function");
+        debug!("func_addr 0x{:x}", func_addr);
         unsafe {
-            *((EXEC_ZONE_START as u64 + rela.r_offset) as *mut usize) = func.addr();
-            debug!("{} at : 0x{:x}", rela_name,*((EXEC_ZONE_START as u64 + rela.r_offset) as *const usize));
+            *((EXEC_ZONE_START as u64 + rela.r_offset) as *mut usize) = func_addr;
         }
     }
+}
+
+fn inner_func(elf: &ElfBytes<LittleEndian>) {
+    let common = elf.find_common_data().expect("Failed to find common data");
+
+    let symtabs = common.symtab.unwrap();
+	let strtabs = common.symtab_strs.unwrap();
+
+	for mut sym in symtabs {
+		// debug!("sym: {:?}", sym);
+		if sym.st_shndx == 8 && sym.st_size > 0 && sym.st_symtype() == STT_FUNC {
+			let name = strtabs.get(sym.st_name as usize).expect("Failed to get symbol name");
+			debug!("sym name: {}", name);
+			let value = sym.st_value;
+			debug!("sym value: 0x{:x}", value);
+            sym.st_value = EXEC_ZONE_START as u64 + value;
+            // unsafe {
+            //     *((EXEC_ZONE_START as u64 + value) as *mut usize) = value as usize;
+            // }
+		}
+	}
 }

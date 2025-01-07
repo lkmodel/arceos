@@ -4,7 +4,8 @@
 ARCH="riscv64"
 LOG="warn"
 QEMU_LOG="n"
-TTYPE="all"
+TTYPE="dynamic"
+C_APP="hello_app"
 
 # Parse arguments
 for arg in "$@"; do
@@ -21,6 +22,9 @@ for arg in "$@"; do
         TTYPE=*)
             TTYPE="${arg#*=}"
             ;;
+        C_APP=*)
+            C_APP="${arg#*=}"
+            ;;
     esac
 done
 
@@ -28,8 +32,9 @@ echo "Architecture: $ARCH"
 echo "Log level: $LOG"
 echo "QEMU log: $QEMU_LOG"
 echo "Test type: $TTYPE"
+echo "C app: $C_APP"
 
-current=$PWD
+CURRENT=$PWD
 
 get_sudo() {
     # Check if sudo permissions are already available
@@ -145,24 +150,40 @@ check_branch() {
 # Invoke functions
 install_musl_riscv64
 
-cd $current
+cd $CURRENT
 check_branch "mocklibc"
 
 static_test() {
-    cd $current/payload
+    cd $CURRENT/payload/$C_APP
     echo "Starting static compilation test"
-    python3 build.py static
-    cd ..
+    # 运行测试脚本并捕获返回值
+    bash ./run_test.sh TTYPE=static
+    test_result=$?
+    
+    if [ $test_result -ne 0 ]; then
+        echo "Static compilation test failed"
+        return $test_result  # 返回错误状态
+    fi
+
+    cd $CURRENT
     echo "Starting execution"
     make defconfig ARCH=riscv64
     make A=examples/loader ARCH=$ARCH LOG=$LOG QEMU_LOG=$QEMU_LOG run
 }
 
 dynamic_test() {
-    cd $current/payload
+    cd $CURRENT/payload/$C_APP
     echo "Starting dynamic compilation test"
-    python3 build.py dynamic
-    cd ..
+    # 运行测试脚本并捕获返回值
+    bash ./run_test.sh TTYPE=dynamic
+    test_result=$?
+    
+    if [ $test_result -ne 0 ]; then
+        echo "Dynamic compilation test failed"
+        return $test_result  # 返回错误状态
+    fi
+
+    cd $CURRENT
     echo "Starting execution"
     make defconfig ARCH=riscv64
     make A=examples/loader ARCH=$ARCH LOG=$LOG QEMU_LOG=$QEMU_LOG run
@@ -173,8 +194,12 @@ echo "Mocklibc build"
 export PATH=$PATH:/opt/musl_riscv64/bin
 
 rustup target add riscv64gc-unknown-linux-musl
-cargo build --target riscv64gc-unknown-linux-musl --release -p mocklibc
-mv ./target/riscv64gc-unknown-linux-musl/release/libmocklibc.* ./payload
+
+if [ "$C_APP" = "hello_app" ]; then
+    cargo build --target riscv64gc-unknown-linux-musl --release -p mocklibc
+    rm -rf $CURRENT/payload/hello_app/libmocklibc.*
+    mv ./target/riscv64gc-unknown-linux-musl/release/libmocklibc.* ./payload/hello_app
+fi
 
 echo "Starting tests"
 
