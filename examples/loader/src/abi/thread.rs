@@ -10,7 +10,7 @@ pub extern "C" fn abi_pthread_create(
     res: *mut ctypes::pthread_t,
     attr: *const ctypes::pthread_attr_t,
     start_routine: extern "C" fn(arg: *mut c_void) -> *mut c_void,
-    arg: *mut c_void,                                        // void *__restrict
+    arg: *mut c_void,   // void *__restrict
 ) -> i32 {
     info!("[ABI:Thread] Create a new thread!");
 

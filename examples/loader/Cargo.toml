@@ -8,12 +8,8 @@ edition.workspace = true
 [dependencies]
 axlog = { workspace = true }
 axstd = { workspace = true }
+axtask = { workspace = true }
 arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
-buddy_system_allocator = "0.11"
 elf = { git = "https://github.com/cole14/rust-elf/", commit = "cdc6769", default-features = false, features = ["to_str"] }
 
 [features]
-default = ["multitask", "alloc"]
-# Multi-task
-multitask = ["arceos_posix_api/multitask"]
-alloc = []

@@ -1,3 +1,4 @@
+mod init;
 mod thread;
 
 use axlog::debug;
@@ -9,7 +10,8 @@ use axstd::{
     thread::sleep,
 };
 
-// #[cfg(feature = "multitask")]
+use init::{abi_fini, abi_init, abi_libc_start_main};
+
 use thread::{
     abi_pthread_create, abi_pthread_exit, 
     abi_pthread_join, abi_pthread_mutex_init, 
@@ -36,15 +38,18 @@ const SYS_PTHREAD_MUTEX_INIT: usize = 8;
 const SYS_PTHREAD_MUTEX_LOCK: usize = 9;
 const SYS_PTHREAD_MUTEX_UNLOCK: usize = 10;
 
-pub fn abi_hello() {
+#[unsafe(no_mangle)]
+pub extern "C" fn abi_hello() {
     println!("[ABI:Hello] Hello, Apps!");
 }
 
-pub fn abi_putchar(c: char) {
+#[unsafe(no_mangle)]
+pub extern "C" fn abi_putchar(c: char) {
     println!("[ABI:Print] {c}");
 }
 
-pub fn abi_exit(exit_code: i32) {
+#[unsafe(no_mangle)]
+pub extern "C" fn abi_exit(exit_code: i32) {
     println!("[ABI:Exit] Exit Apps by exit_code: {exit_code}!");
     exit(exit_code);
 }
@@ -130,7 +135,7 @@ pub extern "C" fn abi_puts(s: *const u8) -> i32 {
 
     // 将 C 字符串转换为 Rust 字符串切片
     unsafe {
-        let c_str =  CStr::from_ptr(res);
+        let c_str = CStr::from_ptr(res);
         match c_str.to_str() {
             Ok(string) => {
                 println!("{}", string);
@@ -185,5 +190,8 @@ define_abi_functions! {
     ("pthread_mutex_unlock", abi_pthread_mutex_unlock),
     ("printf", abi_printf), 
     ("puts", abi_puts), 
-    ("sleep", abi_sleep)
+    ("sleep", abi_sleep),
+    ("_init", abi_init),
+    ("_fini", abi_fini),
+    ("__libc_start_main", abi_libc_start_main)
 }

@@ -4,8 +4,8 @@ import subprocess
 CC = "riscv64-linux-musl-gcc"
 
 DYNAMIC_FLAG = [
-    "-nostartfiles",
 ]
+
 def run(cmd):
     subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

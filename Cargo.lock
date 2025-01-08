@@ -26,7 +26,7 @@ version = "0.1.1"
 source = "git+https://github.com/arceos-org/allocator.git?tag=v0.1.1#1d5b7a1b4fd8db4c9c9cea4e6012d15d42e2bf40"
 dependencies = [
  "bitmap-allocator",
- "buddy_system_allocator 0.10.0",
+ "buddy_system_allocator",
  "cfg-if",
  "rlsf",
  "slab_allocator",
@@ -124,7 +124,7 @@ dependencies = [
  "arceos_posix_api",
  "axlog",
  "axstd",
- "buddy_system_allocator 0.11.0",
+ "axtask",
  "elf",
 ]
 
@@ -690,15 +690,6 @@ name = "buddy_system_allocator"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7913f22349ffcfc6ca0ca9a656ec26cfbba538ed49c31a273dff2c5d1ea83d9"
-
-[[package]]
-name = "buddy_system_allocator"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1a0108968a3a2dab95b089c0fc3f1afa7759aa5ebe6f1d86d206d6f7ba726eb"
-dependencies = [
- "spin",
-]
 
 [[package]]
 name = "bumpalo"
@@ -1510,7 +1501,7 @@ name = "slab_allocator"
 version = "0.3.1"
 source = "git+https://github.com/arceos-org/slab_allocator.git?tag=v0.3.1#3c13499d664ccd36f66786985b753340aea57f5a"
 dependencies = [
- "buddy_system_allocator 0.10.0",
+ "buddy_system_allocator",
 ]
 
 [[package]]
