@@ -1,2 +1,5 @@
 [target.riscv64gc-unknown-linux-musl]
 linker = "riscv64-linux-musl-ld"
+
+[alias]
+xtask = "run --package xtask --release --"

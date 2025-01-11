@@ -29,7 +29,7 @@ members = [
     "examples/httpserver",
     "examples/shell",
     "examples/loader",
-]
+    "xtask"]
 
 [workspace.package]
 version = "0.1.0"

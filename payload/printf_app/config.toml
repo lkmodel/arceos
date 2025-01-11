@@ -1,0 +1,4 @@
+[dev]
+rename="printf"
+ttype="dynamic"
+snapshot=true

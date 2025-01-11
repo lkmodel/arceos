@@ -32,31 +32,9 @@ jobs:
       - uses: ./.github/workflows/actions/setup-musl
         with:
           arch: ${{ matrix.arch }}
-      - name: hello static build
-        run: python build.py static
-        working-directory: ./payload/hello_app
-      - name: run tests
-        run: |
-          make defconfig ARCH=${{ matrix.arch }}
-          make A=examples/loader ARCH=${{ matrix.arch }} run
-      - name: hello dynamic build
-        run: python build.py dynamic
-        working-directory: ./payload/hello_app
-      - name: run tests
-        run: |
-          make defconfig ARCH=${{ matrix.arch }}
-          make A=examples/loader ARCH=${{ matrix.arch }} run
-      - name: printf dynamic build
-        run: python build.py printf
-        working-directory: ./payload/printf_app
-      - name: run tests
-        run: |
-          make defconfig ARCH=${{ matrix.arch }}
-          make A=examples/loader ARCH=${{ matrix.arch }} run
-      - name: pthread dynamic build
-        run: python build.py pthread
-        working-directory: ./payload/pthread_app
-      - name: run tests
-        run: |
-          make defconfig ARCH=${{ matrix.arch }}
-          make A=examples/loader ARCH=${{ matrix.arch }} run
+      - name: hello
+        run: cargo xtask hello_app
+      - name: printf
+        run: cargo xtask printf_app
+      - name: pthread
+        run: cargo xtask pthread_app

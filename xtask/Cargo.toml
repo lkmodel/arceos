@@ -1,0 +1,11 @@
+[package]
+name = "xtask"
+edition.workspace = true
+
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+hex = "0.4.3"
+insta = "1.42.0"
+toml = "0.8.19"
+serde = { version = "1.0.210", features = ["derive"] }
