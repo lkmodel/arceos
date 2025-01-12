@@ -9,19 +9,7 @@ use std::{env, fs, io};
 
 const CC: &str = "riscv64-linux-musl-gcc";
 const DYNAMIC_FLAG: [&str; 0] = [];
-const STATIC_FLAG: [&str; 11] = [
-    "-nostdlib",
-    "-nostartfiles",
-    "-nodefaultlibs",
-    "-ffreestanding",
-    "-O0",
-    "-mcmodel=medany",
-    "-static",
-    "-fno-pie",
-    "-L./",
-    "-lmocklibc",
-    "-T./linker.ld",
-];
+const STATIC_FLAG: [&str; 0] = [];
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
