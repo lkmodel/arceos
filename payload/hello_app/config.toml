@@ -1,0 +1,6 @@
+[dev]
+rename="hello"
+ttype="all"
+snapshot=true
+dynamic_flags=["-nostdlib", "-nostartfiles", "-nodefaultlibs", "-ffreestanding", "-O0", "-mcmodel=medany", "-L./", "-lmocklibc",]
+static_flags = ["-nostdlib", "-nostartfiles", "-nodefaultlibs", "-ffreestanding", "-O0", "-mcmodel=medany", "-static", "-fno-pie", "-L./", "-lmocklibc", "-T./linker.ld", ]

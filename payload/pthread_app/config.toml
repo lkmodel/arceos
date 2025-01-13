@@ -1,0 +1,4 @@
+[dev]
+rename="pthread"
+ttype="dynamic"
+snapshot=true

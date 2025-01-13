@@ -1,0 +1,323 @@
+---
+source: xtask/src/main.rs
+expression: from_utf8(&output.stdout).unwrap()
+---
+pthread:     file format elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+0000000000000690 <.plt>:
+ 690:	00002397          	auipc	t2,0x2
+ 694:	41c30333          	sub	t1,t1,t3
+ 698:	9783be03          	ld	t3,-1672(t2) # 2008 <__TMC_END__>
+ 69c:	fd430313          	addi	t1,t1,-44
+ 6a0:	97838293          	addi	t0,t2,-1672
+ 6a4:	00135313          	srli	t1,t1,0x1
+ 6a8:	0082b283          	ld	t0,8(t0)
+ 6ac:	000e0067          	jr	t3
+
+00000000000006b0 <printf@plt>:
+ 6b0:	00002e17          	auipc	t3,0x2
+ 6b4:	968e3e03          	ld	t3,-1688(t3) # 2018 <printf>
+ 6b8:	000e0367          	jalr	t1,t3
+ 6bc:	00000013          	nop
+
+00000000000006c0 <pthread_create@plt>:
+ 6c0:	00002e17          	auipc	t3,0x2
+ 6c4:	960e3e03          	ld	t3,-1696(t3) # 2020 <pthread_create>
+ 6c8:	000e0367          	jalr	t1,t3
+ 6cc:	00000013          	nop
+
+00000000000006d0 <pthread_exit@plt>:
+ 6d0:	00002e17          	auipc	t3,0x2
+ 6d4:	958e3e03          	ld	t3,-1704(t3) # 2028 <pthread_exit>
+ 6d8:	000e0367          	jalr	t1,t3
+ 6dc:	00000013          	nop
+
+00000000000006e0 <puts@plt>:
+ 6e0:	00002e17          	auipc	t3,0x2
+ 6e4:	950e3e03          	ld	t3,-1712(t3) # 2030 <puts>
+ 6e8:	000e0367          	jalr	t1,t3
+ 6ec:	00000013          	nop
+
+00000000000006f0 <sleep@plt>:
+ 6f0:	00002e17          	auipc	t3,0x2
+ 6f4:	948e3e03          	ld	t3,-1720(t3) # 2038 <sleep>
+ 6f8:	000e0367          	jalr	t1,t3
+ 6fc:	00000013          	nop
+
+0000000000000700 <__libc_start_main@plt>:
+ 700:	00002e17          	auipc	t3,0x2
+ 704:	940e3e03          	ld	t3,-1728(t3) # 2040 <__libc_start_main>
+ 708:	000e0367          	jalr	t1,t3
+ 70c:	00000013          	nop
+
+0000000000000710 <pthread_join@plt>:
+ 710:	00002e17          	auipc	t3,0x2
+ 714:	938e3e03          	ld	t3,-1736(t3) # 2048 <pthread_join>
+ 718:	000e0367          	jalr	t1,t3
+ 71c:	00000013          	nop
+
+Disassembly of section .text:
+
+0000000000000720 <_start>:
+ 720:	00002197          	auipc	gp,0x2
+ 724:	0e018193          	addi	gp,gp,224 # 2800 <__global_pointer$>
+ 728:	850a                	mv	a0,sp
+ 72a:	00001597          	auipc	a1,0x1
+ 72e:	71658593          	addi	a1,a1,1814 # 1e40 <_DYNAMIC>
+ 732:	ff017113          	andi	sp,sp,-16
+ 736:	a009                	j	738 <_start_c>
+
+0000000000000738 <_start_c>:
+ 738:	410c                	lw	a1,0(a0)
+ 73a:	00850613          	addi	a2,a0,8
+ 73e:	4781                	li	a5,0
+ 740:	00002717          	auipc	a4,0x2
+ 744:	94873703          	ld	a4,-1720(a4) # 2088 <_fini>
+ 748:	00002697          	auipc	a3,0x2
+ 74c:	9186b683          	ld	a3,-1768(a3) # 2060 <_init>
+ 750:	00002517          	auipc	a0,0x2
+ 754:	93053503          	ld	a0,-1744(a0) # 2080 <_GLOBAL_OFFSET_TABLE_+0x30>
+ 758:	b765                	j	700 <__libc_start_main@plt>
+
+000000000000075a <deregister_tm_clones>:
+ 75a:	00002517          	auipc	a0,0x2
+ 75e:	8ae50513          	addi	a0,a0,-1874 # 2008 <__TMC_END__>
+ 762:	00002797          	auipc	a5,0x2
+ 766:	8a678793          	addi	a5,a5,-1882 # 2008 <__TMC_END__>
+ 76a:	00a78863          	beq	a5,a0,77a <deregister_tm_clones+0x20>
+ 76e:	00002797          	auipc	a5,0x2
+ 772:	90a7b783          	ld	a5,-1782(a5) # 2078 <_ITM_deregisterTMCloneTable>
+ 776:	c391                	beqz	a5,77a <deregister_tm_clones+0x20>
+ 778:	8782                	jr	a5
+ 77a:	8082                	ret
+
+000000000000077c <register_tm_clones>:
+ 77c:	00002517          	auipc	a0,0x2
+ 780:	88c50513          	addi	a0,a0,-1908 # 2008 <__TMC_END__>
+ 784:	00002597          	auipc	a1,0x2
+ 788:	88458593          	addi	a1,a1,-1916 # 2008 <__TMC_END__>
+ 78c:	8d89                	sub	a1,a1,a0
+ 78e:	4035d793          	srai	a5,a1,0x3
+ 792:	91fd                	srli	a1,a1,0x3f
+ 794:	95be                	add	a1,a1,a5
+ 796:	8585                	srai	a1,a1,0x1
+ 798:	c599                	beqz	a1,7a6 <register_tm_clones+0x2a>
+ 79a:	00002797          	auipc	a5,0x2
+ 79e:	8d67b783          	ld	a5,-1834(a5) # 2070 <_ITM_registerTMCloneTable>
+ 7a2:	c391                	beqz	a5,7a6 <register_tm_clones+0x2a>
+ 7a4:	8782                	jr	a5
+ 7a6:	8082                	ret
+
+00000000000007a8 <__do_global_dtors_aux>:
+ 7a8:	1141                	addi	sp,sp,-16
+ 7aa:	e022                	sd	s0,0(sp)
+ 7ac:	00002417          	auipc	s0,0x2
+ 7b0:	8ec40413          	addi	s0,s0,-1812 # 2098 <completed.1>
+ 7b4:	00044783          	lbu	a5,0(s0)
+ 7b8:	e406                	sd	ra,8(sp)
+ 7ba:	eb95                	bnez	a5,7ee <__do_global_dtors_aux+0x46>
+ 7bc:	00002797          	auipc	a5,0x2
+ 7c0:	89c7b783          	ld	a5,-1892(a5) # 2058 <__cxa_finalize>
+ 7c4:	c791                	beqz	a5,7d0 <__do_global_dtors_aux+0x28>
+ 7c6:	00002517          	auipc	a0,0x2
+ 7ca:	83a53503          	ld	a0,-1990(a0) # 2000 <__dso_handle>
+ 7ce:	9782                	jalr	a5
+ 7d0:	f8bff0ef          	jal	ra,75a <deregister_tm_clones>
+ 7d4:	00002797          	auipc	a5,0x2
+ 7d8:	8947b783          	ld	a5,-1900(a5) # 2068 <__deregister_frame_info>
+ 7dc:	c791                	beqz	a5,7e8 <__do_global_dtors_aux+0x40>
+ 7de:	00000517          	auipc	a0,0x0
+ 7e2:	39e50513          	addi	a0,a0,926 # b7c <__FRAME_END__>
+ 7e6:	9782                	jalr	a5
+ 7e8:	4785                	li	a5,1
+ 7ea:	00f40023          	sb	a5,0(s0)
+ 7ee:	60a2                	ld	ra,8(sp)
+ 7f0:	6402                	ld	s0,0(sp)
+ 7f2:	0141                	addi	sp,sp,16
+ 7f4:	8082                	ret
+
+00000000000007f6 <frame_dummy>:
+ 7f6:	00002797          	auipc	a5,0x2
+ 7fa:	89a7b783          	ld	a5,-1894(a5) # 2090 <__register_frame_info>
+ 7fe:	cf99                	beqz	a5,81c <frame_dummy+0x26>
+ 800:	1141                	addi	sp,sp,-16
+ 802:	e406                	sd	ra,8(sp)
+ 804:	00002597          	auipc	a1,0x2
+ 808:	89c58593          	addi	a1,a1,-1892 # 20a0 <object.0>
+ 80c:	00000517          	auipc	a0,0x0
+ 810:	37050513          	addi	a0,a0,880 # b7c <__FRAME_END__>
+ 814:	9782                	jalr	a5
+ 816:	60a2                	ld	ra,8(sp)
+ 818:	0141                	addi	sp,sp,16
+ 81a:	b78d                	j	77c <register_tm_clones>
+ 81c:	b785                	j	77c <register_tm_clones>
+
+000000000000081e <main>:
+ 81e:	7139                	addi	sp,sp,-64
+ 820:	fc06                	sd	ra,56(sp)
+ 822:	f822                	sd	s0,48(sp)
+ 824:	0080                	addi	s0,sp,64
+ 826:	4589                	li	a1,2
+ 828:	00000517          	auipc	a0,0x0
+ 82c:	20050513          	addi	a0,a0,512 # a28 <thread_function+0x8a>
+ 830:	e81ff0ef          	jal	ra,6b0 <printf@plt>
+ 834:	00000597          	auipc	a1,0x0
+ 838:	14e58593          	addi	a1,a1,334 # 982 <addtwo>
+ 83c:	00000517          	auipc	a0,0x0
+ 840:	20c50513          	addi	a0,a0,524 # a48 <thread_function+0xaa>
+ 844:	e6dff0ef          	jal	ra,6b0 <printf@plt>
+ 848:	00000597          	auipc	a1,0x0
+ 84c:	15658593          	addi	a1,a1,342 # 99e <thread_function>
+ 850:	00000517          	auipc	a0,0x0
+ 854:	21050513          	addi	a0,a0,528 # a60 <thread_function+0xc2>
+ 858:	e59ff0ef          	jal	ra,6b0 <printf@plt>
+ 85c:	00000597          	auipc	a1,0x0
+ 860:	fc258593          	addi	a1,a1,-62 # 81e <main>
+ 864:	00000517          	auipc	a0,0x0
+ 868:	21c50513          	addi	a0,a0,540 # a80 <thread_function+0xe2>
+ 86c:	e45ff0ef          	jal	ra,6b0 <printf@plt>
+ 870:	4505                	li	a0,1
+ 872:	110000ef          	jal	ra,982 <addtwo>
+ 876:	87aa                	mv	a5,a0
+ 878:	fef42223          	sw	a5,-28(s0)
+ 87c:	fe442783          	lw	a5,-28(s0)
+ 880:	85be                	mv	a1,a5
+ 882:	00000517          	auipc	a0,0x0
+ 886:	21650513          	addi	a0,a0,534 # a98 <thread_function+0xfa>
+ 88a:	e27ff0ef          	jal	ra,6b0 <printf@plt>
+ 88e:	fe042623          	sw	zero,-20(s0)
+ 892:	a069                	j	91c <main+0xfe>
+ 894:	fec42783          	lw	a5,-20(s0)
+ 898:	078a                	slli	a5,a5,0x2
+ 89a:	17c1                	addi	a5,a5,-16
+ 89c:	97a2                	add	a5,a5,s0
+ 89e:	fec42703          	lw	a4,-20(s0)
+ 8a2:	fce7ac23          	sw	a4,-40(a5)
+ 8a6:	fd040713          	addi	a4,s0,-48
+ 8aa:	fec42783          	lw	a5,-20(s0)
+ 8ae:	078e                	slli	a5,a5,0x3
+ 8b0:	00f70533          	add	a0,a4,a5
+ 8b4:	fc840713          	addi	a4,s0,-56
+ 8b8:	fec42783          	lw	a5,-20(s0)
+ 8bc:	078a                	slli	a5,a5,0x2
+ 8be:	97ba                	add	a5,a5,a4
+ 8c0:	86be                	mv	a3,a5
+ 8c2:	00000617          	auipc	a2,0x0
+ 8c6:	0dc60613          	addi	a2,a2,220 # 99e <thread_function>
+ 8ca:	4581                	li	a1,0
+ 8cc:	df5ff0ef          	jal	ra,6c0 <pthread_create@plt>
+ 8d0:	87aa                	mv	a5,a0
+ 8d2:	fef42023          	sw	a5,-32(s0)
+ 8d6:	fe042783          	lw	a5,-32(s0)
+ 8da:	85be                	mv	a1,a5
+ 8dc:	00000517          	auipc	a0,0x0
+ 8e0:	1cc50513          	addi	a0,a0,460 # aa8 <thread_function+0x10a>
+ 8e4:	dcdff0ef          	jal	ra,6b0 <printf@plt>
+ 8e8:	fe042783          	lw	a5,-32(s0)
+ 8ec:	2781                	sext.w	a5,a5
+ 8ee:	cb89                	beqz	a5,900 <main+0xe2>
+ 8f0:	00000517          	auipc	a0,0x0
+ 8f4:	1c050513          	addi	a0,a0,448 # ab0 <thread_function+0x112>
+ 8f8:	de9ff0ef          	jal	ra,6e0 <puts@plt>
+ 8fc:	4785                	li	a5,1
+ 8fe:	a8ad                	j	978 <main+0x15a>
+ 900:	fec42783          	lw	a5,-20(s0)
+ 904:	85be                	mv	a1,a5
+ 906:	00000517          	auipc	a0,0x0
+ 90a:	1ca50513          	addi	a0,a0,458 # ad0 <thread_function+0x132>
+ 90e:	da3ff0ef          	jal	ra,6b0 <printf@plt>
+ 912:	fec42783          	lw	a5,-20(s0)
+ 916:	2785                	addiw	a5,a5,1
+ 918:	fef42623          	sw	a5,-20(s0)
+ 91c:	fec42783          	lw	a5,-20(s0)
+ 920:	0007871b          	sext.w	a4,a5
+ 924:	4785                	li	a5,1
+ 926:	f6e7d7e3          	bge	a5,a4,894 <main+0x76>
+ 92a:	00000517          	auipc	a0,0x0
+ 92e:	1be50513          	addi	a0,a0,446 # ae8 <thread_function+0x14a>
+ 932:	dafff0ef          	jal	ra,6e0 <puts@plt>
+ 936:	fe042423          	sw	zero,-24(s0)
+ 93a:	a00d                	j	95c <main+0x13e>
+ 93c:	fe842783          	lw	a5,-24(s0)
+ 940:	078e                	slli	a5,a5,0x3
+ 942:	17c1                	addi	a5,a5,-16
+ 944:	97a2                	add	a5,a5,s0
+ 946:	fe07b783          	ld	a5,-32(a5)
+ 94a:	4581                	li	a1,0
+ 94c:	853e                	mv	a0,a5
+ 94e:	dc3ff0ef          	jal	ra,710 <pthread_join@plt>
+ 952:	fe842783          	lw	a5,-24(s0)
+ 956:	2785                	addiw	a5,a5,1
+ 958:	fef42423          	sw	a5,-24(s0)
+ 95c:	fe842783          	lw	a5,-24(s0)
+ 960:	0007871b          	sext.w	a4,a5
+ 964:	4785                	li	a5,1
+ 966:	fce7dbe3          	bge	a5,a4,93c <main+0x11e>
+ 96a:	00000517          	auipc	a0,0x0
+ 96e:	18e50513          	addi	a0,a0,398 # af8 <thread_function+0x15a>
+ 972:	d6fff0ef          	jal	ra,6e0 <puts@plt>
+ 976:	4781                	li	a5,0
+ 978:	853e                	mv	a0,a5
+ 97a:	70e2                	ld	ra,56(sp)
+ 97c:	7442                	ld	s0,48(sp)
+ 97e:	6121                	addi	sp,sp,64
+ 980:	8082                	ret
+
+0000000000000982 <addtwo>:
+ 982:	1101                	addi	sp,sp,-32
+ 984:	ec22                	sd	s0,24(sp)
+ 986:	1000                	addi	s0,sp,32
+ 988:	87aa                	mv	a5,a0
+ 98a:	fef42623          	sw	a5,-20(s0)
+ 98e:	fec42783          	lw	a5,-20(s0)
+ 992:	2789                	addiw	a5,a5,2
+ 994:	2781                	sext.w	a5,a5
+ 996:	853e                	mv	a0,a5
+ 998:	6462                	ld	s0,24(sp)
+ 99a:	6105                	addi	sp,sp,32
+ 99c:	8082                	ret
+
+000000000000099e <thread_function>:
+ 99e:	7179                	addi	sp,sp,-48
+ 9a0:	f406                	sd	ra,40(sp)
+ 9a2:	f022                	sd	s0,32(sp)
+ 9a4:	1800                	addi	s0,sp,48
+ 9a6:	fca43c23          	sd	a0,-40(s0)
+ 9aa:	fd843783          	ld	a5,-40(s0)
+ 9ae:	439c                	lw	a5,0(a5)
+ 9b0:	fef42423          	sw	a5,-24(s0)
+ 9b4:	fe842783          	lw	a5,-24(s0)
+ 9b8:	00000617          	auipc	a2,0x0
+ 9bc:	fe660613          	addi	a2,a2,-26 # 99e <thread_function>
+ 9c0:	85be                	mv	a1,a5
+ 9c2:	00000517          	auipc	a0,0x0
+ 9c6:	14e50513          	addi	a0,a0,334 # b10 <thread_function+0x172>
+ 9ca:	ce7ff0ef          	jal	ra,6b0 <printf@plt>
+ 9ce:	fe042623          	sw	zero,-20(s0)
+ 9d2:	a02d                	j	9fc <thread_function+0x5e>
+ 9d4:	fec42703          	lw	a4,-20(s0)
+ 9d8:	fe842783          	lw	a5,-24(s0)
+ 9dc:	863a                	mv	a2,a4
+ 9de:	85be                	mv	a1,a5
+ 9e0:	00000517          	auipc	a0,0x0
+ 9e4:	16050513          	addi	a0,a0,352 # b40 <thread_function+0x1a2>
+ 9e8:	cc9ff0ef          	jal	ra,6b0 <printf@plt>
+ 9ec:	4505                	li	a0,1
+ 9ee:	d03ff0ef          	jal	ra,6f0 <sleep@plt>
+ 9f2:	fec42783          	lw	a5,-20(s0)
+ 9f6:	2785                	addiw	a5,a5,1
+ 9f8:	fef42623          	sw	a5,-20(s0)
+ 9fc:	fec42783          	lw	a5,-20(s0)
+ a00:	0007871b          	sext.w	a4,a5
+ a04:	4785                	li	a5,1
+ a06:	fce7d7e3          	bge	a5,a4,9d4 <thread_function+0x36>
+ a0a:	fe842783          	lw	a5,-24(s0)
+ a0e:	85be                	mv	a1,a5
+ a10:	00000517          	auipc	a0,0x0
+ a14:	15850513          	addi	a0,a0,344 # b68 <thread_function+0x1ca>
+ a18:	c99ff0ef          	jal	ra,6b0 <printf@plt>
+ a1c:	4501                	li	a0,0
+ a1e:	cb3ff0ef          	jal	ra,6d0 <pthread_exit@plt>

@@ -1,0 +1,189 @@
+---
+source: xtask/src/main.rs
+expression: from_utf8(&output.stdout).unwrap()
+---
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           RISC-V
+  Version:                           0x1
+  Entry point address:               0xffffffc080100106
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          6896 (bytes into file)
+  Flags:                             0x5, RVC, double-float ABI
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         3
+  Size of section headers:           64 (bytes)
+  Number of section headers:         24
+  Section header string table index: 23
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  [ 1] .text             PROGBITS         ffffffc080100000  00001000
+       000000000000005e  0000000000000000  AX       0     0     8
+  [ 2] .text.hello       PROGBITS         ffffffc08010005e  0000105e
+       000000000000001c  0000000000000000  AX       0     0     2
+  [ 3] .text.putchar     PROGBITS         ffffffc08010007a  0000107a
+       000000000000001c  0000000000000000  AX       0     0     2
+  [ 4] .text.exit        PROGBITS         ffffffc080100096  00001096
+       000000000000001c  0000000000000000  AX       0     0     2
+  [ 5] .text.pthrea[...] PROGBITS         ffffffc0801000b2  000010b2
+       000000000000001c  0000000000000000  AX       0     0     2
+  [ 6] .text.pthrea[...] PROGBITS         ffffffc0801000ce  000010ce
+       000000000000001c  0000000000000000  AX       0     0     2
+  [ 7] .text.pthrea[...] PROGBITS         ffffffc0801000ea  000010ea
+       000000000000001c  0000000000000000  AX       0     0     2
+  [ 8] .text._start      PROGBITS         ffffffc080100106  00001106
+       0000000000000012  0000000000000000  AX       0     0     2
+  [ 9] .dynsym           DYNSYM           ffffffc080100118  00001118
+       0000000000000030  0000000000000018   A      10     2     8
+  [10] .dynstr           STRTAB           ffffffc080100148  00001148
+       0000000000000001  0000000000000000   A       0     0     8
+  [11] .hash             HASH             ffffffc080100150  00001150
+       0000000000000014  0000000000000004   A       9     0     8
+  [12] .gnu.hash         GNU_HASH         ffffffc080100168  00001168
+       000000000000001c  0000000000000000   A       9     0     8
+  [13] .dynamic          DYNAMIC          ffffffc0801001a0  000011a0
+       0000000000000110  0000000000000010  WA      10     0     8
+  [14] .got              PROGBITS         ffffffc0801002b0  000012b0
+       0000000000000010  0000000000000008  WA       0     0     8
+  [15] .got.plt          PROGBITS         ffffffc0801002c0  000012c0
+       0000000000000010  0000000000000008  WA       0     0     8
+  [16] .sbss             NOBITS           ffffffc0801002d0  000012d0
+       0000000000000008  0000000000000000  WA       0     0     8
+  [17] .comment          PROGBITS         0000000000000000  000012d0
+       000000000000004f  0000000000000001  MS       0     0     1
+  [18] .riscv.attributes RISCV_ATTRIBUTE  0000000000000000  0000131f
+       0000000000000047  0000000000000000           0     0     1
+  [19] .rela.dyn         RELA             ffffffc080100188  00001188
+       0000000000000018  0000000000000018   A       9     0     8
+  [20] .debug_frame      PROGBITS         0000000000000000  00001368
+       00000000000000f8  0000000000000000           0     0     8
+  [21] .symtab           SYMTAB           0000000000000000  00001460
+       00000000000004b0  0000000000000018          22    41     8
+  [22] .strtab           STRTAB           0000000000000000  00001910
+       00000000000000e7  0000000000000000           0     0     1
+  [23] .shstrtab         STRTAB           0000000000000000  000019f7
+       00000000000000f7  0000000000000000           0     0     1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), p (processor specific)
+
+There are no section groups in this file.
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  LOAD           0x0000000000001000 0xffffffc080100000 0xffffffc080100000
+                 0x00000000000002d0 0x00000000000002d8  RWE    0x1000
+  DYNAMIC        0x00000000000011a0 0xffffffc0801001a0 0xffffffc0801001a0
+                 0x0000000000000110 0x0000000000000110  RW     0x8
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .text .text.hello .text.putchar .text.exit .text.pthread_create .text.pthread_join .text.pthread_exit .text._start .dynsym .dynstr .hash .gnu.hash .dynamic .got .got.plt .sbss .rela.dyn 
+   01     .dynamic 
+   02     
+
+Dynamic section at offset 0x11a0 contains 13 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000004 (HASH)               0xffffffc080100150
+ 0x000000006ffffef5 (GNU_HASH)           0xffffffc080100168
+ 0x0000000000000005 (STRTAB)             0xffffffc080100148
+ 0x0000000000000006 (SYMTAB)             0xffffffc080100118
+ 0x000000000000000a (STRSZ)              1 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000007 (RELA)               0xffffffc080100188
+ 0x0000000000000008 (RELASZ)             24 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000006ffffffb (FLAGS_1)            Flags: PIE
+ 0x000000006ffffff9 (RELACOUNT)          1
+ 0x0000000000000000 (NULL)               0x0
+
+Relocation section '.rela.dyn' at offset 0x1188 contains 1 entry:
+  Offset          Info           Type           Sym. Value    Sym. Name + Addend
+ffffffc0801002b8  000000000003 R_RISCV_RELATIVE                     -3f7feffd30
+
+The decoding of unwind sections for machine type RISC-V is not currently supported.
+
+Symbol table '.dynsym' contains 2 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: ffffffc080100000     0 SECTION LOCAL  DEFAULT    1 .text
+
+Symbol table '.symtab' contains 50 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: ffffffc080100000     0 SECTION LOCAL  DEFAULT    1 .text
+     2: ffffffc08010005e     0 SECTION LOCAL  DEFAULT    2 .text.hello
+     3: ffffffc08010007a     0 SECTION LOCAL  DEFAULT    3 .text.putchar
+     4: ffffffc080100096     0 SECTION LOCAL  DEFAULT    4 .text.exit
+     5: ffffffc0801000b2     0 SECTION LOCAL  DEFAULT    5 .text.pthread_create
+     6: ffffffc0801000ce     0 SECTION LOCAL  DEFAULT    6 .text.pthread_join
+     7: ffffffc0801000ea     0 SECTION LOCAL  DEFAULT    7 .text.pthread_exit
+     8: ffffffc080100106     0 SECTION LOCAL  DEFAULT    8 .text._start
+     9: ffffffc080100118     0 SECTION LOCAL  DEFAULT    9 .dynsym
+    10: ffffffc080100148     0 SECTION LOCAL  DEFAULT   10 .dynstr
+    11: ffffffc080100150     0 SECTION LOCAL  DEFAULT   11 .hash
+    12: ffffffc080100168     0 SECTION LOCAL  DEFAULT   12 .gnu.hash
+    13: ffffffc0801001a0     0 SECTION LOCAL  DEFAULT   13 .dynamic
+    14: ffffffc0801002b0     0 SECTION LOCAL  DEFAULT   14 .got
+    15: ffffffc0801002c0     0 SECTION LOCAL  DEFAULT   15 .got.plt
+    16: ffffffc0801002d0     0 SECTION LOCAL  DEFAULT   16 .sbss
+    17: 0000000000000000     0 SECTION LOCAL  DEFAULT   17 .comment
+    18: 0000000000000000     0 SECTION LOCAL  DEFAULT   18 .riscv.attributes
+    19: ffffffc080100188     0 SECTION LOCAL  DEFAULT   19 .rela.dyn
+    20: 0000000000000000     0 SECTION LOCAL  DEFAULT   20 .debug_frame
+    21: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS hello.c
+    22: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS mocklibc.277a254[...]
+    23: ffffffc08010005e     0 NOTYPE  LOCAL  DEFAULT    2 $x
+    24: ffffffc0801002d0     8 OBJECT  LOCAL  DEFAULT   16 _ZN8mocklibc3abi[...]
+    25: ffffffc08010007a     0 NOTYPE  LOCAL  DEFAULT    3 $x
+    26: ffffffc080100096     0 NOTYPE  LOCAL  DEFAULT    4 $x
+    27: ffffffc0801000b2     0 NOTYPE  LOCAL  DEFAULT    5 $x
+    28: ffffffc0801000ce     0 NOTYPE  LOCAL  DEFAULT    6 $x
+    29: ffffffc0801000ea     0 NOTYPE  LOCAL  DEFAULT    7 $x
+    30: ffffffc080100106     0 NOTYPE  LOCAL  DEFAULT    8 $x
+    31: ffffffc0801002d0     0 NOTYPE  LOCAL  DEFAULT   16 $d
+    32: 000000000000004e     0 NOTYPE  LOCAL  DEFAULT   17 $d
+    33: 000000000000001b     0 NOTYPE  LOCAL  DEFAULT   17 $d
+    34: 000000000000001b     0 NOTYPE  LOCAL  DEFAULT   17 $d
+    35: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   18 $d
+    36: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   20 $d
+    37: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
+    38: ffffffc0801001a0     0 OBJECT  LOCAL  DEFAULT  ABS _DYNAMIC
+    39: ffffffc080100120     0 OBJECT  LOCAL  DEFAULT  ABS _PROCEDURE_LINKA[...]
+    40: ffffffc0801002b0     0 OBJECT  LOCAL  DEFAULT  ABS _GLOBAL_OFFSET_TABLE_
+    41: ffffffc08010007a    28 FUNC    GLOBAL DEFAULT    3 putchar
+    42: ffffffc0801000b2    28 FUNC    GLOBAL DEFAULT    5 pthread_create
+    43: ffffffc0801000ea    28 FUNC    GLOBAL DEFAULT    7 pthread_exit
+    44: ffffffc08010005e    28 FUNC    GLOBAL DEFAULT    2 hello
+    45: ffffffc080100000     0 NOTYPE  GLOBAL DEFAULT  ABS BASE_ADDRESS
+    46: ffffffc080100106    18 FUNC    GLOBAL DEFAULT    8 _start
+    47: ffffffc080100000    94 FUNC    GLOBAL DEFAULT    1 main
+    48: ffffffc080100096    28 FUNC    GLOBAL DEFAULT    4 exit
+    49: ffffffc0801000ce    28 FUNC    GLOBAL DEFAULT    6 pthread_join
+
+Histogram for bucket list length (total of 1 bucket):
+ Length  Number     % of total  Coverage
+      0  1          (100.0%)
+
+No version information found in this file.
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zmmul1p0"

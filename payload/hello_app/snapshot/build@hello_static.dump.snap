@@ -1,0 +1,257 @@
+---
+source: xtask/src/main.rs
+expression: from_utf8(&output.stdout).unwrap()
+---
+hello:     file format elf64-littleriscv
+hello
+architecture: riscv:rv64, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0xffffffc080100106
+
+Program Header:
+    LOAD off    0x0000000000001000 vaddr 0xffffffc080100000 paddr 0xffffffc080100000 align 2**12
+         filesz 0x00000000000002d0 memsz 0x00000000000002d8 flags rwx
+ DYNAMIC off    0x00000000000011a0 vaddr 0xffffffc0801001a0 paddr 0xffffffc0801001a0 align 2**3
+         filesz 0x0000000000000110 memsz 0x0000000000000110 flags rw-
+   STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**4
+         filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
+
+Dynamic Section:
+  HASH                 0xffffffc080100150
+  GNU_HASH             0xffffffc080100168
+  STRTAB               0xffffffc080100148
+  SYMTAB               0xffffffc080100118
+  STRSZ                0x0000000000000001
+  SYMENT               0x0000000000000018
+  DEBUG                0x0000000000000000
+  RELA                 0xffffffc080100188
+  RELASZ               0x0000000000000018
+  RELAENT              0x0000000000000018
+  FLAGS_1              0x0000000008000000
+  RELACOUNT            0x0000000000000001
+
+Sections:
+Idx Name          Size      VMA               LMA               File off  Algn
+  0 .text         0000005e  ffffffc080100000  ffffffc080100000  00001000  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .text.hello   0000001c  ffffffc08010005e  ffffffc08010005e  0000105e  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .text.putchar 0000001c  ffffffc08010007a  ffffffc08010007a  0000107a  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  3 .text.exit    0000001c  ffffffc080100096  ffffffc080100096  00001096  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  4 .text.pthread_create 0000001c  ffffffc0801000b2  ffffffc0801000b2  000010b2  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  5 .text.pthread_join 0000001c  ffffffc0801000ce  ffffffc0801000ce  000010ce  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  6 .text.pthread_exit 0000001c  ffffffc0801000ea  ffffffc0801000ea  000010ea  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  7 .text._start  00000012  ffffffc080100106  ffffffc080100106  00001106  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  8 .dynsym       00000030  ffffffc080100118  ffffffc080100118  00001118  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  9 .dynstr       00000001  ffffffc080100148  ffffffc080100148  00001148  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 10 .hash         00000014  ffffffc080100150  ffffffc080100150  00001150  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 11 .gnu.hash     0000001c  ffffffc080100168  ffffffc080100168  00001168  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 12 .dynamic      00000110  ffffffc0801001a0  ffffffc0801001a0  000011a0  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 13 .got          00000010  ffffffc0801002b0  ffffffc0801002b0  000012b0  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 14 .got.plt      00000010  ffffffc0801002c0  ffffffc0801002c0  000012c0  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 15 .sbss         00000008  ffffffc0801002d0  ffffffc0801002d0  000012d0  2**3
+                  ALLOC
+ 16 .comment      0000004f  0000000000000000  0000000000000000  000012d0  2**0
+                  CONTENTS, READONLY
+ 17 .riscv.attributes 00000047  0000000000000000  0000000000000000  0000131f  2**0
+                  CONTENTS, READONLY
+ 18 .rela.dyn     00000018  ffffffc080100188  ffffffc080100188  00001188  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 19 .debug_frame  000000f8  0000000000000000  0000000000000000  00001368  2**3
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+SYMBOL TABLE:
+ffffffc080100000 l    d  .text	0000000000000000 .text
+ffffffc08010005e l    d  .text.hello	0000000000000000 .text.hello
+ffffffc08010007a l    d  .text.putchar	0000000000000000 .text.putchar
+ffffffc080100096 l    d  .text.exit	0000000000000000 .text.exit
+ffffffc0801000b2 l    d  .text.pthread_create	0000000000000000 .text.pthread_create
+ffffffc0801000ce l    d  .text.pthread_join	0000000000000000 .text.pthread_join
+ffffffc0801000ea l    d  .text.pthread_exit	0000000000000000 .text.pthread_exit
+ffffffc080100106 l    d  .text._start	0000000000000000 .text._start
+ffffffc080100118 l    d  .dynsym	0000000000000000 .dynsym
+ffffffc080100148 l    d  .dynstr	0000000000000000 .dynstr
+ffffffc080100150 l    d  .hash	0000000000000000 .hash
+ffffffc080100168 l    d  .gnu.hash	0000000000000000 .gnu.hash
+ffffffc0801001a0 l    d  .dynamic	0000000000000000 .dynamic
+ffffffc0801002b0 l    d  .got	0000000000000000 .got
+ffffffc0801002c0 l    d  .got.plt	0000000000000000 .got.plt
+ffffffc0801002d0 l    d  .sbss	0000000000000000 .sbss
+0000000000000000 l    d  .comment	0000000000000000 .comment
+0000000000000000 l    d  .riscv.attributes	0000000000000000 .riscv.attributes
+ffffffc080100188 l    d  .rela.dyn	0000000000000000 .rela.dyn
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000 l    df *ABS*	0000000000000000 hello.c
+0000000000000000 l    df *ABS*	0000000000000000 mocklibc.277a254bf6a587d3-cgu.0
+ffffffc08010005e l       .text.hello	0000000000000000 $x
+ffffffc0801002d0 l     O .sbss	0000000000000008 _ZN8mocklibc3abi9ABI_ENTRY17hf8151f7067f6d5c8E
+ffffffc08010007a l       .text.putchar	0000000000000000 $x
+ffffffc080100096 l       .text.exit	0000000000000000 $x
+ffffffc0801000b2 l       .text.pthread_create	0000000000000000 $x
+ffffffc0801000ce l       .text.pthread_join	0000000000000000 $x
+ffffffc0801000ea l       .text.pthread_exit	0000000000000000 $x
+ffffffc080100106 l       .text._start	0000000000000000 $x
+ffffffc0801002d0 l       .sbss	0000000000000000 $d
+000000000000004e l       .comment	0000000000000000 $d
+000000000000001b l       .comment	0000000000000000 $d
+000000000000001b l       .comment	0000000000000000 $d
+0000000000000000 l       .riscv.attributes	0000000000000000 $d
+0000000000000000 l       .debug_frame	0000000000000000 $d
+ffffffc0801001a0 l     O *ABS*	0000000000000000 _DYNAMIC
+ffffffc080100120 l     O *ABS*	0000000000000000 _PROCEDURE_LINKAGE_TABLE_
+ffffffc0801002b0 l     O *ABS*	0000000000000000 _GLOBAL_OFFSET_TABLE_
+ffffffc08010007a g     F .text.putchar	000000000000001c putchar
+ffffffc0801000b2 g     F .text.pthread_create	000000000000001c pthread_create
+ffffffc0801000ea g     F .text.pthread_exit	000000000000001c pthread_exit
+ffffffc08010005e g     F .text.hello	000000000000001c hello
+ffffffc080100000 g       *ABS*	0000000000000000 BASE_ADDRESS
+ffffffc080100106 g     F .text._start	0000000000000012 _start
+ffffffc080100000 g     F .text	000000000000005e main
+ffffffc080100096 g     F .text.exit	000000000000001c exit
+ffffffc0801000ce g     F .text.pthread_join	000000000000001c pthread_join
+
+
+
+Disassembly of section .text:
+
+ffffffc080100000 <main>:
+ffffffc080100000:	1141                	addi	sp,sp,-16
+ffffffc080100002:	e406                	sd	ra,8(sp)
+ffffffc080100004:	e022                	sd	s0,0(sp)
+ffffffc080100006:	0800                	addi	s0,sp,16
+ffffffc080100008:	04800513          	li	a0,72
+ffffffc08010000c:	06e000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100010:	06500513          	li	a0,101
+ffffffc080100014:	066000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100018:	06c00513          	li	a0,108
+ffffffc08010001c:	05e000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100020:	06c00513          	li	a0,108
+ffffffc080100024:	056000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100028:	06f00513          	li	a0,111
+ffffffc08010002c:	04e000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100030:	03100513          	li	a0,49
+ffffffc080100034:	046000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100038:	03200513          	li	a0,50
+ffffffc08010003c:	03e000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100040:	03300513          	li	a0,51
+ffffffc080100044:	036000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc080100048:	4529                	li	a0,10
+ffffffc08010004a:	030000ef          	jal	ra,ffffffc08010007a <putchar>
+ffffffc08010004e:	4501                	li	a0,0
+ffffffc080100050:	046000ef          	jal	ra,ffffffc080100096 <exit>
+ffffffc080100054:	0001                	nop
+ffffffc080100056:	60a2                	ld	ra,8(sp)
+ffffffc080100058:	6402                	ld	s0,0(sp)
+ffffffc08010005a:	0141                	addi	sp,sp,16
+ffffffc08010005c:	8082                	ret
+
+Disassembly of section .text.hello:
+
+ffffffc08010005e <hello>:
+ffffffc08010005e:	1141                	addi	sp,sp,-16
+ffffffc080100060:	e406                	sd	ra,8(sp)
+ffffffc080100062:	4581                	li	a1,0
+ffffffc080100064:	4505                	li	a0,1
+ffffffc080100066:	00000317          	auipc	t1,0x0
+ffffffc08010006a:	25233303          	ld	t1,594(t1) # ffffffc0801002b8 <_GLOBAL_OFFSET_TABLE_+0x8>
+ffffffc08010006e:	00033303          	ld	t1,0(t1)
+ffffffc080100072:	9302                	jalr	t1
+ffffffc080100074:	60a2                	ld	ra,8(sp)
+ffffffc080100076:	0141                	addi	sp,sp,16
+ffffffc080100078:	8082                	ret
+
+Disassembly of section .text.putchar:
+
+ffffffc08010007a <putchar>:
+ffffffc08010007a:	1141                	addi	sp,sp,-16
+ffffffc08010007c:	e406                	sd	ra,8(sp)
+ffffffc08010007e:	85aa                	mv	a1,a0
+ffffffc080100080:	4509                	li	a0,2
+ffffffc080100082:	00000317          	auipc	t1,0x0
+ffffffc080100086:	23633303          	ld	t1,566(t1) # ffffffc0801002b8 <_GLOBAL_OFFSET_TABLE_+0x8>
+ffffffc08010008a:	00033303          	ld	t1,0(t1)
+ffffffc08010008e:	9302                	jalr	t1
+ffffffc080100090:	60a2                	ld	ra,8(sp)
+ffffffc080100092:	0141                	addi	sp,sp,16
+ffffffc080100094:	8082                	ret
+
+Disassembly of section .text.exit:
+
+ffffffc080100096 <exit>:
+ffffffc080100096:	1141                	addi	sp,sp,-16
+ffffffc080100098:	e406                	sd	ra,8(sp)
+ffffffc08010009a:	85aa                	mv	a1,a0
+ffffffc08010009c:	450d                	li	a0,3
+ffffffc08010009e:	00000317          	auipc	t1,0x0
+ffffffc0801000a2:	21a33303          	ld	t1,538(t1) # ffffffc0801002b8 <_GLOBAL_OFFSET_TABLE_+0x8>
+ffffffc0801000a6:	00033303          	ld	t1,0(t1)
+ffffffc0801000aa:	9302                	jalr	t1
+ffffffc0801000ac:	60a2                	ld	ra,8(sp)
+ffffffc0801000ae:	0141                	addi	sp,sp,16
+ffffffc0801000b0:	8082                	ret
+
+Disassembly of section .text.pthread_create:
+
+ffffffc0801000b2 <pthread_create>:
+ffffffc0801000b2:	1141                	addi	sp,sp,-16
+ffffffc0801000b4:	e406                	sd	ra,8(sp)
+ffffffc0801000b6:	4581                	li	a1,0
+ffffffc0801000b8:	4511                	li	a0,4
+ffffffc0801000ba:	00000317          	auipc	t1,0x0
+ffffffc0801000be:	1fe33303          	ld	t1,510(t1) # ffffffc0801002b8 <_GLOBAL_OFFSET_TABLE_+0x8>
+ffffffc0801000c2:	00033303          	ld	t1,0(t1)
+ffffffc0801000c6:	9302                	jalr	t1
+ffffffc0801000c8:	60a2                	ld	ra,8(sp)
+ffffffc0801000ca:	0141                	addi	sp,sp,16
+ffffffc0801000cc:	8082                	ret
+
+Disassembly of section .text.pthread_join:
+
+ffffffc0801000ce <pthread_join>:
+ffffffc0801000ce:	1141                	addi	sp,sp,-16
+ffffffc0801000d0:	e406                	sd	ra,8(sp)
+ffffffc0801000d2:	4581                	li	a1,0
+ffffffc0801000d4:	4515                	li	a0,5
+ffffffc0801000d6:	00000317          	auipc	t1,0x0
+ffffffc0801000da:	1e233303          	ld	t1,482(t1) # ffffffc0801002b8 <_GLOBAL_OFFSET_TABLE_+0x8>
+ffffffc0801000de:	00033303          	ld	t1,0(t1)
+ffffffc0801000e2:	9302                	jalr	t1
+ffffffc0801000e4:	60a2                	ld	ra,8(sp)
+ffffffc0801000e6:	0141                	addi	sp,sp,16
+ffffffc0801000e8:	8082                	ret
+
+Disassembly of section .text.pthread_exit:
+
+ffffffc0801000ea <pthread_exit>:
+ffffffc0801000ea:	1141                	addi	sp,sp,-16
+ffffffc0801000ec:	e406                	sd	ra,8(sp)
+ffffffc0801000ee:	4581                	li	a1,0
+ffffffc0801000f0:	4519                	li	a0,6
+ffffffc0801000f2:	00000317          	auipc	t1,0x0
+ffffffc0801000f6:	1c633303          	ld	t1,454(t1) # ffffffc0801002b8 <_GLOBAL_OFFSET_TABLE_+0x8>
+ffffffc0801000fa:	00033303          	ld	t1,0(t1)
+ffffffc0801000fe:	9302                	jalr	t1
+ffffffc080100100:	60a2                	ld	ra,8(sp)
+ffffffc080100102:	0141                	addi	sp,sp,16
+ffffffc080100104:	8082                	ret
+
+Disassembly of section .text._start:
+
+ffffffc080100106 <_start>:
+ffffffc080100106:	8532                	mv	a0,a2
+ffffffc080100108:	00000597          	auipc	a1,0x0
+ffffffc08010010c:	1ca5b423          	sd	a0,456(a1) # ffffffc0801002d0 <_ZN8mocklibc3abi9ABI_ENTRY17hf8151f7067f6d5c8E>
+ffffffc080100110:	00000317          	auipc	t1,0x0
+ffffffc080100114:	ef030067          	jr	-272(t1) # ffffffc080100000 <main>
