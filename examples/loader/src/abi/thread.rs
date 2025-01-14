@@ -1,9 +1,7 @@
 use axlog::info;
-use arceos_posix_api::{self as api, ctypes};
+use arceos_posix_api::{self as api, ctypes, sys_pthread_mutex_init, sys_pthread_mutex_lock, sys_pthread_mutex_unlock};
 use api::{sys_pthread_create, sys_pthread_exit, sys_pthread_join, sys_pthread_self};
-use core::{ffi::c_void, mem};
-
-use crate::load::EXEC_ZONE_START;
+use core::ffi::{c_int, c_void};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_pthread_create(
@@ -19,17 +17,11 @@ pub extern "C" fn abi_pthread_create(
     info!("start_routine: {:p}", start_routine);
     info!("arg: {:p}", arg);
 
-    let adjusted_start_routine = unsafe {
-        mem::transmute::<usize, extern "C" fn(arg: *mut c_void) -> *mut c_void>(
-            (start_routine as usize) + EXEC_ZONE_START
-        )
-    };
-
     unsafe {
         sys_pthread_create(
             res, 
             attr, 
-            adjusted_start_routine, 
+            start_routine, 
             arg
         )
     }
@@ -58,14 +50,28 @@ pub extern "C" fn abi_pthread_self() -> ctypes::pthread_t {
     sys_pthread_self()
 }
 
-pub fn abi_pthread_mutex_init() {
+#[unsafe(no_mangle)]
+pub fn abi_pthread_mutex_init(
+    mutex: *mut ctypes::pthread_mutex_t,
+    _attr: *const ctypes::pthread_mutexattr_t,
+) -> c_int {
     info!("[ABI:Thread] Initialize a mutex!");
+    sys_pthread_mutex_init(mutex, _attr)
 }
 
-pub fn abi_pthread_mutex_lock() {
+#[unsafe(no_mangle)]
+pub fn abi_pthread_mutex_lock(mutex: *mut ctypes::pthread_mutex_t) -> c_int {
     info!("[ABI:Thread] Lock the given mutex!");
+    sys_pthread_mutex_lock(mutex)
 }
 
-pub fn abi_pthread_mutex_unlock() {
+#[unsafe(no_mangle)]
+pub fn abi_pthread_mutex_unlock(mutex: *mut ctypes::pthread_mutex_t) -> c_int {
     info!("[ABI:Thread] Unlock the given mutex!");
+    sys_pthread_mutex_unlock(mutex)
+}
+
+#[unsafe(no_mangle)]
+pub fn abi_pthread_mutex_destroy() {
+    info!("[ABI:Thread] Destroy the given mutex!");
 }

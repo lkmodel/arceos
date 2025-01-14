@@ -38,3 +38,5 @@ jobs:
         run: cargo xtask printf_app
       - name: pthread
         run: cargo xtask pthread_app
+      - name: malloc
+        run: cargo xtask malloc_app
