@@ -11,7 +11,7 @@ use elf::{
     ElfBytes,
 };
 
-use crate::{abi::get_abi_function, elf::{verify_elf_header, LoadError}};
+use crate::{abi::lookup_abi_call, elf::{verify_elf_header, LoadError}};
 
 pub const PLASH_START: usize = 0xffff_ffc0_2200_0000;
 pub const EXEC_ZONE_START: usize = 0xffff_ffc0_8010_0000;
@@ -149,7 +149,7 @@ fn modify_plt(elf: &ElfBytes<LittleEndian>) {
         let sym = dynsym_table.get(rela.r_sym as usize).expect("Failed to get symbol");
         let rela_name = dynstr_table.get(sym.st_name as usize).expect("Failed to get symbol name");
         debug!("Rela sym: {}", rela_name);
-        let func_addr = get_abi_function(rela_name).expect("Failed to find abi function");
+        let func_addr = lookup_abi_call(rela_name).expect("Failed to find abi function");
         debug!("func_addr 0x{:x}", func_addr);
         unsafe {
             *((EXEC_ZONE_START as u64 + rela.r_offset) as *mut usize) = func_addr;

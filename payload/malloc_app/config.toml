@@ -1,5 +1,5 @@
 [dev]
-rename="printf"
+rename="malloc"
 ttype="dynamic"
 snapshot=false
 dynamic_flags=["-fPIE",]
