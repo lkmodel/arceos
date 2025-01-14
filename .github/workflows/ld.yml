@@ -30,8 +30,8 @@ jobs:
       - uses: ./.github/workflows/actions/setup-qemu
         with:
           qemu-version: ${{ env.qemu-version }}
-      - uses: ./.github/workflows/actions/setup-musl
-        with:
-          arch: ${{ matrix.arch }}
+      #      - uses: ./.github/workflows/actions/setup-musl
+      #        with:
+      #          arch: ${{ matrix.arch }}
       - name: run all apps
         run: cargo xtask all
