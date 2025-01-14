@@ -2,4 +2,3 @@
 rename="malloc"
 ttype="dynamic"
 snapshot=false
-dynamic_flags=["-fPIE",]

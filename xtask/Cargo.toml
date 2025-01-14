@@ -1,6 +1,8 @@
 [package]
 name = "xtask"
 edition.workspace = true
+authors = ["Ridesun <ridesungg@gmail.com>"]
+version = "0.0.1"
 
 
 [dependencies]

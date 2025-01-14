@@ -3,12 +3,12 @@ use serde::Deserialize;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::str::from_utf8;
 use std::{env, fs, io};
 
 const CC: &str = "riscv64-linux-musl-gcc";
-const DYNAMIC_FLAG: [&str; 0] = [];
+const DYNAMIC_FLAG: [&str; 1] = ["-fPIE", ];
 const STATIC_FLAG: [&str; 0] = [];
 
 #[derive(Parser, Debug)]
@@ -74,6 +74,26 @@ fn main() {
     }
 
     let current_dir = env::current_dir().expect("Failed to get current directory");
+
+    let is_ci = env::var("CI").is_err();
+    if args.app == "all".to_string() || !is_ci {
+        traverse_all_app(&current_dir.join("payload"), &|dir: &PathBuf| -> Result<(), String> {
+            let arg = Args {
+                arch: "riscv64".to_string(),
+                log: "warn".to_string(),
+                qemu_log: "n".to_string(),
+                ttype: None,
+                snapshot: false,
+                app: dir.iter().last().unwrap().to_str().unwrap().to_string(),
+            };
+            let config = parse_toml(&current_dir.join("payload").join(&arg.app));
+            println!("APP:{}", arg.app);
+            dynamic_test(&arg, &current_dir, &config)
+        }).expect("Failed to traverse app")
+            .iter()
+            .for_each(|app| println!("{}\t{}", app[0], app[1]));
+        return;
+    }
 
     // Parse the toml file
     let config = parse_toml(&current_dir.join("payload").join(&args.app));
@@ -151,17 +171,34 @@ fn main() {
 
     // Run tests based on the test type
     match ttype {
-        "dynamic" => dynamic_test(&args, &current_dir, &config),
-        "static" => static_test(&args, &current_dir, &config),
+        "dynamic" => dynamic_test(&args, &current_dir, &config).unwrap(),
+        "static" => static_test(&args, &current_dir, &config).unwrap(),
         "all" => {
-            dynamic_test(&args, &current_dir, &config);
+            dynamic_test(&args, &current_dir, &config).unwrap();
             println!("----------------------------------------");
             println!(" ");
             println!("----------------------------------------");
-            static_test(&args, &current_dir, &config);
+            static_test(&args, &current_dir, &config).unwrap();
         }
         _ => eprintln!("Invalid test type"),
     }
+}
+fn traverse_all_app(path: &PathBuf, cb: &dyn Fn(&PathBuf) -> Result<(), String>) -> io::Result<Vec<Vec<String>>> {
+    let mut apps = Vec::new();
+    if path.is_dir() {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                if let Err(e) = cb(&path) {
+                    apps.push(vec![path.iter().last().unwrap().to_str().unwrap().to_string(), e]);
+                } else {
+                    apps.push(vec![path.iter().last().unwrap().to_str().unwrap().to_string(), String::from("OK")]);
+                }
+            }
+        }
+    }
+    Ok(apps)
 }
 
 fn parse_toml(app_path: &PathBuf) -> Option<Config> {
@@ -313,21 +350,21 @@ fn check_branch(branch_name: &str) -> bool {
     }
 }
 
-fn static_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) {
+fn static_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> Result<(), String> {
     let payload_dir = current_dir.join("payload");
     let app_path = payload_dir.join(args.app.as_str());
     build(&app_path, false, config).expect("Failed to build dynamic test");
-    run_make(args, current_dir);
+    run_make(args, current_dir)
 }
 
-fn dynamic_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) {
+fn dynamic_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> Result<(), String> {
     let payload_dir = current_dir.join("payload");
     let app_path = payload_dir.join(args.app.as_str());
     build(&app_path, true, config).expect("Failed to build dynamic test");
-    run_make(args, current_dir);
+    run_make(args, current_dir)
 }
 
-fn run_make(args: &Args, current_dir: &PathBuf) {
+fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
     let status = Command::new("make")
         .args(["defconfig", "ARCH=riscv64"])
         .current_dir(&current_dir)
@@ -335,8 +372,7 @@ fn run_make(args: &Args, current_dir: &PathBuf) {
         .expect("Failed to run make defconfig");
 
     if !status.success() {
-        eprintln!("make defconfig failed");
-        return;
+        return Err(String::from("make defconfig failed"));
     }
 
     let status = Command::new("make")
@@ -352,8 +388,9 @@ fn run_make(args: &Args, current_dir: &PathBuf) {
         .expect("Failed to run make");
 
     if !status.success() {
-        eprintln!("make run failed");
+        return Err(String::from("make run failed"));
     }
+    Ok(())
 }
 
 /// Generate a binary file from the ELF file
@@ -427,22 +464,18 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
 
     // Compile the C file
     let mut status = Command::new(CC);
-    match ttype {
-        true => {
-            status
-                .args(&["-v", &c_file])
-                .args(dynamic_flags)
-                .args(&["-o", &elf_output])
-                .current_dir(elf_path);
-        }
-        false => {
-            status
-                .args(&["-v", &c_file])
-                .args(static_flags)
-                .args(&["-o", &elf_output])
-                .current_dir(elf_path);
-        }
-    }
+    let flags = if ttype {
+        dynamic_flags
+    } else {
+        static_flags
+    };
+    status
+        .args(&["-v", &c_file])
+        .args(flags)
+        .args(&["-o", &elf_output])
+        .current_dir(elf_path)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
     let re = status.status()?;
 
     if !re.success() {
@@ -533,7 +566,6 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     // Generate the binary file
     generate_bin(&elf_output, &elf_path)?;
 
-    println!("Build completed successfully!");
     Ok(())
 }
 

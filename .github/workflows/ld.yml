@@ -9,6 +9,7 @@ on:
 env:
   qemu-version: 8.2.0
   rust-toolchain: nightly-2024-12-25
+  CI: 1
 
 jobs:
   loader-test:
@@ -32,11 +33,5 @@ jobs:
       - uses: ./.github/workflows/actions/setup-musl
         with:
           arch: ${{ matrix.arch }}
-      - name: hello
-        run: cargo xtask hello_app
-      - name: printf
-        run: cargo xtask printf_app
-      - name: pthread
-        run: cargo xtask pthread_app
-      - name: malloc
-        run: cargo xtask malloc_app
+      - name: run all apps
+        run: cargo xtask all
