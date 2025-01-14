@@ -75,6 +75,31 @@ fn main() {
 
     let current_dir = env::current_dir().expect("Failed to get current directory");
 
+    // Check and install musl-riscv64
+    if !check_installation() {
+        if !install_musl_riscv64() {
+            eprintln!("Failed to install musl-riscv64");
+            return;
+        }
+    }
+
+    // Checkout the mocklibc branch
+    if !check_branch("mocklibc") {
+        eprintln!("Failed to switch to mocklibc branch");
+        return;
+    }
+
+    // Add Rust target
+    let status = Command::new("rustup")
+        .args(["target", "add", "riscv64gc-unknown-linux-musl"])
+        .status()
+        .expect("Failed to add Rust target");
+
+    if !status.success() {
+        eprintln!("Failed to add Rust target");
+        return;
+    }
+
     let is_ci = env::var("CI").is_err();
     if args.app == "all".to_string() || !is_ci {
         traverse_all_app(&current_dir.join("payload"), &|dir: &PathBuf| -> Result<(), String> {
@@ -119,31 +144,6 @@ fn main() {
     println!("QEMU log: {}", args.qemu_log);
     println!("Link type: {}", ttype);
     println!("App: {}", args.app);
-
-    // Check and install musl-riscv64
-    if !check_installation() {
-        if !install_musl_riscv64() {
-            eprintln!("Failed to install musl-riscv64");
-            return;
-        }
-    }
-
-    // Checkout the mocklibc branch
-    if !check_branch("mocklibc") {
-        eprintln!("Failed to switch to mocklibc branch");
-        return;
-    }
-
-    // Add Rust target
-    let status = Command::new("rustup")
-        .args(["target", "add", "riscv64gc-unknown-linux-musl"])
-        .status()
-        .expect("Failed to add Rust target");
-
-    if !status.success() {
-        eprintln!("Failed to add Rust target");
-        return;
-    }
 
     // Build mocklibc
     // let status = Command::new("cargo")
