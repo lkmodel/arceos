@@ -54,26 +54,18 @@ struct DevConfig {
 
 fn main() {
     let args = Args::parse();
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+
+    Command::new("cargo")
+        .args(&["install", "cargo-insta"])
+        .status()
+        .expect("Can`t install cargo-insta");
+
 
     if args.snapshot {
-        Command::new("cargo")
-            .args(&["install", "cargo-insta"])
-            .status()
-            .expect("Can`t install cargo-insta");
-        let current_dir = env::current_dir().expect("Failed to get current directory");
-        Command::new("cargo")
-            .args(&[
-                "insta",
-                "review",
-                "--workspace-root",
-                current_dir.join("payload").join(args.app).to_str().unwrap(),
-            ])
-            .status()
-            .expect("Review failed");
+        review_snap(&current_dir.join("payload").join(args.app));
         return;
     }
-
-    let current_dir = env::current_dir().expect("Failed to get current directory");
 
     // Check and install musl-riscv64
     if !check_installation() {
@@ -182,6 +174,17 @@ fn main() {
         }
         _ => eprintln!("Invalid test type"),
     }
+}
+fn review_snap(app_dir: &PathBuf) {
+    Command::new("cargo")
+        .args(&[
+            "insta",
+            "review",
+            "--workspace-root",
+            app_dir.to_str().unwrap(),
+        ])
+        .status()
+        .expect("Review failed");
 }
 fn traverse_all_app(path: &PathBuf, cb: &dyn Fn(&PathBuf) -> Result<(), String>) -> io::Result<Vec<Vec<String>>> {
     let mut apps = Vec::new();
@@ -484,10 +487,18 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
             "Failed to compile C file",
         ));
     }
-
+    let is_insta = config
+        .as_ref()
+        .and_then(|c| c.dev.snapshot.as_ref())
+        .is_some_and(|b| *b);
     let mut insta_set = insta::Settings::clone_current();
-    insta_set.set_snapshot_path(elf_path.join("snapshot"));
-    insta_set.set_prepend_module_to_snapshot(false);
+    if is_insta {
+        insta_set.set_snapshot_path(elf_path.join("snapshot"));
+        insta_set.set_prepend_module_to_snapshot(false);
+        unsafe {
+            env::set_var("INSTA_FORCE_PASS", "1");
+        }
+    }
 
     let t_type: String;
     if ttype {
@@ -504,10 +515,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .expect("Failed to run riscv64-linux-musl-objdump");
     let output_file = elf_path.clone();
 
-    if config
-        .as_ref()
-        .and_then(|c| c.dev.snapshot.as_ref())
-        .is_some_and(|b| *b)
+    if is_insta
     {
         insta_set.set_snapshot_suffix(format!("{}_{}.S", elf_file, t_type));
         insta_set.bind(|| {
@@ -524,10 +532,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .output()
         .expect("Failed to run riscv64-linux-musl-readelf");
     let output_file = elf_path.clone();
-    if config
-        .as_ref()
-        .and_then(|c| c.dev.snapshot.as_ref())
-        .is_some_and(|b| *b)
+    if is_insta
     {
         insta_set.set_snapshot_suffix(format!("{}_{}.elf", elf_file, t_type));
         insta_set.bind(|| {
@@ -547,10 +552,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .output()
         .expect("Failed to run riscv64-linux-musl-objdump");
     let output_file = elf_path.clone();
-    if config
-        .as_ref()
-        .and_then(|c| c.dev.snapshot.as_ref())
-        .is_some_and(|b| *b)
+    if is_insta
     {
         insta_set.set_snapshot_suffix(format!("{}_{}.dump", elf_file, t_type));
         insta_set.bind(|| {
@@ -562,6 +564,10 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         output.stdout,
     )
         .expect("Failed to write ELF file");
+
+    if is_insta {
+        review_snap(elf_path);
+    }
 
     // Generate the binary file
     generate_bin(&elf_output, &elf_path)?;
