@@ -16,25 +16,6 @@ ArceOS is a lightweight Unikernel system designed to efficiently run native Linu
 
 ### Quick Start
 
-#### Install Dependencies
-
-Ensure Python and the musl cross-compilation environment are installed locally:
-
-1. Verify Python Installation
-
-Run the following command to check if Python is installed:
-
-``` bash
-which python3
-```
-
-If no output is returned, install Python (example for Ubuntu):
-
-``` bash
-sudo apt-get update
-sudo apt-get install python3
-```
-
 ### Run the Project
 
 1. Clone the repository and switch to the mocklibc branch:
@@ -45,10 +26,10 @@ cd arceos
 git switch mocklibc
 ```
 
-2. Execute the script:
+2. Run all apps:
 
 ``` bash
-./linux_abi.sh
+cargo xtask all
 ```
 
 > Note: If the required tools are already installed, you can skip this step.

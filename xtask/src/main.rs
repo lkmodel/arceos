@@ -34,7 +34,7 @@ struct Args {
     #[arg(long, short)]
     snapshot: bool,
 
-    /// Which app to run
+    /// Which app to run, "all" to run all apps
     app: String,
 }
 

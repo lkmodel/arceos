@@ -69,37 +69,17 @@ b) 动态加载 (load_dyn):
 
 ## 编译运行
 
-### 安装Python环境
-
-首先，验证本地是否已安装Python环境
-
-``` bash
- ~ ❯ which python
-/usr/bin/python
- ~ ❯ which python3
-/usr/bin/python3
-```
-
-如果没有输出结果，说明系统未安装 Python 环境。以 Ubuntu 为例，可以使用以下命令安装：
-
-``` bash
-sudo apt-get update
-sudo apt-get install python3
-```
-
-安装完成后，再次运行上述命令，验证是否已经成功安装 Python 环境。
-
 ### 尝试运行
 
 ``` bash
 git clone https://github.com/lkmodel/arceos.git
 cd arceos
 git switch mocklibc
-./linux_abi.sh
+cargo xtask all
 ```
 
 > 注：如果所需工具已经安装，您可以跳过此步骤。
-> 如果在运行 .linux_abi.sh 时遇到网络问题，或希望手动安装工具，请按照以下步骤操作：
+> 如果在运行 cargo xtask 时遇到网络问题，或希望手动安装musl-cross-make工具，请按照以下步骤操作：
 >
 > ``` bash
 > git clone https://github.com/richfelker/musl-cross-make.git
@@ -123,16 +103,32 @@ git switch mocklibc
 > ```
 >
 
-对于`linux_abi.sh`文件
+对于`cargo xtask`命令
 
 可用参数:
 
-+ `ARCH`: 目标架构: `x86_64`, `riscv64`, `aarch64`, 目前仅支持`riscv64`。
-+ `LOG`: 日志等级: `warn`, `error`, `info`, `debug`, `trace`, 默认为`warn`。
-+ `QEMU_LOG`: 是否开启QMEU日志 (日志文件为 "qemu.log"), 默认为`no`。
-+ `TTYPE`: 运行测试类型：`static`, `dynamic`, `all`, 默认为`dynamic`。
++ `<APP>` 指定需要运行的APP文件夹名,使用"all"来运行所有应用
 
-`linux_abi.sh`的内容也可根据情况进行自行调整
+可用选项:
+
++ `--arch <ARCH>`: 目标架构: `x86_64`, `riscv64`, `aarch64`, 目前仅支持`riscv64`。
++ `-l, --log <LOG>`: 日志等级: `warn`, `error`, `info`, `debug`, `trace`, 默认为`warn`。
++ `--qemu-log <QEMU_LOG>`: 是否开启QMEU日志 (日志文件为 "qemu.log"), 默认为`n`。
++ `-t, -ttype <TTYPE>`: 运行测试类型：`static`, `dynamic`, `all`, 默认为`dynamic`。
++ `-s, --snapshot`: 仅审阅编译快照，不运行应用
+
+也可在应用目录下根据情况进行自行修改`config.toml`
+
+现在支持的所有配置如下
+
+```toml
+[dev]
+rename = "hello" #覆盖文件夹名,例如hello_app文件夹下的hello.c
+ttype = "all" #链接方式。特别的,"all"="static"+"dynamic"
+snapshot = true #是否为该应用开启快照测试
+dynamic_flags = [] #用于动态链接的参数,在开发阶段,默认为所有应用启用了-fPIE,在此处填写可以覆盖
+static_flags = [] #用于静态链接的参数
+```
 
 ## 协作开发流程
 
