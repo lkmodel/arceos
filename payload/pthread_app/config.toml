@@ -1,4 +1,4 @@
 [dev]
 rename="pthread"
 ttype="dynamic"
-snapshot=false
+snapshot = true

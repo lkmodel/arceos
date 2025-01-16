@@ -1,4 +1,4 @@
 [dev]
 rename="malloc"
 ttype="dynamic"
-snapshot=false
+snapshot = true

@@ -1,5 +1,6 @@
 ---
 source: xtask/src/main.rs
+description: riscv64-linux-musl-gcc (GCC) 9.4.0
 expression: from_utf8(&output.stdout).unwrap()
 ---
 hello:     file format elf64-littleriscv
@@ -7,57 +8,51 @@ hello:     file format elf64-littleriscv
 
 Disassembly of section .plt:
 
-0000000000000330 <.plt>:
- 330:	00002397          	auipc	t2,0x2
- 334:	41c30333          	sub	t1,t1,t3
- 338:	cd03be03          	ld	t3,-816(t2) # 2000 <__DATA_BEGIN__>
- 33c:	fd430313          	addi	t1,t1,-44
- 340:	cd038293          	addi	t0,t2,-816
- 344:	00135313          	srli	t1,t1,0x1
- 348:	0082b283          	ld	t0,8(t0)
- 34c:	000e0067          	jr	t3
+0000000000010320 <_PROCEDURE_LINKAGE_TABLE_>:
+   10320:	97 23 00 00 33 03 c3 41 03 be 03 ce 13 03 43 fd     .#..3..A......C.
+   10330:	93 82 03 ce 13 53 13 00 83 b2 82 00 67 00 0e 00     .....S......g...
 
-0000000000000350 <putchar@plt>:
- 350:	00002e17          	auipc	t3,0x2
- 354:	cc0e3e03          	ld	t3,-832(t3) # 2010 <putchar>
- 358:	000e0367          	jalr	t1,t3
- 35c:	00000013          	nop
+0000000000010340 <putchar@plt>:
+   10340:	00002e17          	auipc	t3,0x2
+   10344:	cd0e3e03          	ld	t3,-816(t3) # 12010 <putchar>
+   10348:	000e0367          	jalr	t1,t3
+   1034c:	00000013          	nop
 
-0000000000000360 <exit@plt>:
- 360:	00002e17          	auipc	t3,0x2
- 364:	cb8e3e03          	ld	t3,-840(t3) # 2018 <exit>
- 368:	000e0367          	jalr	t1,t3
- 36c:	00000013          	nop
+0000000000010350 <exit@plt>:
+   10350:	00002e17          	auipc	t3,0x2
+   10354:	cc8e3e03          	ld	t3,-824(t3) # 12018 <exit>
+   10358:	000e0367          	jalr	t1,t3
+   1035c:	00000013          	nop
 
 Disassembly of section .text:
 
-0000000000000370 <main>:
- 370:	1141                	addi	sp,sp,-16
- 372:	e406                	sd	ra,8(sp)
- 374:	e022                	sd	s0,0(sp)
- 376:	0800                	addi	s0,sp,16
- 378:	04800513          	li	a0,72
- 37c:	fd5ff0ef          	jal	ra,350 <putchar@plt>
- 380:	06500513          	li	a0,101
- 384:	fcdff0ef          	jal	ra,350 <putchar@plt>
- 388:	06c00513          	li	a0,108
- 38c:	fc5ff0ef          	jal	ra,350 <putchar@plt>
- 390:	06c00513          	li	a0,108
- 394:	fbdff0ef          	jal	ra,350 <putchar@plt>
- 398:	06f00513          	li	a0,111
- 39c:	fb5ff0ef          	jal	ra,350 <putchar@plt>
- 3a0:	03100513          	li	a0,49
- 3a4:	fadff0ef          	jal	ra,350 <putchar@plt>
- 3a8:	03200513          	li	a0,50
- 3ac:	fa5ff0ef          	jal	ra,350 <putchar@plt>
- 3b0:	03300513          	li	a0,51
- 3b4:	f9dff0ef          	jal	ra,350 <putchar@plt>
- 3b8:	4529                	li	a0,10
- 3ba:	f97ff0ef          	jal	ra,350 <putchar@plt>
- 3be:	4501                	li	a0,0
- 3c0:	fa1ff0ef          	jal	ra,360 <exit@plt>
- 3c4:	0001                	nop
- 3c6:	60a2                	ld	ra,8(sp)
- 3c8:	6402                	ld	s0,0(sp)
- 3ca:	0141                	addi	sp,sp,16
- 3cc:	8082                	ret
+0000000000010360 <main>:
+   10360:	1141                	addi	sp,sp,-16
+   10362:	e406                	sd	ra,8(sp)
+   10364:	e022                	sd	s0,0(sp)
+   10366:	0800                	addi	s0,sp,16
+   10368:	04800513          	li	a0,72
+   1036c:	fd5ff0ef          	jal	ra,10340 <putchar@plt>
+   10370:	06500513          	li	a0,101
+   10374:	fcdff0ef          	jal	ra,10340 <putchar@plt>
+   10378:	06c00513          	li	a0,108
+   1037c:	fc5ff0ef          	jal	ra,10340 <putchar@plt>
+   10380:	06c00513          	li	a0,108
+   10384:	fbdff0ef          	jal	ra,10340 <putchar@plt>
+   10388:	06f00513          	li	a0,111
+   1038c:	fb5ff0ef          	jal	ra,10340 <putchar@plt>
+   10390:	03100513          	li	a0,49
+   10394:	fadff0ef          	jal	ra,10340 <putchar@plt>
+   10398:	03200513          	li	a0,50
+   1039c:	fa5ff0ef          	jal	ra,10340 <putchar@plt>
+   103a0:	03300513          	li	a0,51
+   103a4:	f9dff0ef          	jal	ra,10340 <putchar@plt>
+   103a8:	4529                	li	a0,10
+   103aa:	f97ff0ef          	jal	ra,10340 <putchar@plt>
+   103ae:	4501                	li	a0,0
+   103b0:	fa1ff0ef          	jal	ra,10350 <exit@plt>
+   103b4:	0001                	nop
+   103b6:	60a2                	ld	ra,8(sp)
+   103b8:	6402                	ld	s0,0(sp)
+   103ba:	0141                	addi	sp,sp,16
+   103bc:	8082                	ret

@@ -105,6 +105,8 @@ cargo xtask all
 
 对于`cargo xtask`命令
 
+可以使用`CC=/path/to/gcc`来指定使用的编译器
+
 可用参数:
 
 + `<APP>` 指定需要运行的APP文件夹名,使用"all"来运行所有应用
@@ -129,6 +131,16 @@ snapshot = true #是否为该应用开启快照测试
 dynamic_flags = [] #用于动态链接的参数,在开发阶段,默认为所有应用启用了-fPIE,在此处填写可以覆盖
 static_flags = [] #用于静态链接的参数
 ```
+## 快照审阅
+为了方便调试与测试，引入了[insta](https://insta.rs/)来存储与比对编译生成的应用。
+当在`config.toml`中指定`snapshot=true`后，运行xtask编译完成应用后，如果应用的`S` `dump` `elf`发生变化（或本来并没有.snap文件）会在运行前触发审阅。此时有两种选择：
+1. 如果明确发生的变化在预期中 <br>
+    对于每个snap，按下`a`来接受审阅即可，会自动使用snap.new覆盖原有.snap
+2. 如果改动是非预期的，需要进一步比对和修改 <br>
+    对于每个snap，按下`s`来暂时跳过审阅来运行应用。xxx_app/snapshot下会出现.snap.new，当确认无误后，可再次运行`cargo xtask xxx_app -s`来审阅快照。
+    >cargo_insta的比对是上下排列的，如果需要更好的对比体验，推荐使用[difftastic](https://difftastic.wilfred.me.uk/)或其他工具来获得更好的体验
+
+**注意**：为了健壮的编码与方便他人，如果还有快照尚未审阅就向仓库提交审阅，会被git hooks制止
 
 ## 协作开发流程
 

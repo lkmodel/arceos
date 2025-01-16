@@ -1,4 +1,4 @@
 [dev]
 rename="mutex"
 ttype="dynamic"
-snapshot=false
+snapshot = true

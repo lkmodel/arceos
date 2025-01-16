@@ -114,12 +114,18 @@ fn main() {
 
     // Parse the toml file
     let config = parse_toml(&current_dir.join("payload").join(&args.app));
-    println!("Config: {:?}", config);
-    let mut ttype = config
-        .as_ref()
-        .and_then(|c| c.dev.ttype.as_ref())
-        .unwrap()
-        .as_str();
+    let mut ttype;
+    if config.is_some() {
+        println!("Config: {:?}", config);
+        ttype = config
+            .as_ref()
+            .and_then(|c| c.dev.ttype.as_ref())
+            .unwrap()
+            .as_str();
+    } else {
+        ttype = "all";
+    }
+
     let args_ttype: &String;
     if args.ttype.is_some() {
         args_ttype = args.ttype.as_ref().unwrap();
@@ -246,8 +252,8 @@ fn install_musl_riscv64() -> bool {
     let mut config_mak = std::fs::read_to_string("musl-cross-make/config.mak.dist")
         .expect("Failed to read config.mak.dist");
 
-    config_mak.insert_str(15, "TARGET = riscv64-linux-musl\n");
-    config_mak.insert_str(22, "OUTPUT = /opt/musl_riscv64\n");
+    config_mak.insert_str(0, "TARGET = riscv64-linux-musl\n");
+    config_mak.insert_str(0, "OUTPUT = /opt/musl_riscv64\n");
 
     std::fs::write("musl-cross-make/config.mak", config_mak).expect("Failed to write config.mak");
 
@@ -465,8 +471,12 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .map(|flags| flags.iter().map(|s| s.as_str()).collect::<Vec<_>>())
         .unwrap_or_else(|| STATIC_FLAG.iter().map(|s| *s).collect());
 
+    let gcc = env::var("CC").unwrap_or(CC.to_string());
+    let output = Command::new(gcc.clone()).arg("--version").output()?;
+    let output_str = String::from_utf8(output.stdout).unwrap();
+    let gcc_version = output_str.lines().next().unwrap();
     // Compile the C file
-    let mut status = Command::new(CC);
+    let mut status = Command::new(gcc);
     let flags = if ttype {
         dynamic_flags
     } else {
@@ -495,6 +505,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     if is_insta {
         insta_set.set_snapshot_path(elf_path.join("snapshot"));
         insta_set.set_prepend_module_to_snapshot(false);
+        insta_set.set_description(gcc_version);
         unsafe {
             env::set_var("INSTA_FORCE_PASS", "1");
         }

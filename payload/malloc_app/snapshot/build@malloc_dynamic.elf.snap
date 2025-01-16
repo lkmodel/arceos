@@ -1,0 +1,254 @@
+---
+source: xtask/src/main.rs
+description: riscv64-linux-musl-gcc (GCC) 9.4.0
+expression: from_utf8(&output.stdout).unwrap()
+---
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           RISC-V
+  Version:                           0x1
+  Entry point address:               0x105e0
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          10672 (bytes into file)
+  Flags:                             0x5, RVC, double-float ABI
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         7
+  Size of section headers:           64 (bytes)
+  Number of section headers:         21
+  Section header string table index: 20
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  [ 1] .interp           PROGBITS         00000000000101c8  000001c8
+       000000000000001a  0000000000000000   A       0     0     1
+  [ 2] .hash             HASH             00000000000101e8  000001e8
+       0000000000000044  0000000000000004   A       4     0     8
+  [ 3] .gnu.hash         GNU_HASH         0000000000010230  00000230
+       0000000000000050  0000000000000000   A       4     0     8
+  [ 4] .dynsym           DYNSYM           0000000000010280  00000280
+       0000000000000120  0000000000000018   A       5     1     8
+  [ 5] .dynstr           STRTAB           00000000000103a0  000003a0
+       000000000000005d  0000000000000000   A       0     0     1
+  [ 6] .rela.plt         RELA             0000000000010400  00000400
+       0000000000000108  0000000000000018  AI       4    14     8
+  [ 7] .plt              PROGBITS         0000000000010510  00000510
+       00000000000000d0  0000000000000010  AX       0     0     16
+  [ 8] .text             PROGBITS         00000000000105e0  000005e0
+       0000000000000aa4  0000000000000000  AX       0     0     2
+  [ 9] .rodata           PROGBITS         0000000000011088  00001088
+       0000000000000490  0000000000000000   A       0     0     8
+  [10] .eh_frame         PROGBITS         0000000000011518  00001518
+       0000000000000004  0000000000000000   A       0     0     4
+  [11] .init_array       INIT_ARRAY       0000000000012e40  00001e40
+       0000000000000008  0000000000000008  WA       0     0     8
+  [12] .fini_array       FINI_ARRAY       0000000000012e48  00001e48
+       0000000000000008  0000000000000008  WA       0     0     8
+  [13] .dynamic          DYNAMIC          0000000000012e50  00001e50
+       00000000000001b0  0000000000000010  WA       5     0     8
+  [14] .got              PROGBITS         0000000000013000  00002000
+       0000000000000070  0000000000000008  WA       0     0     8
+  [15] .sdata            PROGBITS         0000000000013070  00002070
+       0000000000000008  0000000000000000  WA       0     0     8
+  [16] .bss              NOBITS           0000000000013078  00002078
+       0000000000000038  0000000000000000  WA       0     0     8
+  [17] .comment          PROGBITS         0000000000000000  00002078
+       0000000000000011  0000000000000001  MS       0     0     1
+  [18] .symtab           SYMTAB           0000000000000000  00002090
+       0000000000000648  0000000000000018          19    36     8
+  [19] .strtab           STRTAB           0000000000000000  000026d8
+       000000000000023d  0000000000000000           0     0     1
+  [20] .shstrtab         STRTAB           0000000000000000  00002915
+       000000000000009a  0000000000000000           0     0     1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  p (processor specific)
+
+There are no section groups in this file.
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  PHDR           0x0000000000000040 0x0000000000010040 0x0000000000010040
+                 0x0000000000000188 0x0000000000000188  R      0x8
+  INTERP         0x00000000000001c8 0x00000000000101c8 0x00000000000101c8
+                 0x000000000000001a 0x000000000000001a  R      0x1
+      [Requesting program interpreter: /lib/ld-musl-riscv64.so.1]
+  LOAD           0x0000000000000000 0x0000000000010000 0x0000000000010000
+                 0x000000000000151c 0x000000000000151c  R E    0x1000
+  LOAD           0x0000000000001e40 0x0000000000012e40 0x0000000000012e40
+                 0x0000000000000238 0x0000000000000270  RW     0x1000
+  DYNAMIC        0x0000000000001e50 0x0000000000012e50 0x0000000000012e50
+                 0x00000000000001b0 0x00000000000001b0  RW     0x8
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x0000000000001e40 0x0000000000012e40 0x0000000000012e40
+                 0x00000000000001c0 0x00000000000001c0  R      0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .interp .hash .gnu.hash .dynsym .dynstr .rela.plt .plt .text .rodata .eh_frame 
+   03     .init_array .fini_array .dynamic .got .sdata .bss 
+   04     .dynamic 
+   05     
+   06     .init_array .fini_array .dynamic 
+
+Dynamic section at offset 0x1e50 contains 22 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
+ 0x000000000000000c (INIT)               0x10570
+ 0x000000000000000d (FINI)               0x105a0
+ 0x0000000000000019 (INIT_ARRAY)         0x12e40
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x12e48
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x0000000000000004 (HASH)               0x101e8
+ 0x000000006ffffef5 (GNU_HASH)           0x10230
+ 0x0000000000000005 (STRTAB)             0x103a0
+ 0x0000000000000006 (SYMTAB)             0x10280
+ 0x000000000000000a (STRSZ)              93 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000003 (PLTGOT)             0x13000
+ 0x0000000000000002 (PLTRELSZ)           264 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0x10400
+ 0x0000000000000007 (RELA)               0x10400
+ 0x0000000000000008 (RELASZ)             264 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x0000000000000000 (NULL)               0x0
+
+Relocation section '.rela.plt' at offset 0x400 contains 11 entries:
+  Offset          Info           Type           Sym. Value    Sym. Name + Addend
+000000013010  000400000005 R_RISCV_JUMP_SLOT 0000000000010530 putchar + 0
+000000013018  000500000005 R_RISCV_JUMP_SLOT 0000000000010540 printf + 0
+000000013020  000100000005 R_RISCV_JUMP_SLOT 0000000000010550 puts + 0
+000000013028  000600000005 R_RISCV_JUMP_SLOT 0000000000010560 malloc + 0
+000000013030  000700000005 R_RISCV_JUMP_SLOT 0000000000000000 _init + 0
+000000013038  000900000005 R_RISCV_JUMP_SLOT 0000000000010580 calloc + 0
+000000013040  000200000005 R_RISCV_JUMP_SLOT 0000000000010590 realloc + 0
+000000013048  000a00000005 R_RISCV_JUMP_SLOT 0000000000000000 _fini + 0
+000000013050  000b00000005 R_RISCV_JUMP_SLOT 00000000000105b0 __libc_start_main + 0
+000000013058  000300000005 R_RISCV_JUMP_SLOT 00000000000105c0 strlen + 0
+000000013060  000800000005 R_RISCV_JUMP_SLOT 00000000000105d0 free + 0
+
+The decoding of unwind sections for machine type RISC-V is not currently supported.
+
+Symbol table '.dynsym' contains 12 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 0000000000010550     0 FUNC    GLOBAL DEFAULT  UND puts
+     2: 0000000000010590     0 FUNC    GLOBAL DEFAULT  UND realloc
+     3: 00000000000105c0     0 FUNC    GLOBAL DEFAULT  UND strlen
+     4: 0000000000010530     0 FUNC    GLOBAL DEFAULT  UND putchar
+     5: 0000000000010540     0 FUNC    GLOBAL DEFAULT  UND printf
+     6: 0000000000010560     0 FUNC    GLOBAL DEFAULT  UND malloc
+     7: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND _init
+     8: 00000000000105d0     0 FUNC    GLOBAL DEFAULT  UND free
+     9: 0000000000010580     0 FUNC    GLOBAL DEFAULT  UND calloc
+    10: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND _fini
+    11: 00000000000105b0     0 FUNC    GLOBAL DEFAULT  UND __libc_start_main
+
+Symbol table '.symtab' contains 67 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 00000000000101c8     0 SECTION LOCAL  DEFAULT    1 
+     2: 00000000000101e8     0 SECTION LOCAL  DEFAULT    2 
+     3: 0000000000010230     0 SECTION LOCAL  DEFAULT    3 
+     4: 0000000000010280     0 SECTION LOCAL  DEFAULT    4 
+     5: 00000000000103a0     0 SECTION LOCAL  DEFAULT    5 
+     6: 0000000000010400     0 SECTION LOCAL  DEFAULT    6 
+     7: 0000000000010510     0 SECTION LOCAL  DEFAULT    7 
+     8: 00000000000105e0     0 SECTION LOCAL  DEFAULT    8 
+     9: 0000000000011088     0 SECTION LOCAL  DEFAULT    9 
+    10: 0000000000011518     0 SECTION LOCAL  DEFAULT   10 
+    11: 0000000000012e40     0 SECTION LOCAL  DEFAULT   11 
+    12: 0000000000012e48     0 SECTION LOCAL  DEFAULT   12 
+    13: 0000000000012e50     0 SECTION LOCAL  DEFAULT   13 
+    14: 0000000000013000     0 SECTION LOCAL  DEFAULT   14 
+    15: 0000000000013070     0 SECTION LOCAL  DEFAULT   15 
+    16: 0000000000013078     0 SECTION LOCAL  DEFAULT   16 
+    17: 0000000000000000     0 SECTION LOCAL  DEFAULT   17 
+    18: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crt1.c
+    19: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
+    20: 0000000000011518     0 OBJECT  LOCAL  DEFAULT   10 
+    21: 0000000000010614     0 FUNC    LOCAL  DEFAULT    8 deregister_tm_clones
+    22: 0000000000010638     0 FUNC    LOCAL  DEFAULT    8 register_tm_clones
+    23: 0000000000010668     0 FUNC    LOCAL  DEFAULT    8 __do_global_dtors_aux
+    24: 0000000000013078     1 OBJECT  LOCAL  DEFAULT   16 completed.4702
+    25: 0000000000012e48     0 OBJECT  LOCAL  DEFAULT   12 __do_global_dtors_aux_fin
+    26: 000000000001069e     0 FUNC    LOCAL  DEFAULT    8 frame_dummy
+    27: 0000000000013080    48 OBJECT  LOCAL  DEFAULT   16 object.4707
+    28: 0000000000012e40     0 OBJECT  LOCAL  DEFAULT   11 __frame_dummy_init_array_
+    29: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS malloc.c
+    30: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
+    31: 0000000000011518     0 OBJECT  LOCAL  DEFAULT   10 __FRAME_END__
+    32: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
+    33: 0000000000012e50     0 OBJECT  LOCAL  DEFAULT   13 _DYNAMIC
+    34: 0000000000010510     0 OBJECT  LOCAL  DEFAULT    7 _PROCEDURE_LINKAGE_TABLE_
+    35: 0000000000013068     0 OBJECT  LOCAL  DEFAULT   14 _GLOBAL_OFFSET_TABLE_
+    36: 0000000000010530     0 FUNC    GLOBAL DEFAULT  UND putchar
+    37: 0000000000010f50   308 FUNC    GLOBAL DEFAULT    8 test_calloc_struct
+    38: 0000000000010540     0 FUNC    GLOBAL DEFAULT  UND printf
+    39: 0000000000013800     0 NOTYPE  GLOBAL HIDDEN   ABS __global_pointer$
+    40: 0000000000013070     0 NOTYPE  GLOBAL DEFAULT   15 __SDATA_BEGIN__
+    41: 0000000000013000     0 OBJECT  GLOBAL HIDDEN    14 __TMC_END__
+    42: 0000000000010550     0 FUNC    GLOBAL DEFAULT  UND puts
+    43: 0000000000010560     0 FUNC    GLOBAL DEFAULT  UND malloc
+    44: 0000000000013070     0 OBJECT  GLOBAL HIDDEN    15 __dso_handle
+    45: 000000000001075a    90 FUNC    GLOBAL DEFAULT    8 test_simple_malloc
+    46: 000000000001088c   282 FUNC    GLOBAL DEFAULT    8 test_struct_malloc
+    47: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND _init
+    48: 0000000000010580     0 FUNC    GLOBAL DEFAULT  UND calloc
+    49: 00000000000107b4   216 FUNC    GLOBAL DEFAULT    8 test_array_malloc
+    50: 00000000000105e0     0 FUNC    GLOBAL DEFAULT    8 _start
+    51: 0000000000010d3c   244 FUNC    GLOBAL DEFAULT    8 test_calloc
+    52: 00000000000105f8    28 FUNC    GLOBAL DEFAULT    8 _start_c
+    53: 0000000000010590     0 FUNC    GLOBAL DEFAULT  UND realloc
+    54: 0000000000010bae   398 FUNC    GLOBAL DEFAULT    8 test_realloc
+    55: 00000000000130b0     0 NOTYPE  GLOBAL DEFAULT   16 __BSS_END__
+    56: 0000000000013078     0 NOTYPE  GLOBAL DEFAULT   16 __bss_start
+    57: 00000000000106c6   148 FUNC    GLOBAL DEFAULT    8 main
+    58: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND _fini
+    59: 0000000000013000     0 NOTYPE  GLOBAL DEFAULT   14 __DATA_BEGIN__
+    60: 0000000000013078     0 NOTYPE  GLOBAL DEFAULT   15 _edata
+    61: 00000000000109a6   520 FUNC    GLOBAL DEFAULT    8 test_2d_array_malloc
+    62: 00000000000130b0     0 NOTYPE  GLOBAL DEFAULT   16 _end
+    63: 0000000000010e30   288 FUNC    GLOBAL DEFAULT    8 test_realloc_string
+    64: 00000000000105b0     0 FUNC    GLOBAL DEFAULT  UND __libc_start_main
+    65: 00000000000105c0     0 FUNC    GLOBAL DEFAULT  UND strlen
+    66: 00000000000105d0     0 FUNC    GLOBAL DEFAULT  UND free
+
+Histogram for bucket list length (total of 3 buckets):
+ Length  Number     % of total  Coverage
+      0  0          (  0.0%)
+      1  0          (  0.0%)      0.0%
+      2  1          ( 33.3%)     18.2%
+      3  1          ( 33.3%)     45.5%
+      4  0          (  0.0%)     45.5%
+      5  0          (  0.0%)     45.5%
+      6  1          ( 33.3%)    100.0%
+
+Histogram for `.gnu.hash' bucket list length (total of 3 buckets):
+ Length  Number     % of total  Coverage
+      0  0          (  0.0%)
+      1  0          (  0.0%)      0.0%
+      2  0          (  0.0%)      0.0%
+      3  2          ( 66.7%)     54.5%
+      4  0          (  0.0%)     54.5%
+      5  1          ( 33.3%)    100.0%
+
+No version information found in this file.
