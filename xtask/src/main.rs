@@ -239,45 +239,27 @@ fn install_musl_riscv64() -> bool {
         return false;
     }
 
-    let status = Command::new("git")
-        .args(["clone", "https://github.com/richfelker/musl-cross-make.git"])
+    let status = Command::new("wget")
+        .args(["https://musl.cc/riscv64-linux-musl-cross.tgz"])
         .status()
-        .expect("Failed to clone musl-cross-make");
+        .expect("Failed to download riscv64-linux-musl-cross");
 
     if !status.success() {
-        eprintln!("Failed to clone musl-cross-make");
+        eprintln!("Failed to download riscv64-linux-musl-cross");
         return false;
     }
 
-    let mut config_mak = std::fs::read_to_string("musl-cross-make/config.mak.dist")
-        .expect("Failed to read config.mak.dist");
 
-    config_mak.insert_str(0, "TARGET = riscv64-linux-musl\n");
-    config_mak.insert_str(0, "OUTPUT = /opt/musl_riscv64\n");
-
-    std::fs::write("musl-cross-make/config.mak", config_mak).expect("Failed to write config.mak");
-
-    let status = Command::new("make")
-        .args(["-j4"])
-        .current_dir("musl-cross-make")
+    let status = Command::new("tar")
+        .args(["riscv64-linux-musl-cross.tgz", "-C", "/opt/musl_riscv64"])
         .status()
-        .expect("Failed to build musl-cross-make");
+        .expect("Failed to unzip riscv64-linux-musl-cross");
 
     if !status.success() {
-        eprintln!("Build failed");
+        eprintln!("Unzip failed");
         return false;
     }
 
-    let status = Command::new("sudo")
-        .args(["make", "install", "-j4"])
-        .current_dir("musl-cross-make")
-        .status()
-        .expect("Failed to install musl-cross-make");
-
-    if !status.success() {
-        eprintln!("Installation failed");
-        return false;
-    }
 
     // Add to PATH in .bashrc and .zshrc
     let home_dir = env::var("HOME").expect("Failed to get HOME directory");
@@ -295,7 +277,7 @@ fn install_musl_riscv64() -> bool {
     }
 
     println!("Musl RISC-V64 toolchain installation complete");
-    std::fs::remove_dir_all("musl-cross-make").expect("Failed to remove musl-cross-make directory");
+    std::fs::remove_file("riscv64-linux-musl-cross.tgz").expect("Failed to remove musl-cross-make directory");
 
     // Add musl-riscv64 to PATH
     let mut path = env::var("PATH").unwrap_or_default();

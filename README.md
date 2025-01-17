@@ -36,18 +36,10 @@ cargo xtask all
 > If you encounter network issues while running `.linux_abi.sh` or prefer to install the tools manually, follow the steps below:
 >
 > ``` bash
-> git clone https://github.com/richfelker/musl-cross-make.git
-> cd musl-cross-make
-> cp ./config.mak.list ./config.mak
-> printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
-> sed -i '15i\riscv64-linux-musl' config.mak
-> sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
-> make
-> sudo make install
+> wget https://musl.cc/riscv64-linux-musl-cross.tgz
+> tar zxf riscv64-linux-musl-cross.tgz -C /opt/musl_riscv64
 > export PATH=$PATH:/opt/musl_riscv64/bin
 > ```
->
-> Refer to the [musl-cross-make]((https://github.com/richfelker/musl-cross-make.git))
 >
 > After completing the installation, you can verify whether the toolchain is installed correctly by running the following command:
 >

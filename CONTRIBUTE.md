@@ -82,19 +82,10 @@ cargo xtask all
 > 如果在运行 cargo xtask 时遇到网络问题，或希望手动安装musl-cross-make工具，请按照以下步骤操作：
 >
 > ``` bash
-> git clone https://github.com/richfelker/musl-cross-make.git
-> cd ./musl-cross-make
-> cp ./config.mak.list ./config.mak
-> printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
-> sed -i '15i\riscv64-linux-musl' config.mak
-> sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
-> make
-> sudo make install
-> 
+> wget https://musl.cc/riscv64-linux-musl-cross.tgz
+> tar zxf riscv64-linux-musl-cross.tgz -C /opt/musl_riscv64
 > export PATH=$PATH:/opt/musl_riscv64/bin
 > ```
->
-> 有关更多信息，请参考 [musl-cross-make](https://github.com/richfelker/musl-cross-make.git) 仓库。
 >
 > 安装完成后，您可以通过运行以下命令来验证工具链是否正确安装：
 >
