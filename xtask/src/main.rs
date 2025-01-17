@@ -1,3 +1,4 @@
+//! # ArceOS Linux Application Builder and Tester
 use clap::Parser;
 use serde::Deserialize;
 use std::fs::{File, OpenOptions};
