@@ -213,7 +213,7 @@ fn install_musl_riscv64() -> bool {
     }
 
     let status = Command::new("wget")
-        .args(["https://musl.cc/riscv64-linux-musl-cross.tgz"])
+        .args(["-N", "https://musl.cc/riscv64-linux-musl-cross.tgz"])
         .current_dir(env::current_dir().unwrap().join("xtask"))
         .status()
         .expect("Failed to download riscv64-linux-musl-cross");
