@@ -386,7 +386,16 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .unwrap_or_else(|| STATIC_FLAG.iter().map(|s| *s).collect());
 
     let cur_dir = env::current_dir()?;
-    let gcc = env::var("CC").unwrap_or(format!("{}/{}riscv64-linux-musl-gcc", cur_dir.to_string_lossy(), MUSL));
+    let tools = if !env::var("CC").is_err() {
+        env::var("CC").unwrap()
+    } else if !env::var("CI").is_err() {
+        String::new()
+    } else {
+        format!("{}/{}", cur_dir.to_string_lossy(), MUSL)
+    };
+
+
+    let gcc = format!("{}riscv64-linux-musl-gcc", tools);
     let output = Command::new(gcc.clone()).arg("--version").output()?;
     let output_str = String::from_utf8(output.stdout).unwrap();
     let gcc_version = output_str.lines().next().unwrap();
@@ -435,7 +444,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     }
 
     // Generate disassembly file
-    let output = Command::new(format!("{}/{}riscv64-linux-musl-objdump", cur_dir.to_string_lossy(), MUSL))
+    let output = Command::new(format!("{}riscv64-linux-musl-objdump", tools))
         .args(&["-d", &elf_output])
         .current_dir(elf_path)
         .output()
@@ -453,7 +462,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .expect("Failed to write ELF file");
 
     // Generate ELF info file
-    let output = Command::new(format!("{}/{}riscv64-linux-musl-readelf", cur_dir.to_string_lossy(), MUSL))
+    let output = Command::new(format!("{}riscv64-linux-musl-readelf", tools))
         .args(&["-a", &elf_output])
         .current_dir(elf_path)
         .output()
@@ -473,7 +482,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .expect("Failed to write ELF file");
 
     // Generate full disassembly and symbol table
-    let output = Command::new(format!("{}/{}riscv64-linux-musl-objdump", cur_dir.to_string_lossy(), MUSL))
+    let output = Command::new(format!("{}riscv64-linux-musl-objdump", tools))
         .args(&["-x", "-d", &elf_output])
         .current_dir(elf_path)
         .output()
