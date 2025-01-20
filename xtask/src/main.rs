@@ -8,7 +8,7 @@ use std::process::{Command, Stdio};
 use std::str::from_utf8;
 use std::{env, fs, io};
 
-const CC: &str = "riscv64-linux-musl-gcc";
+const MUSL: &str = "xtask/riscv64-linux-musl-cross/bin/";
 const DYNAMIC_FLAG: [&str; 1] = ["-fPIE", ];
 const STATIC_FLAG: [&str; 0] = [];
 
@@ -144,30 +144,6 @@ fn main() {
     println!("Link type: {}", ttype);
     println!("App: {}", args.app);
 
-    // Build mocklibc
-    // let status = Command::new("cargo")
-    //     .args([
-    //         "build",
-    //         "--target",
-    //         "riscv64gc-unknown-linux-musl",
-    //         "--release",
-    //         "-p",
-    //         "mocklibc",
-    //     ])
-    //     .status()
-    //     .expect("Failed to build mocklibc");
-    //
-    // if !status.success() {
-    //     eprintln!("Failed to build mocklibc");
-    //     return;
-    // }
-
-    // Move the built library to the payload directory
-    // let lib_path = PathBuf::from("./target/riscv64gc-unknown-linux-musl/release/libmocklibc.so");
-    // let payload_path = PathBuf::from(format!("./payload/{}/libmocklibc.so",args.app));
-    // std::fs::rename(&lib_path, &payload_path).expect("Failed to move libmocklibc.so");
-
-
     // Run tests based on the test type
     match ttype {
         "dynamic" => dynamic_test(&args, &current_dir, &config).unwrap(),
@@ -228,7 +204,7 @@ fn check_installation() -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
-        || PathBuf::from("/opt/musl_riscv64").exists()
+        || PathBuf::from("riscv64-linux-musl-cross").exists()
 }
 
 fn install_musl_riscv64() -> bool {
@@ -236,12 +212,9 @@ fn install_musl_riscv64() -> bool {
         return true;
     }
 
-    if !get_sudo() {
-        return false;
-    }
-
     let status = Command::new("wget")
         .args(["https://musl.cc/riscv64-linux-musl-cross.tgz"])
+        .current_dir(env::current_dir().unwrap().join("xtask"))
         .status()
         .expect("Failed to download riscv64-linux-musl-cross");
 
@@ -250,9 +223,9 @@ fn install_musl_riscv64() -> bool {
         return false;
     }
 
-
     let status = Command::new("tar")
-        .args(["riscv64-linux-musl-cross.tgz", "-C", "/opt/musl_riscv64"])
+        .args(["-xzf", "riscv64-linux-musl-cross.tgz"])
+        .current_dir(env::current_dir().unwrap().join("xtask"))
         .status()
         .expect("Failed to unzip riscv64-linux-musl-cross");
 
@@ -262,52 +235,10 @@ fn install_musl_riscv64() -> bool {
     }
 
 
-    // Add to PATH in .bashrc and .zshrc
-    let home_dir = env::var("HOME").expect("Failed to get HOME directory");
-    let bashrc_path = PathBuf::from(&home_dir).join(".bashrc");
-    let zshrc_path = PathBuf::from(&home_dir).join(".zshrc");
-
-    for rc_file in &[bashrc_path, zshrc_path] {
-        if rc_file.exists() {
-            let mut rc_content = std::fs::read_to_string(rc_file).expect("Failed to read rc file");
-            if !rc_content.contains("/opt/musl_riscv64/bin") {
-                rc_content.push_str("\nexport PATH=$PATH:/opt/musl_riscv64/bin\n");
-                std::fs::write(rc_file, rc_content).expect("Failed to write rc file");
-            }
-        }
-    }
-
     println!("Musl RISC-V64 toolchain installation complete");
-    std::fs::remove_file("riscv64-linux-musl-cross.tgz").expect("Failed to remove musl-cross-make directory");
-
-    // Add musl-riscv64 to PATH
-    let mut path = env::var("PATH").unwrap_or_default();
-    path.push_str(":/opt/musl_riscv64/bin");
-    unsafe {
-        env::set_var("PATH", &path);
-    }
+    std::fs::remove_file("xtask/riscv64-linux-musl-cross.tgz").expect("Failed to remove musl-cross-make.tgz");
 
     true
-}
-
-fn get_sudo() -> bool {
-    for attempt in 1..=3 {
-        println!("Requesting sudo permissions (attempt {}/3)", attempt);
-        let status = Command::new("sudo")
-            .arg("-v")
-            .status()
-            .expect("Failed to request sudo permissions");
-
-        if status.success() {
-            println!("Sudo permissions granted");
-            return true;
-        } else {
-            println!("Permission denied, please retry");
-        }
-    }
-
-    eprintln!("Failed to obtain sudo permissions after maximum attempts");
-    false
 }
 
 fn check_branch(branch_name: &str) -> bool {
@@ -454,7 +385,8 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .map(|flags| flags.iter().map(|s| s.as_str()).collect::<Vec<_>>())
         .unwrap_or_else(|| STATIC_FLAG.iter().map(|s| *s).collect());
 
-    let gcc = env::var("CC").unwrap_or(CC.to_string());
+    let cur_dir = env::current_dir()?;
+    let gcc = env::var("CC").unwrap_or(format!("{}/{}riscv64-linux-musl-gcc", cur_dir.to_string_lossy(), MUSL));
     let output = Command::new(gcc.clone()).arg("--version").output()?;
     let output_str = String::from_utf8(output.stdout).unwrap();
     let gcc_version = output_str.lines().next().unwrap();
@@ -465,6 +397,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     } else {
         static_flags
     };
+
     status
         .args(&["-v", &c_file])
         .args(flags)
@@ -502,7 +435,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     }
 
     // Generate disassembly file
-    let output = Command::new("riscv64-linux-musl-objdump")
+    let output = Command::new(format!("{}/{}riscv64-linux-musl-objdump", cur_dir.to_string_lossy(), MUSL))
         .args(&["-d", &elf_output])
         .current_dir(elf_path)
         .output()
@@ -520,7 +453,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .expect("Failed to write ELF file");
 
     // Generate ELF info file
-    let output = Command::new("riscv64-linux-musl-readelf")
+    let output = Command::new(format!("{}/{}riscv64-linux-musl-readelf", cur_dir.to_string_lossy(), MUSL))
         .args(&["-a", &elf_output])
         .current_dir(elf_path)
         .output()
@@ -540,7 +473,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .expect("Failed to write ELF file");
 
     // Generate full disassembly and symbol table
-    let output = Command::new("riscv64-linux-musl-objdump")
+    let output = Command::new(format!("{}/{}riscv64-linux-musl-objdump", cur_dir.to_string_lossy(), MUSL))
         .args(&["-x", "-d", &elf_output])
         .current_dir(elf_path)
         .output()
