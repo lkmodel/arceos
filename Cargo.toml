@@ -28,6 +28,7 @@ members = [
     "examples/httpserver",
     "examples/httpserver",
     "examples/shell",
+    "examples/loader_lib",
 ]
 
 [workspace.package]
@@ -65,3 +66,4 @@ axdma = { path = "modules/axdma" }
 
 [profile.release]
 lto = true
+panic = "abort"
