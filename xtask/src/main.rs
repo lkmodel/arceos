@@ -204,7 +204,7 @@ fn check_installation() -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
-        || PathBuf::from("riscv64-linux-musl-cross").exists()
+        || PathBuf::from("xtask/riscv64-linux-musl-cross").exists()
 }
 
 fn install_musl_riscv64() -> bool {
