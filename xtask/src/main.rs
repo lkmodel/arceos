@@ -388,7 +388,11 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     let cur_dir = env::current_dir()?;
     let tools = if !env::var("CC").is_err() {
         env::var("CC").unwrap()
-    } else if !env::var("CI").is_err() {
+    } else if (!env::var("CI").is_err()) || (Command::new("which")
+        .arg("riscv64-linux-musl-gcc")
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)) {
         String::new()
     } else {
         format!("{}/{}", cur_dir.to_string_lossy(), MUSL)
