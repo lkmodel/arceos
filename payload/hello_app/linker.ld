@@ -60,5 +60,4 @@ SECTIONS
     .bss : ALIGN(8) {
         *(.bss)
     }
-
 }

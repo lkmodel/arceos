@@ -1,0 +1,1003 @@
+---
+source: xtask/src/main.rs
+assertion_line: 462
+description: riscv64-linux-musl-gcc (GCC) 11.2.1 20211120
+expression: from_utf8(&output.stdout).unwrap()
+---
+malloc:     file format elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+0000000000000720 <.plt>:
+ 720:	00003397          	auipc	t2,0x3
+ 724:	41c30333          	sub	t1,t1,t3
+ 728:	8e83be03          	ld	t3,-1816(t2) # 3008 <__TMC_END__>
+ 72c:	fd430313          	addi	t1,t1,-44
+ 730:	8e838293          	addi	t0,t2,-1816
+ 734:	00135313          	srli	t1,t1,0x1
+ 738:	0082b283          	ld	t0,8(t0)
+ 73c:	000e0067          	jr	t3
+
+0000000000000740 <putchar@plt>:
+ 740:	00003e17          	auipc	t3,0x3
+ 744:	8d8e3e03          	ld	t3,-1832(t3) # 3018 <putchar>
+ 748:	000e0367          	jalr	t1,t3
+ 74c:	00000013          	nop
+
+0000000000000750 <printf@plt>:
+ 750:	00003e17          	auipc	t3,0x3
+ 754:	8d0e3e03          	ld	t3,-1840(t3) # 3020 <printf>
+ 758:	000e0367          	jalr	t1,t3
+ 75c:	00000013          	nop
+
+0000000000000760 <puts@plt>:
+ 760:	00003e17          	auipc	t3,0x3
+ 764:	8c8e3e03          	ld	t3,-1848(t3) # 3028 <puts>
+ 768:	000e0367          	jalr	t1,t3
+ 76c:	00000013          	nop
+
+0000000000000770 <malloc@plt>:
+ 770:	00003e17          	auipc	t3,0x3
+ 774:	8c0e3e03          	ld	t3,-1856(t3) # 3030 <malloc>
+ 778:	000e0367          	jalr	t1,t3
+ 77c:	00000013          	nop
+
+0000000000000780 <calloc@plt>:
+ 780:	00003e17          	auipc	t3,0x3
+ 784:	8b8e3e03          	ld	t3,-1864(t3) # 3038 <calloc>
+ 788:	000e0367          	jalr	t1,t3
+ 78c:	00000013          	nop
+
+0000000000000790 <realloc@plt>:
+ 790:	00003e17          	auipc	t3,0x3
+ 794:	8b0e3e03          	ld	t3,-1872(t3) # 3040 <realloc>
+ 798:	000e0367          	jalr	t1,t3
+ 79c:	00000013          	nop
+
+00000000000007a0 <__libc_start_main@plt>:
+ 7a0:	00003e17          	auipc	t3,0x3
+ 7a4:	8a8e3e03          	ld	t3,-1880(t3) # 3048 <__libc_start_main>
+ 7a8:	000e0367          	jalr	t1,t3
+ 7ac:	00000013          	nop
+
+00000000000007b0 <strlen@plt>:
+ 7b0:	00003e17          	auipc	t3,0x3
+ 7b4:	8a0e3e03          	ld	t3,-1888(t3) # 3050 <strlen>
+ 7b8:	000e0367          	jalr	t1,t3
+ 7bc:	00000013          	nop
+
+00000000000007c0 <free@plt>:
+ 7c0:	00003e17          	auipc	t3,0x3
+ 7c4:	898e3e03          	ld	t3,-1896(t3) # 3058 <free>
+ 7c8:	000e0367          	jalr	t1,t3
+ 7cc:	00000013          	nop
+
+Disassembly of section .text:
+
+00000000000007d0 <_start>:
+     7d0:	00003197          	auipc	gp,0x3
+     7d4:	03018193          	addi	gp,gp,48 # 3800 <__global_pointer$>
+     7d8:	850a                	mv	a0,sp
+     7da:	00002597          	auipc	a1,0x2
+     7de:	66658593          	addi	a1,a1,1638 # 2e40 <_DYNAMIC>
+     7e2:	ff017113          	andi	sp,sp,-16
+     7e6:	a009                	j	7e8 <_start_c>
+
+00000000000007e8 <_start_c>:
+     7e8:	410c                	lw	a1,0(a0)
+     7ea:	00850613          	addi	a2,a0,8
+     7ee:	4781                	li	a5,0
+     7f0:	00003717          	auipc	a4,0x3
+     7f4:	8a873703          	ld	a4,-1880(a4) # 3098 <_fini>
+     7f8:	00003697          	auipc	a3,0x3
+     7fc:	8786b683          	ld	a3,-1928(a3) # 3070 <_init>
+     800:	00003517          	auipc	a0,0x3
+     804:	89053503          	ld	a0,-1904(a0) # 3090 <_GLOBAL_OFFSET_TABLE_+0x30>
+     808:	bf61                	j	7a0 <__libc_start_main@plt>
+
+000000000000080a <deregister_tm_clones>:
+     80a:	00002517          	auipc	a0,0x2
+     80e:	7fe50513          	addi	a0,a0,2046 # 3008 <__TMC_END__>
+     812:	00002797          	auipc	a5,0x2
+     816:	7f678793          	addi	a5,a5,2038 # 3008 <__TMC_END__>
+     81a:	00a78863          	beq	a5,a0,82a <deregister_tm_clones+0x20>
+     81e:	00003797          	auipc	a5,0x3
+     822:	86a7b783          	ld	a5,-1942(a5) # 3088 <_ITM_deregisterTMCloneTable>
+     826:	c391                	beqz	a5,82a <deregister_tm_clones+0x20>
+     828:	8782                	jr	a5
+     82a:	8082                	ret
+
+000000000000082c <register_tm_clones>:
+     82c:	00002517          	auipc	a0,0x2
+     830:	7dc50513          	addi	a0,a0,2012 # 3008 <__TMC_END__>
+     834:	00002597          	auipc	a1,0x2
+     838:	7d458593          	addi	a1,a1,2004 # 3008 <__TMC_END__>
+     83c:	8d89                	sub	a1,a1,a0
+     83e:	4035d793          	srai	a5,a1,0x3
+     842:	91fd                	srli	a1,a1,0x3f
+     844:	95be                	add	a1,a1,a5
+     846:	8585                	srai	a1,a1,0x1
+     848:	c599                	beqz	a1,856 <register_tm_clones+0x2a>
+     84a:	00003797          	auipc	a5,0x3
+     84e:	8367b783          	ld	a5,-1994(a5) # 3080 <_ITM_registerTMCloneTable>
+     852:	c391                	beqz	a5,856 <register_tm_clones+0x2a>
+     854:	8782                	jr	a5
+     856:	8082                	ret
+
+0000000000000858 <__do_global_dtors_aux>:
+     858:	1141                	addi	sp,sp,-16
+     85a:	e022                	sd	s0,0(sp)
+     85c:	00003417          	auipc	s0,0x3
+     860:	84c40413          	addi	s0,s0,-1972 # 30a8 <completed.1>
+     864:	00044783          	lbu	a5,0(s0)
+     868:	e406                	sd	ra,8(sp)
+     86a:	eb95                	bnez	a5,89e <__do_global_dtors_aux+0x46>
+     86c:	00002797          	auipc	a5,0x2
+     870:	7fc7b783          	ld	a5,2044(a5) # 3068 <__cxa_finalize>
+     874:	c791                	beqz	a5,880 <__do_global_dtors_aux+0x28>
+     876:	00002517          	auipc	a0,0x2
+     87a:	78a53503          	ld	a0,1930(a0) # 3000 <__dso_handle>
+     87e:	9782                	jalr	a5
+     880:	f8bff0ef          	jal	ra,80a <deregister_tm_clones>
+     884:	00002797          	auipc	a5,0x2
+     888:	7f47b783          	ld	a5,2036(a5) # 3078 <__deregister_frame_info>
+     88c:	c791                	beqz	a5,898 <__do_global_dtors_aux+0x40>
+     88e:	00001517          	auipc	a0,0x1
+     892:	ed250513          	addi	a0,a0,-302 # 1760 <__FRAME_END__>
+     896:	9782                	jalr	a5
+     898:	4785                	li	a5,1
+     89a:	00f40023          	sb	a5,0(s0)
+     89e:	60a2                	ld	ra,8(sp)
+     8a0:	6402                	ld	s0,0(sp)
+     8a2:	0141                	addi	sp,sp,16
+     8a4:	8082                	ret
+
+00000000000008a6 <frame_dummy>:
+     8a6:	00002797          	auipc	a5,0x2
+     8aa:	7fa7b783          	ld	a5,2042(a5) # 30a0 <__register_frame_info>
+     8ae:	cf99                	beqz	a5,8cc <frame_dummy+0x26>
+     8b0:	1141                	addi	sp,sp,-16
+     8b2:	e406                	sd	ra,8(sp)
+     8b4:	00002597          	auipc	a1,0x2
+     8b8:	7fc58593          	addi	a1,a1,2044 # 30b0 <object.0>
+     8bc:	00001517          	auipc	a0,0x1
+     8c0:	ea450513          	addi	a0,a0,-348 # 1760 <__FRAME_END__>
+     8c4:	9782                	jalr	a5
+     8c6:	60a2                	ld	ra,8(sp)
+     8c8:	0141                	addi	sp,sp,16
+     8ca:	b78d                	j	82c <register_tm_clones>
+     8cc:	b785                	j	82c <register_tm_clones>
+
+00000000000008ce <main>:
+     8ce:	1141                	addi	sp,sp,-16
+     8d0:	e406                	sd	ra,8(sp)
+     8d2:	e022                	sd	s0,0(sp)
+     8d4:	0800                	addi	s0,sp,16
+     8d6:	00001517          	auipc	a0,0x1
+     8da:	9fa50513          	addi	a0,a0,-1542 # 12d0 <test_calloc_struct+0x13e>
+     8de:	e83ff0ef          	jal	ra,760 <puts@plt>
+     8e2:	080000ef          	jal	ra,962 <test_simple_malloc>
+     8e6:	00001517          	auipc	a0,0x1
+     8ea:	a1250513          	addi	a0,a0,-1518 # 12f8 <test_calloc_struct+0x166>
+     8ee:	e73ff0ef          	jal	ra,760 <puts@plt>
+     8f2:	0ca000ef          	jal	ra,9bc <test_array_malloc>
+     8f6:	00001517          	auipc	a0,0x1
+     8fa:	a3250513          	addi	a0,a0,-1486 # 1328 <test_calloc_struct+0x196>
+     8fe:	e63ff0ef          	jal	ra,760 <puts@plt>
+     902:	196000ef          	jal	ra,a98 <test_struct_malloc>
+     906:	00001517          	auipc	a0,0x1
+     90a:	a5250513          	addi	a0,a0,-1454 # 1358 <test_calloc_struct+0x1c6>
+     90e:	e53ff0ef          	jal	ra,760 <puts@plt>
+     912:	2a6000ef          	jal	ra,bb8 <test_2d_array_malloc>
+     916:	00001517          	auipc	a0,0x1
+     91a:	a7250513          	addi	a0,a0,-1422 # 1388 <test_calloc_struct+0x1f6>
+     91e:	e43ff0ef          	jal	ra,760 <puts@plt>
+     922:	4ae000ef          	jal	ra,dd0 <test_realloc>
+     926:	00001517          	auipc	a0,0x1
+     92a:	a7a50513          	addi	a0,a0,-1414 # 13a0 <test_calloc_struct+0x20e>
+     92e:	e33ff0ef          	jal	ra,760 <puts@plt>
+     932:	634000ef          	jal	ra,f66 <test_calloc>
+     936:	00001517          	auipc	a0,0x1
+     93a:	a8250513          	addi	a0,a0,-1406 # 13b8 <test_calloc_struct+0x226>
+     93e:	e23ff0ef          	jal	ra,760 <puts@plt>
+     942:	71c000ef          	jal	ra,105e <test_realloc_string>
+     946:	00001517          	auipc	a0,0x1
+     94a:	a9a50513          	addi	a0,a0,-1382 # 13e0 <test_calloc_struct+0x24e>
+     94e:	e13ff0ef          	jal	ra,760 <puts@plt>
+     952:	041000ef          	jal	ra,1192 <test_calloc_struct>
+     956:	4781                	li	a5,0
+     958:	853e                	mv	a0,a5
+     95a:	60a2                	ld	ra,8(sp)
+     95c:	6402                	ld	s0,0(sp)
+     95e:	0141                	addi	sp,sp,16
+     960:	8082                	ret
+
+0000000000000962 <test_simple_malloc>:
+     962:	1101                	addi	sp,sp,-32
+     964:	ec06                	sd	ra,24(sp)
+     966:	e822                	sd	s0,16(sp)
+     968:	1000                	addi	s0,sp,32
+     96a:	4511                	li	a0,4
+     96c:	e05ff0ef          	jal	ra,770 <malloc@plt>
+     970:	87aa                	mv	a5,a0
+     972:	fef43423          	sd	a5,-24(s0)
+     976:	fe843783          	ld	a5,-24(s0)
+     97a:	eb81                	bnez	a5,98a <test_simple_malloc+0x28>
+     97c:	00001517          	auipc	a0,0x1
+     980:	a9450513          	addi	a0,a0,-1388 # 1410 <test_calloc_struct+0x27e>
+     984:	dddff0ef          	jal	ra,760 <puts@plt>
+     988:	a035                	j	9b4 <test_simple_malloc+0x52>
+     98a:	fe843783          	ld	a5,-24(s0)
+     98e:	02a00713          	li	a4,42
+     992:	c398                	sw	a4,0(a5)
+     994:	fe843783          	ld	a5,-24(s0)
+     998:	439c                	lw	a5,0(a5)
+     99a:	85be                	mv	a1,a5
+     99c:	00001517          	auipc	a0,0x1
+     9a0:	a9450513          	addi	a0,a0,-1388 # 1430 <test_calloc_struct+0x29e>
+     9a4:	dadff0ef          	jal	ra,750 <printf@plt>
+     9a8:	fe843503          	ld	a0,-24(s0)
+     9ac:	e15ff0ef          	jal	ra,7c0 <free@plt>
+     9b0:	fe043423          	sd	zero,-24(s0)
+     9b4:	60e2                	ld	ra,24(sp)
+     9b6:	6442                	ld	s0,16(sp)
+     9b8:	6105                	addi	sp,sp,32
+     9ba:	8082                	ret
+
+00000000000009bc <test_array_malloc>:
+     9bc:	7179                	addi	sp,sp,-48
+     9be:	f406                	sd	ra,40(sp)
+     9c0:	f022                	sd	s0,32(sp)
+     9c2:	1800                	addi	s0,sp,48
+     9c4:	4795                	li	a5,5
+     9c6:	fef42223          	sw	a5,-28(s0)
+     9ca:	fe442783          	lw	a5,-28(s0)
+     9ce:	078a                	slli	a5,a5,0x2
+     9d0:	853e                	mv	a0,a5
+     9d2:	d9fff0ef          	jal	ra,770 <malloc@plt>
+     9d6:	87aa                	mv	a5,a0
+     9d8:	fcf43c23          	sd	a5,-40(s0)
+     9dc:	fd843783          	ld	a5,-40(s0)
+     9e0:	eb81                	bnez	a5,9f0 <test_array_malloc+0x34>
+     9e2:	00001517          	auipc	a0,0x1
+     9e6:	a6e50513          	addi	a0,a0,-1426 # 1450 <test_calloc_struct+0x2be>
+     9ea:	d77ff0ef          	jal	ra,760 <puts@plt>
+     9ee:	a04d                	j	a90 <test_array_malloc+0xd4>
+     9f0:	fe042623          	sw	zero,-20(s0)
+     9f4:	a03d                	j	a22 <test_array_malloc+0x66>
+     9f6:	fec42783          	lw	a5,-20(s0)
+     9fa:	078a                	slli	a5,a5,0x2
+     9fc:	fd843703          	ld	a4,-40(s0)
+     a00:	973e                	add	a4,a4,a5
+     a02:	fec42783          	lw	a5,-20(s0)
+     a06:	86be                	mv	a3,a5
+     a08:	87b6                	mv	a5,a3
+     a0a:	0027979b          	slliw	a5,a5,0x2
+     a0e:	9fb5                	addw	a5,a5,a3
+     a10:	0017979b          	slliw	a5,a5,0x1
+     a14:	2781                	sext.w	a5,a5
+     a16:	c31c                	sw	a5,0(a4)
+     a18:	fec42783          	lw	a5,-20(s0)
+     a1c:	2785                	addiw	a5,a5,1
+     a1e:	fef42623          	sw	a5,-20(s0)
+     a22:	fec42783          	lw	a5,-20(s0)
+     a26:	873e                	mv	a4,a5
+     a28:	fe442783          	lw	a5,-28(s0)
+     a2c:	2701                	sext.w	a4,a4
+     a2e:	2781                	sext.w	a5,a5
+     a30:	fcf743e3          	blt	a4,a5,9f6 <test_array_malloc+0x3a>
+     a34:	00001517          	auipc	a0,0x1
+     a38:	a3c50513          	addi	a0,a0,-1476 # 1470 <test_calloc_struct+0x2de>
+     a3c:	d15ff0ef          	jal	ra,750 <printf@plt>
+     a40:	fe042423          	sw	zero,-24(s0)
+     a44:	a025                	j	a6c <test_array_malloc+0xb0>
+     a46:	fe842783          	lw	a5,-24(s0)
+     a4a:	078a                	slli	a5,a5,0x2
+     a4c:	fd843703          	ld	a4,-40(s0)
+     a50:	97ba                	add	a5,a5,a4
+     a52:	439c                	lw	a5,0(a5)
+     a54:	85be                	mv	a1,a5
+     a56:	00001517          	auipc	a0,0x1
+     a5a:	a3250513          	addi	a0,a0,-1486 # 1488 <test_calloc_struct+0x2f6>
+     a5e:	cf3ff0ef          	jal	ra,750 <printf@plt>
+     a62:	fe842783          	lw	a5,-24(s0)
+     a66:	2785                	addiw	a5,a5,1
+     a68:	fef42423          	sw	a5,-24(s0)
+     a6c:	fe842783          	lw	a5,-24(s0)
+     a70:	873e                	mv	a4,a5
+     a72:	fe442783          	lw	a5,-28(s0)
+     a76:	2701                	sext.w	a4,a4
+     a78:	2781                	sext.w	a5,a5
+     a7a:	fcf746e3          	blt	a4,a5,a46 <test_array_malloc+0x8a>
+     a7e:	4529                	li	a0,10
+     a80:	cc1ff0ef          	jal	ra,740 <putchar@plt>
+     a84:	fd843503          	ld	a0,-40(s0)
+     a88:	d39ff0ef          	jal	ra,7c0 <free@plt>
+     a8c:	fc043c23          	sd	zero,-40(s0)
+     a90:	70a2                	ld	ra,40(sp)
+     a92:	7402                	ld	s0,32(sp)
+     a94:	6145                	addi	sp,sp,48
+     a96:	8082                	ret
+
+0000000000000a98 <test_struct_malloc>:
+     a98:	1101                	addi	sp,sp,-32
+     a9a:	ec06                	sd	ra,24(sp)
+     a9c:	e822                	sd	s0,16(sp)
+     a9e:	1000                	addi	s0,sp,32
+     aa0:	4561                	li	a0,24
+     aa2:	ccfff0ef          	jal	ra,770 <malloc@plt>
+     aa6:	87aa                	mv	a5,a0
+     aa8:	fef43423          	sd	a5,-24(s0)
+     aac:	fe843783          	ld	a5,-24(s0)
+     ab0:	eb81                	bnez	a5,ac0 <test_struct_malloc+0x28>
+     ab2:	00001517          	auipc	a0,0x1
+     ab6:	9de50513          	addi	a0,a0,-1570 # 1490 <test_calloc_struct+0x2fe>
+     aba:	ca7ff0ef          	jal	ra,760 <puts@plt>
+     abe:	a8cd                	j	bb0 <test_struct_malloc+0x118>
+     ac0:	4551                	li	a0,20
+     ac2:	cafff0ef          	jal	ra,770 <malloc@plt>
+     ac6:	87aa                	mv	a5,a0
+     ac8:	873e                	mv	a4,a5
+     aca:	fe843783          	ld	a5,-24(s0)
+     ace:	e798                	sd	a4,8(a5)
+     ad0:	fe843783          	ld	a5,-24(s0)
+     ad4:	679c                	ld	a5,8(a5)
+     ad6:	ef81                	bnez	a5,aee <test_struct_malloc+0x56>
+     ad8:	fe843503          	ld	a0,-24(s0)
+     adc:	ce5ff0ef          	jal	ra,7c0 <free@plt>
+     ae0:	00001517          	auipc	a0,0x1
+     ae4:	9d850513          	addi	a0,a0,-1576 # 14b8 <test_calloc_struct+0x326>
+     ae8:	c79ff0ef          	jal	ra,760 <puts@plt>
+     aec:	a0d1                	j	bb0 <test_struct_malloc+0x118>
+     aee:	fe843783          	ld	a5,-24(s0)
+     af2:	3e900713          	li	a4,1001
+     af6:	c398                	sw	a4,0(a5)
+     af8:	fe843783          	ld	a5,-24(s0)
+     afc:	679c                	ld	a5,8(a5)
+     afe:	00001717          	auipc	a4,0x1
+     b02:	9da70713          	addi	a4,a4,-1574 # 14d8 <test_calloc_struct+0x346>
+     b06:	00074683          	lbu	a3,0(a4)
+     b0a:	8536                	mv	a0,a3
+     b0c:	00174683          	lbu	a3,1(a4)
+     b10:	85b6                	mv	a1,a3
+     b12:	00274683          	lbu	a3,2(a4)
+     b16:	8636                	mv	a2,a3
+     b18:	00374683          	lbu	a3,3(a4)
+     b1c:	00474703          	lbu	a4,4(a4)
+     b20:	00a78023          	sb	a0,0(a5)
+     b24:	00b780a3          	sb	a1,1(a5)
+     b28:	00c78123          	sb	a2,2(a5)
+     b2c:	00d781a3          	sb	a3,3(a5)
+     b30:	00e78223          	sb	a4,4(a5)
+     b34:	fe843783          	ld	a5,-24(s0)
+     b38:	00001717          	auipc	a4,0x1
+     b3c:	c1470713          	addi	a4,a4,-1004 # 174c <test_calloc_struct+0x5ba>
+     b40:	00072787          	flw	fa5,0(a4)
+     b44:	00f7a827          	fsw	fa5,16(a5)
+     b48:	00001517          	auipc	a0,0x1
+     b4c:	99850513          	addi	a0,a0,-1640 # 14e0 <test_calloc_struct+0x34e>
+     b50:	c11ff0ef          	jal	ra,760 <puts@plt>
+     b54:	fe843783          	ld	a5,-24(s0)
+     b58:	439c                	lw	a5,0(a5)
+     b5a:	85be                	mv	a1,a5
+     b5c:	00001517          	auipc	a0,0x1
+     b60:	99c50513          	addi	a0,a0,-1636 # 14f8 <test_calloc_struct+0x366>
+     b64:	bedff0ef          	jal	ra,750 <printf@plt>
+     b68:	fe843783          	ld	a5,-24(s0)
+     b6c:	679c                	ld	a5,8(a5)
+     b6e:	85be                	mv	a1,a5
+     b70:	00001517          	auipc	a0,0x1
+     b74:	99050513          	addi	a0,a0,-1648 # 1500 <test_calloc_struct+0x36e>
+     b78:	bd9ff0ef          	jal	ra,750 <printf@plt>
+     b7c:	fe843783          	ld	a5,-24(s0)
+     b80:	0107a787          	flw	fa5,16(a5)
+     b84:	420787d3          	fcvt.d.s	fa5,fa5
+     b88:	e20785d3          	fmv.x.d	a1,fa5
+     b8c:	00001517          	auipc	a0,0x1
+     b90:	98450513          	addi	a0,a0,-1660 # 1510 <test_calloc_struct+0x37e>
+     b94:	bbdff0ef          	jal	ra,750 <printf@plt>
+     b98:	fe843783          	ld	a5,-24(s0)
+     b9c:	679c                	ld	a5,8(a5)
+     b9e:	853e                	mv	a0,a5
+     ba0:	c21ff0ef          	jal	ra,7c0 <free@plt>
+     ba4:	fe843503          	ld	a0,-24(s0)
+     ba8:	c19ff0ef          	jal	ra,7c0 <free@plt>
+     bac:	fe043423          	sd	zero,-24(s0)
+     bb0:	60e2                	ld	ra,24(sp)
+     bb2:	6442                	ld	s0,16(sp)
+     bb4:	6105                	addi	sp,sp,32
+     bb6:	8082                	ret
+
+0000000000000bb8 <test_2d_array_malloc>:
+     bb8:	715d                	addi	sp,sp,-80
+     bba:	e486                	sd	ra,72(sp)
+     bbc:	e0a2                	sd	s0,64(sp)
+     bbe:	fc26                	sd	s1,56(sp)
+     bc0:	0880                	addi	s0,sp,80
+     bc2:	478d                	li	a5,3
+     bc4:	fcf42023          	sw	a5,-64(s0)
+     bc8:	4791                	li	a5,4
+     bca:	faf42e23          	sw	a5,-68(s0)
+     bce:	fc042783          	lw	a5,-64(s0)
+     bd2:	078e                	slli	a5,a5,0x3
+     bd4:	853e                	mv	a0,a5
+     bd6:	b9bff0ef          	jal	ra,770 <malloc@plt>
+     bda:	87aa                	mv	a5,a0
+     bdc:	faf43823          	sd	a5,-80(s0)
+     be0:	fb043783          	ld	a5,-80(s0)
+     be4:	eb81                	bnez	a5,bf4 <test_2d_array_malloc+0x3c>
+     be6:	00001517          	auipc	a0,0x1
+     bea:	93a50513          	addi	a0,a0,-1734 # 1520 <test_calloc_struct+0x38e>
+     bee:	b73ff0ef          	jal	ra,760 <puts@plt>
+     bf2:	aad1                	j	dc6 <test_2d_array_malloc+0x20e>
+     bf4:	fc042e23          	sw	zero,-36(s0)
+     bf8:	a061                	j	c80 <test_2d_array_malloc+0xc8>
+     bfa:	fbc42783          	lw	a5,-68(s0)
+     bfe:	00279693          	slli	a3,a5,0x2
+     c02:	fdc42783          	lw	a5,-36(s0)
+     c06:	078e                	slli	a5,a5,0x3
+     c08:	fb043703          	ld	a4,-80(s0)
+     c0c:	00f704b3          	add	s1,a4,a5
+     c10:	8536                	mv	a0,a3
+     c12:	b5fff0ef          	jal	ra,770 <malloc@plt>
+     c16:	87aa                	mv	a5,a0
+     c18:	e09c                	sd	a5,0(s1)
+     c1a:	fdc42783          	lw	a5,-36(s0)
+     c1e:	078e                	slli	a5,a5,0x3
+     c20:	fb043703          	ld	a4,-80(s0)
+     c24:	97ba                	add	a5,a5,a4
+     c26:	639c                	ld	a5,0(a5)
+     c28:	e7b9                	bnez	a5,c76 <test_2d_array_malloc+0xbe>
+     c2a:	fc042c23          	sw	zero,-40(s0)
+     c2e:	a005                	j	c4e <test_2d_array_malloc+0x96>
+     c30:	fd842783          	lw	a5,-40(s0)
+     c34:	078e                	slli	a5,a5,0x3
+     c36:	fb043703          	ld	a4,-80(s0)
+     c3a:	97ba                	add	a5,a5,a4
+     c3c:	639c                	ld	a5,0(a5)
+     c3e:	853e                	mv	a0,a5
+     c40:	b81ff0ef          	jal	ra,7c0 <free@plt>
+     c44:	fd842783          	lw	a5,-40(s0)
+     c48:	2785                	addiw	a5,a5,1
+     c4a:	fcf42c23          	sw	a5,-40(s0)
+     c4e:	fd842783          	lw	a5,-40(s0)
+     c52:	873e                	mv	a4,a5
+     c54:	fdc42783          	lw	a5,-36(s0)
+     c58:	2701                	sext.w	a4,a4
+     c5a:	2781                	sext.w	a5,a5
+     c5c:	fcf74ae3          	blt	a4,a5,c30 <test_2d_array_malloc+0x78>
+     c60:	fb043503          	ld	a0,-80(s0)
+     c64:	b5dff0ef          	jal	ra,7c0 <free@plt>
+     c68:	00001517          	auipc	a0,0x1
+     c6c:	8d850513          	addi	a0,a0,-1832 # 1540 <test_calloc_struct+0x3ae>
+     c70:	af1ff0ef          	jal	ra,760 <puts@plt>
+     c74:	aa89                	j	dc6 <test_2d_array_malloc+0x20e>
+     c76:	fdc42783          	lw	a5,-36(s0)
+     c7a:	2785                	addiw	a5,a5,1
+     c7c:	fcf42e23          	sw	a5,-36(s0)
+     c80:	fdc42783          	lw	a5,-36(s0)
+     c84:	873e                	mv	a4,a5
+     c86:	fc042783          	lw	a5,-64(s0)
+     c8a:	2701                	sext.w	a4,a4
+     c8c:	2781                	sext.w	a5,a5
+     c8e:	f6f746e3          	blt	a4,a5,bfa <test_2d_array_malloc+0x42>
+     c92:	fc042a23          	sw	zero,-44(s0)
+     c96:	a085                	j	cf6 <test_2d_array_malloc+0x13e>
+     c98:	fc042823          	sw	zero,-48(s0)
+     c9c:	a83d                	j	cda <test_2d_array_malloc+0x122>
+     c9e:	fd442783          	lw	a5,-44(s0)
+     ca2:	873e                	mv	a4,a5
+     ca4:	fbc42783          	lw	a5,-68(s0)
+     ca8:	02f707bb          	mulw	a5,a4,a5
+     cac:	0007871b          	sext.w	a4,a5
+     cb0:	fd442783          	lw	a5,-44(s0)
+     cb4:	078e                	slli	a5,a5,0x3
+     cb6:	fb043683          	ld	a3,-80(s0)
+     cba:	97b6                	add	a5,a5,a3
+     cbc:	6394                	ld	a3,0(a5)
+     cbe:	fd042783          	lw	a5,-48(s0)
+     cc2:	078a                	slli	a5,a5,0x2
+     cc4:	97b6                	add	a5,a5,a3
+     cc6:	fd042683          	lw	a3,-48(s0)
+     cca:	9f35                	addw	a4,a4,a3
+     ccc:	2701                	sext.w	a4,a4
+     cce:	c398                	sw	a4,0(a5)
+     cd0:	fd042783          	lw	a5,-48(s0)
+     cd4:	2785                	addiw	a5,a5,1
+     cd6:	fcf42823          	sw	a5,-48(s0)
+     cda:	fd042783          	lw	a5,-48(s0)
+     cde:	873e                	mv	a4,a5
+     ce0:	fbc42783          	lw	a5,-68(s0)
+     ce4:	2701                	sext.w	a4,a4
+     ce6:	2781                	sext.w	a5,a5
+     ce8:	faf74be3          	blt	a4,a5,c9e <test_2d_array_malloc+0xe6>
+     cec:	fd442783          	lw	a5,-44(s0)
+     cf0:	2785                	addiw	a5,a5,1
+     cf2:	fcf42a23          	sw	a5,-44(s0)
+     cf6:	fd442783          	lw	a5,-44(s0)
+     cfa:	873e                	mv	a4,a5
+     cfc:	fc042783          	lw	a5,-64(s0)
+     d00:	2701                	sext.w	a4,a4
+     d02:	2781                	sext.w	a5,a5
+     d04:	f8f74ae3          	blt	a4,a5,c98 <test_2d_array_malloc+0xe0>
+     d08:	00001517          	auipc	a0,0x1
+     d0c:	86050513          	addi	a0,a0,-1952 # 1568 <test_calloc_struct+0x3d6>
+     d10:	a51ff0ef          	jal	ra,760 <puts@plt>
+     d14:	fc042623          	sw	zero,-52(s0)
+     d18:	a8a9                	j	d72 <test_2d_array_malloc+0x1ba>
+     d1a:	fc042423          	sw	zero,-56(s0)
+     d1e:	a80d                	j	d50 <test_2d_array_malloc+0x198>
+     d20:	fcc42783          	lw	a5,-52(s0)
+     d24:	078e                	slli	a5,a5,0x3
+     d26:	fb043703          	ld	a4,-80(s0)
+     d2a:	97ba                	add	a5,a5,a4
+     d2c:	6398                	ld	a4,0(a5)
+     d2e:	fc842783          	lw	a5,-56(s0)
+     d32:	078a                	slli	a5,a5,0x2
+     d34:	97ba                	add	a5,a5,a4
+     d36:	439c                	lw	a5,0(a5)
+     d38:	85be                	mv	a1,a5
+     d3a:	00001517          	auipc	a0,0x1
+     d3e:	84650513          	addi	a0,a0,-1978 # 1580 <test_calloc_struct+0x3ee>
+     d42:	a0fff0ef          	jal	ra,750 <printf@plt>
+     d46:	fc842783          	lw	a5,-56(s0)
+     d4a:	2785                	addiw	a5,a5,1
+     d4c:	fcf42423          	sw	a5,-56(s0)
+     d50:	fc842783          	lw	a5,-56(s0)
+     d54:	873e                	mv	a4,a5
+     d56:	fbc42783          	lw	a5,-68(s0)
+     d5a:	2701                	sext.w	a4,a4
+     d5c:	2781                	sext.w	a5,a5
+     d5e:	fcf741e3          	blt	a4,a5,d20 <test_2d_array_malloc+0x168>
+     d62:	4529                	li	a0,10
+     d64:	9ddff0ef          	jal	ra,740 <putchar@plt>
+     d68:	fcc42783          	lw	a5,-52(s0)
+     d6c:	2785                	addiw	a5,a5,1
+     d6e:	fcf42623          	sw	a5,-52(s0)
+     d72:	fcc42783          	lw	a5,-52(s0)
+     d76:	873e                	mv	a4,a5
+     d78:	fc042783          	lw	a5,-64(s0)
+     d7c:	2701                	sext.w	a4,a4
+     d7e:	2781                	sext.w	a5,a5
+     d80:	f8f74de3          	blt	a4,a5,d1a <test_2d_array_malloc+0x162>
+     d84:	fc042223          	sw	zero,-60(s0)
+     d88:	a005                	j	da8 <test_2d_array_malloc+0x1f0>
+     d8a:	fc442783          	lw	a5,-60(s0)
+     d8e:	078e                	slli	a5,a5,0x3
+     d90:	fb043703          	ld	a4,-80(s0)
+     d94:	97ba                	add	a5,a5,a4
+     d96:	639c                	ld	a5,0(a5)
+     d98:	853e                	mv	a0,a5
+     d9a:	a27ff0ef          	jal	ra,7c0 <free@plt>
+     d9e:	fc442783          	lw	a5,-60(s0)
+     da2:	2785                	addiw	a5,a5,1
+     da4:	fcf42223          	sw	a5,-60(s0)
+     da8:	fc442783          	lw	a5,-60(s0)
+     dac:	873e                	mv	a4,a5
+     dae:	fc042783          	lw	a5,-64(s0)
+     db2:	2701                	sext.w	a4,a4
+     db4:	2781                	sext.w	a5,a5
+     db6:	fcf74ae3          	blt	a4,a5,d8a <test_2d_array_malloc+0x1d2>
+     dba:	fb043503          	ld	a0,-80(s0)
+     dbe:	a03ff0ef          	jal	ra,7c0 <free@plt>
+     dc2:	fa043823          	sd	zero,-80(s0)
+     dc6:	60a6                	ld	ra,72(sp)
+     dc8:	6406                	ld	s0,64(sp)
+     dca:	74e2                	ld	s1,56(sp)
+     dcc:	6161                	addi	sp,sp,80
+     dce:	8082                	ret
+
+0000000000000dd0 <test_realloc>:
+     dd0:	7139                	addi	sp,sp,-64
+     dd2:	fc06                	sd	ra,56(sp)
+     dd4:	f822                	sd	s0,48(sp)
+     dd6:	0080                	addi	s0,sp,64
+     dd8:	478d                	li	a5,3
+     dda:	fcf42e23          	sw	a5,-36(s0)
+     dde:	4795                	li	a5,5
+     de0:	fcf42c23          	sw	a5,-40(s0)
+     de4:	fdc42783          	lw	a5,-36(s0)
+     de8:	078a                	slli	a5,a5,0x2
+     dea:	853e                	mv	a0,a5
+     dec:	985ff0ef          	jal	ra,770 <malloc@plt>
+     df0:	87aa                	mv	a5,a0
+     df2:	fcf43823          	sd	a5,-48(s0)
+     df6:	fd043783          	ld	a5,-48(s0)
+     dfa:	eb81                	bnez	a5,e0a <test_realloc+0x3a>
+     dfc:	00000517          	auipc	a0,0x0
+     e00:	78c50513          	addi	a0,a0,1932 # 1588 <test_calloc_struct+0x3f6>
+     e04:	95dff0ef          	jal	ra,760 <puts@plt>
+     e08:	aa99                	j	f5e <test_realloc+0x18e>
+     e0a:	fe042623          	sw	zero,-20(s0)
+     e0e:	a00d                	j	e30 <test_realloc+0x60>
+     e10:	fec42783          	lw	a5,-20(s0)
+     e14:	078a                	slli	a5,a5,0x2
+     e16:	fd043703          	ld	a4,-48(s0)
+     e1a:	97ba                	add	a5,a5,a4
+     e1c:	fec42703          	lw	a4,-20(s0)
+     e20:	2705                	addiw	a4,a4,1
+     e22:	2701                	sext.w	a4,a4
+     e24:	c398                	sw	a4,0(a5)
+     e26:	fec42783          	lw	a5,-20(s0)
+     e2a:	2785                	addiw	a5,a5,1
+     e2c:	fef42623          	sw	a5,-20(s0)
+     e30:	fec42783          	lw	a5,-20(s0)
+     e34:	873e                	mv	a4,a5
+     e36:	fdc42783          	lw	a5,-36(s0)
+     e3a:	2701                	sext.w	a4,a4
+     e3c:	2781                	sext.w	a5,a5
+     e3e:	fcf749e3          	blt	a4,a5,e10 <test_realloc+0x40>
+     e42:	00000517          	auipc	a0,0x0
+     e46:	76650513          	addi	a0,a0,1894 # 15a8 <test_calloc_struct+0x416>
+     e4a:	907ff0ef          	jal	ra,750 <printf@plt>
+     e4e:	fe042423          	sw	zero,-24(s0)
+     e52:	a025                	j	e7a <test_realloc+0xaa>
+     e54:	fe842783          	lw	a5,-24(s0)
+     e58:	078a                	slli	a5,a5,0x2
+     e5a:	fd043703          	ld	a4,-48(s0)
+     e5e:	97ba                	add	a5,a5,a4
+     e60:	439c                	lw	a5,0(a5)
+     e62:	85be                	mv	a1,a5
+     e64:	00000517          	auipc	a0,0x0
+     e68:	62450513          	addi	a0,a0,1572 # 1488 <test_calloc_struct+0x2f6>
+     e6c:	8e5ff0ef          	jal	ra,750 <printf@plt>
+     e70:	fe842783          	lw	a5,-24(s0)
+     e74:	2785                	addiw	a5,a5,1
+     e76:	fef42423          	sw	a5,-24(s0)
+     e7a:	fe842783          	lw	a5,-24(s0)
+     e7e:	873e                	mv	a4,a5
+     e80:	fdc42783          	lw	a5,-36(s0)
+     e84:	2701                	sext.w	a4,a4
+     e86:	2781                	sext.w	a5,a5
+     e88:	fcf746e3          	blt	a4,a5,e54 <test_realloc+0x84>
+     e8c:	4529                	li	a0,10
+     e8e:	8b3ff0ef          	jal	ra,740 <putchar@plt>
+     e92:	fd842783          	lw	a5,-40(s0)
+     e96:	078a                	slli	a5,a5,0x2
+     e98:	85be                	mv	a1,a5
+     e9a:	fd043503          	ld	a0,-48(s0)
+     e9e:	8f3ff0ef          	jal	ra,790 <realloc@plt>
+     ea2:	fca43423          	sd	a0,-56(s0)
+     ea6:	fc843783          	ld	a5,-56(s0)
+     eaa:	ef81                	bnez	a5,ec2 <test_realloc+0xf2>
+     eac:	00000517          	auipc	a0,0x0
+     eb0:	70c50513          	addi	a0,a0,1804 # 15b8 <test_calloc_struct+0x426>
+     eb4:	8adff0ef          	jal	ra,760 <puts@plt>
+     eb8:	fd043503          	ld	a0,-48(s0)
+     ebc:	905ff0ef          	jal	ra,7c0 <free@plt>
+     ec0:	a879                	j	f5e <test_realloc+0x18e>
+     ec2:	fc843783          	ld	a5,-56(s0)
+     ec6:	fcf43823          	sd	a5,-48(s0)
+     eca:	fdc42783          	lw	a5,-36(s0)
+     ece:	fef42223          	sw	a5,-28(s0)
+     ed2:	a00d                	j	ef4 <test_realloc+0x124>
+     ed4:	fe442783          	lw	a5,-28(s0)
+     ed8:	078a                	slli	a5,a5,0x2
+     eda:	fd043703          	ld	a4,-48(s0)
+     ede:	97ba                	add	a5,a5,a4
+     ee0:	fe442703          	lw	a4,-28(s0)
+     ee4:	2705                	addiw	a4,a4,1
+     ee6:	2701                	sext.w	a4,a4
+     ee8:	c398                	sw	a4,0(a5)
+     eea:	fe442783          	lw	a5,-28(s0)
+     eee:	2785                	addiw	a5,a5,1
+     ef0:	fef42223          	sw	a5,-28(s0)
+     ef4:	fe442783          	lw	a5,-28(s0)
+     ef8:	873e                	mv	a4,a5
+     efa:	fd842783          	lw	a5,-40(s0)
+     efe:	2701                	sext.w	a4,a4
+     f00:	2781                	sext.w	a5,a5
+     f02:	fcf749e3          	blt	a4,a5,ed4 <test_realloc+0x104>
+     f06:	00000517          	auipc	a0,0x0
+     f0a:	6ca50513          	addi	a0,a0,1738 # 15d0 <test_calloc_struct+0x43e>
+     f0e:	843ff0ef          	jal	ra,750 <printf@plt>
+     f12:	fe042023          	sw	zero,-32(s0)
+     f16:	a025                	j	f3e <test_realloc+0x16e>
+     f18:	fe042783          	lw	a5,-32(s0)
+     f1c:	078a                	slli	a5,a5,0x2
+     f1e:	fd043703          	ld	a4,-48(s0)
+     f22:	97ba                	add	a5,a5,a4
+     f24:	439c                	lw	a5,0(a5)
+     f26:	85be                	mv	a1,a5
+     f28:	00000517          	auipc	a0,0x0
+     f2c:	56050513          	addi	a0,a0,1376 # 1488 <test_calloc_struct+0x2f6>
+     f30:	821ff0ef          	jal	ra,750 <printf@plt>
+     f34:	fe042783          	lw	a5,-32(s0)
+     f38:	2785                	addiw	a5,a5,1
+     f3a:	fef42023          	sw	a5,-32(s0)
+     f3e:	fe042783          	lw	a5,-32(s0)
+     f42:	873e                	mv	a4,a5
+     f44:	fd842783          	lw	a5,-40(s0)
+     f48:	2701                	sext.w	a4,a4
+     f4a:	2781                	sext.w	a5,a5
+     f4c:	fcf746e3          	blt	a4,a5,f18 <test_realloc+0x148>
+     f50:	4529                	li	a0,10
+     f52:	feeff0ef          	jal	ra,740 <putchar@plt>
+     f56:	fd043503          	ld	a0,-48(s0)
+     f5a:	867ff0ef          	jal	ra,7c0 <free@plt>
+     f5e:	70e2                	ld	ra,56(sp)
+     f60:	7442                	ld	s0,48(sp)
+     f62:	6121                	addi	sp,sp,64
+     f64:	8082                	ret
+
+0000000000000f66 <test_calloc>:
+     f66:	7179                	addi	sp,sp,-48
+     f68:	f406                	sd	ra,40(sp)
+     f6a:	f022                	sd	s0,32(sp)
+     f6c:	1800                	addi	s0,sp,48
+     f6e:	4795                	li	a5,5
+     f70:	fef42223          	sw	a5,-28(s0)
+     f74:	fe442783          	lw	a5,-28(s0)
+     f78:	4591                	li	a1,4
+     f7a:	853e                	mv	a0,a5
+     f7c:	805ff0ef          	jal	ra,780 <calloc@plt>
+     f80:	87aa                	mv	a5,a0
+     f82:	fcf43c23          	sd	a5,-40(s0)
+     f86:	fd843783          	ld	a5,-40(s0)
+     f8a:	eb81                	bnez	a5,f9a <test_calloc+0x34>
+     f8c:	00000517          	auipc	a0,0x0
+     f90:	65c50513          	addi	a0,a0,1628 # 15e8 <test_calloc_struct+0x456>
+     f94:	fccff0ef          	jal	ra,760 <puts@plt>
+     f98:	a87d                	j	1056 <test_calloc+0xf0>
+     f9a:	00000517          	auipc	a0,0x0
+     f9e:	66e50513          	addi	a0,a0,1646 # 1608 <test_calloc_struct+0x476>
+     fa2:	faeff0ef          	jal	ra,750 <printf@plt>
+     fa6:	fe042623          	sw	zero,-20(s0)
+     faa:	a025                	j	fd2 <test_calloc+0x6c>
+     fac:	fec42783          	lw	a5,-20(s0)
+     fb0:	078a                	slli	a5,a5,0x2
+     fb2:	fd843703          	ld	a4,-40(s0)
+     fb6:	97ba                	add	a5,a5,a4
+     fb8:	439c                	lw	a5,0(a5)
+     fba:	85be                	mv	a1,a5
+     fbc:	00000517          	auipc	a0,0x0
+     fc0:	4cc50513          	addi	a0,a0,1228 # 1488 <test_calloc_struct+0x2f6>
+     fc4:	f8cff0ef          	jal	ra,750 <printf@plt>
+     fc8:	fec42783          	lw	a5,-20(s0)
+     fcc:	2785                	addiw	a5,a5,1
+     fce:	fef42623          	sw	a5,-20(s0)
+     fd2:	fec42783          	lw	a5,-20(s0)
+     fd6:	873e                	mv	a4,a5
+     fd8:	fe442783          	lw	a5,-28(s0)
+     fdc:	2701                	sext.w	a4,a4
+     fde:	2781                	sext.w	a5,a5
+     fe0:	fcf746e3          	blt	a4,a5,fac <test_calloc+0x46>
+     fe4:	4529                	li	a0,10
+     fe6:	f5aff0ef          	jal	ra,740 <putchar@plt>
+     fea:	fd843783          	ld	a5,-40(s0)
+     fee:	0791                	addi	a5,a5,4
+     ff0:	4729                	li	a4,10
+     ff2:	c398                	sw	a4,0(a5)
+     ff4:	fd843783          	ld	a5,-40(s0)
+     ff8:	07b1                	addi	a5,a5,12
+     ffa:	4751                	li	a4,20
+     ffc:	c398                	sw	a4,0(a5)
+     ffe:	00000517          	auipc	a0,0x0
+    1002:	62a50513          	addi	a0,a0,1578 # 1628 <test_calloc_struct+0x496>
+    1006:	f4aff0ef          	jal	ra,750 <printf@plt>
+    100a:	fe042423          	sw	zero,-24(s0)
+    100e:	a025                	j	1036 <test_calloc+0xd0>
+    1010:	fe842783          	lw	a5,-24(s0)
+    1014:	078a                	slli	a5,a5,0x2
+    1016:	fd843703          	ld	a4,-40(s0)
+    101a:	97ba                	add	a5,a5,a4
+    101c:	439c                	lw	a5,0(a5)
+    101e:	85be                	mv	a1,a5
+    1020:	00000517          	auipc	a0,0x0
+    1024:	46850513          	addi	a0,a0,1128 # 1488 <test_calloc_struct+0x2f6>
+    1028:	f28ff0ef          	jal	ra,750 <printf@plt>
+    102c:	fe842783          	lw	a5,-24(s0)
+    1030:	2785                	addiw	a5,a5,1
+    1032:	fef42423          	sw	a5,-24(s0)
+    1036:	fe842783          	lw	a5,-24(s0)
+    103a:	873e                	mv	a4,a5
+    103c:	fe442783          	lw	a5,-28(s0)
+    1040:	2701                	sext.w	a4,a4
+    1042:	2781                	sext.w	a5,a5
+    1044:	fcf746e3          	blt	a4,a5,1010 <test_calloc+0xaa>
+    1048:	4529                	li	a0,10
+    104a:	ef6ff0ef          	jal	ra,740 <putchar@plt>
+    104e:	fd843503          	ld	a0,-40(s0)
+    1052:	f6eff0ef          	jal	ra,7c0 <free@plt>
+    1056:	70a2                	ld	ra,40(sp)
+    1058:	7402                	ld	s0,32(sp)
+    105a:	6145                	addi	sp,sp,48
+    105c:	8082                	ret
+
+000000000000105e <test_realloc_string>:
+    105e:	1101                	addi	sp,sp,-32
+    1060:	ec06                	sd	ra,24(sp)
+    1062:	e822                	sd	s0,16(sp)
+    1064:	1000                	addi	s0,sp,32
+    1066:	4529                	li	a0,10
+    1068:	f08ff0ef          	jal	ra,770 <malloc@plt>
+    106c:	87aa                	mv	a5,a0
+    106e:	fef43423          	sd	a5,-24(s0)
+    1072:	fe843783          	ld	a5,-24(s0)
+    1076:	eb81                	bnez	a5,1086 <test_realloc_string+0x28>
+    1078:	00000517          	auipc	a0,0x0
+    107c:	5c850513          	addi	a0,a0,1480 # 1640 <test_calloc_struct+0x4ae>
+    1080:	ee0ff0ef          	jal	ra,760 <puts@plt>
+    1084:	a219                	j	118a <test_realloc_string+0x12c>
+    1086:	fe843783          	ld	a5,-24(s0)
+    108a:	00000717          	auipc	a4,0x0
+    108e:	5de70713          	addi	a4,a4,1502 # 1668 <test_calloc_struct+0x4d6>
+    1092:	00074683          	lbu	a3,0(a4)
+    1096:	8836                	mv	a6,a3
+    1098:	00174683          	lbu	a3,1(a4)
+    109c:	8536                	mv	a0,a3
+    109e:	00274683          	lbu	a3,2(a4)
+    10a2:	85b6                	mv	a1,a3
+    10a4:	00374683          	lbu	a3,3(a4)
+    10a8:	8636                	mv	a2,a3
+    10aa:	00474683          	lbu	a3,4(a4)
+    10ae:	00574703          	lbu	a4,5(a4)
+    10b2:	01078023          	sb	a6,0(a5)
+    10b6:	00a780a3          	sb	a0,1(a5)
+    10ba:	00b78123          	sb	a1,2(a5)
+    10be:	00c781a3          	sb	a2,3(a5)
+    10c2:	00d78223          	sb	a3,4(a5)
+    10c6:	00e782a3          	sb	a4,5(a5)
+    10ca:	fe843583          	ld	a1,-24(s0)
+    10ce:	00000517          	auipc	a0,0x0
+    10d2:	5a250513          	addi	a0,a0,1442 # 1670 <test_calloc_struct+0x4de>
+    10d6:	e7aff0ef          	jal	ra,750 <printf@plt>
+    10da:	45d1                	li	a1,20
+    10dc:	fe843503          	ld	a0,-24(s0)
+    10e0:	eb0ff0ef          	jal	ra,790 <realloc@plt>
+    10e4:	fea43023          	sd	a0,-32(s0)
+    10e8:	fe043783          	ld	a5,-32(s0)
+    10ec:	ef81                	bnez	a5,1104 <test_realloc_string+0xa6>
+    10ee:	00000517          	auipc	a0,0x0
+    10f2:	59a50513          	addi	a0,a0,1434 # 1688 <test_calloc_struct+0x4f6>
+    10f6:	e6aff0ef          	jal	ra,760 <puts@plt>
+    10fa:	fe843503          	ld	a0,-24(s0)
+    10fe:	ec2ff0ef          	jal	ra,7c0 <free@plt>
+    1102:	a061                	j	118a <test_realloc_string+0x12c>
+    1104:	fe043783          	ld	a5,-32(s0)
+    1108:	fef43423          	sd	a5,-24(s0)
+    110c:	fe843503          	ld	a0,-24(s0)
+    1110:	ea0ff0ef          	jal	ra,7b0 <strlen@plt>
+    1114:	87aa                	mv	a5,a0
+    1116:	873e                	mv	a4,a5
+    1118:	fe843783          	ld	a5,-24(s0)
+    111c:	97ba                	add	a5,a5,a4
+    111e:	00000717          	auipc	a4,0x0
+    1122:	58a70713          	addi	a4,a4,1418 # 16a8 <test_calloc_struct+0x516>
+    1126:	00074683          	lbu	a3,0(a4)
+    112a:	8336                	mv	t1,a3
+    112c:	00174683          	lbu	a3,1(a4)
+    1130:	88b6                	mv	a7,a3
+    1132:	00274683          	lbu	a3,2(a4)
+    1136:	8836                	mv	a6,a3
+    1138:	00374683          	lbu	a3,3(a4)
+    113c:	8536                	mv	a0,a3
+    113e:	00474683          	lbu	a3,4(a4)
+    1142:	85b6                	mv	a1,a3
+    1144:	00574683          	lbu	a3,5(a4)
+    1148:	8636                	mv	a2,a3
+    114a:	00674683          	lbu	a3,6(a4)
+    114e:	00774703          	lbu	a4,7(a4)
+    1152:	00678023          	sb	t1,0(a5)
+    1156:	011780a3          	sb	a7,1(a5)
+    115a:	01078123          	sb	a6,2(a5)
+    115e:	00a781a3          	sb	a0,3(a5)
+    1162:	00b78223          	sb	a1,4(a5)
+    1166:	00c782a3          	sb	a2,5(a5)
+    116a:	00d78323          	sb	a3,6(a5)
+    116e:	00e783a3          	sb	a4,7(a5)
+    1172:	fe843583          	ld	a1,-24(s0)
+    1176:	00000517          	auipc	a0,0x0
+    117a:	53a50513          	addi	a0,a0,1338 # 16b0 <test_calloc_struct+0x51e>
+    117e:	dd2ff0ef          	jal	ra,750 <printf@plt>
+    1182:	fe843503          	ld	a0,-24(s0)
+    1186:	e3aff0ef          	jal	ra,7c0 <free@plt>
+    118a:	60e2                	ld	ra,24(sp)
+    118c:	6442                	ld	s0,16(sp)
+    118e:	6105                	addi	sp,sp,32
+    1190:	8082                	ret
+
+0000000000001192 <test_calloc_struct>:
+    1192:	7179                	addi	sp,sp,-48
+    1194:	f406                	sd	ra,40(sp)
+    1196:	f022                	sd	s0,32(sp)
+    1198:	1800                	addi	s0,sp,48
+    119a:	478d                	li	a5,3
+    119c:	fef42223          	sw	a5,-28(s0)
+    11a0:	fe442783          	lw	a5,-28(s0)
+    11a4:	45c1                	li	a1,16
+    11a6:	853e                	mv	a0,a5
+    11a8:	dd8ff0ef          	jal	ra,780 <calloc@plt>
+    11ac:	87aa                	mv	a5,a0
+    11ae:	fcf43c23          	sd	a5,-40(s0)
+    11b2:	fd843783          	ld	a5,-40(s0)
+    11b6:	eb81                	bnez	a5,11c6 <test_calloc_struct+0x34>
+    11b8:	00000517          	auipc	a0,0x0
+    11bc:	51050513          	addi	a0,a0,1296 # 16c8 <test_calloc_struct+0x536>
+    11c0:	da0ff0ef          	jal	ra,760 <puts@plt>
+    11c4:	a8fd                	j	12c2 <test_calloc_struct+0x130>
+    11c6:	00000517          	auipc	a0,0x0
+    11ca:	52a50513          	addi	a0,a0,1322 # 16f0 <test_calloc_struct+0x55e>
+    11ce:	d92ff0ef          	jal	ra,760 <puts@plt>
+    11d2:	fe042623          	sw	zero,-20(s0)
+    11d6:	a83d                	j	1214 <test_calloc_struct+0x82>
+    11d8:	fec42783          	lw	a5,-20(s0)
+    11dc:	0792                	slli	a5,a5,0x4
+    11de:	fd843703          	ld	a4,-40(s0)
+    11e2:	97ba                	add	a5,a5,a4
+    11e4:	4390                	lw	a2,0(a5)
+    11e6:	fec42783          	lw	a5,-20(s0)
+    11ea:	0792                	slli	a5,a5,0x4
+    11ec:	fd843703          	ld	a4,-40(s0)
+    11f0:	97ba                	add	a5,a5,a4
+    11f2:	279c                	fld	fa5,8(a5)
+    11f4:	fec42783          	lw	a5,-20(s0)
+    11f8:	e20786d3          	fmv.x.d	a3,fa5
+    11fc:	85be                	mv	a1,a5
+    11fe:	00000517          	auipc	a0,0x0
+    1202:	51250513          	addi	a0,a0,1298 # 1710 <test_calloc_struct+0x57e>
+    1206:	d4aff0ef          	jal	ra,750 <printf@plt>
+    120a:	fec42783          	lw	a5,-20(s0)
+    120e:	2785                	addiw	a5,a5,1
+    1210:	fef42623          	sw	a5,-20(s0)
+    1214:	fec42783          	lw	a5,-20(s0)
+    1218:	873e                	mv	a4,a5
+    121a:	fe442783          	lw	a5,-28(s0)
+    121e:	2701                	sext.w	a4,a4
+    1220:	2781                	sext.w	a5,a5
+    1222:	faf74be3          	blt	a4,a5,11d8 <test_calloc_struct+0x46>
+    1226:	fd843783          	ld	a5,-40(s0)
+    122a:	4705                	li	a4,1
+    122c:	c398                	sw	a4,0(a5)
+    122e:	fd843783          	ld	a5,-40(s0)
+    1232:	00000717          	auipc	a4,0x0
+    1236:	51e70713          	addi	a4,a4,1310 # 1750 <test_calloc_struct+0x5be>
+    123a:	231c                	fld	fa5,0(a4)
+    123c:	a79c                	fsd	fa5,8(a5)
+    123e:	fd843783          	ld	a5,-40(s0)
+    1242:	07c1                	addi	a5,a5,16
+    1244:	4709                	li	a4,2
+    1246:	c398                	sw	a4,0(a5)
+    1248:	fd843783          	ld	a5,-40(s0)
+    124c:	07c1                	addi	a5,a5,16
+    124e:	00000717          	auipc	a4,0x0
+    1252:	50a70713          	addi	a4,a4,1290 # 1758 <test_calloc_struct+0x5c6>
+    1256:	231c                	fld	fa5,0(a4)
+    1258:	a79c                	fsd	fa5,8(a5)
+    125a:	00000517          	auipc	a0,0x0
+    125e:	4d650513          	addi	a0,a0,1238 # 1730 <test_calloc_struct+0x59e>
+    1262:	cfeff0ef          	jal	ra,760 <puts@plt>
+    1266:	fe042423          	sw	zero,-24(s0)
+    126a:	a83d                	j	12a8 <test_calloc_struct+0x116>
+    126c:	fe842783          	lw	a5,-24(s0)
+    1270:	0792                	slli	a5,a5,0x4
+    1272:	fd843703          	ld	a4,-40(s0)
+    1276:	97ba                	add	a5,a5,a4
+    1278:	4390                	lw	a2,0(a5)
+    127a:	fe842783          	lw	a5,-24(s0)
+    127e:	0792                	slli	a5,a5,0x4
+    1280:	fd843703          	ld	a4,-40(s0)
+    1284:	97ba                	add	a5,a5,a4
+    1286:	279c                	fld	fa5,8(a5)
+    1288:	fe842783          	lw	a5,-24(s0)
+    128c:	e20786d3          	fmv.x.d	a3,fa5
+    1290:	85be                	mv	a1,a5
+    1292:	00000517          	auipc	a0,0x0
+    1296:	47e50513          	addi	a0,a0,1150 # 1710 <test_calloc_struct+0x57e>
+    129a:	cb6ff0ef          	jal	ra,750 <printf@plt>
+    129e:	fe842783          	lw	a5,-24(s0)
+    12a2:	2785                	addiw	a5,a5,1
+    12a4:	fef42423          	sw	a5,-24(s0)
+    12a8:	fe842783          	lw	a5,-24(s0)
+    12ac:	873e                	mv	a4,a5
+    12ae:	fe442783          	lw	a5,-28(s0)
+    12b2:	2701                	sext.w	a4,a4
+    12b4:	2781                	sext.w	a5,a5
+    12b6:	faf74be3          	blt	a4,a5,126c <test_calloc_struct+0xda>
+    12ba:	fd843503          	ld	a0,-40(s0)
+    12be:	d02ff0ef          	jal	ra,7c0 <free@plt>
+    12c2:	70a2                	ld	ra,40(sp)
+    12c4:	7402                	ld	s0,32(sp)
+    12c6:	6145                	addi	sp,sp,48
+    12c8:	8082                	ret

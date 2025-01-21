@@ -5,7 +5,7 @@
 /* pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; */
 pthread_mutex_t mutex;
 
-int count = 0;
+int count;
 
 void * thread_run(void *arg)
 {

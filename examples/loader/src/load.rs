@@ -6,7 +6,7 @@ use core::{
 use axlog::debug;
 
 use elf::{
-    abi::{PT_LOAD, STT_FUNC},
+    abi::PT_LOAD,
 	endian::LittleEndian,
     ElfBytes,
 };
@@ -25,6 +25,9 @@ pub fn load_elf() -> u64 {
     let elf: ElfBytes<'_, LittleEndian> =
         ElfBytes::<LittleEndian>::minimal_parse(elf_slice).expect("Failed to parse ELF");
     let elf_hdr = elf.ehdr;
+
+    // 检查 ELF 头
+    verify_elf_header(&elf).expect("Failed to verify ELF header");
 
     let is_need_interp = { 
         if let Some(segments) = elf.segments() {
@@ -62,9 +65,6 @@ pub fn load_elf() -> u64 {
 }
 
 fn load_exec(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8]) -> Result<(), LoadError> {
-    // 检查 ELF 头
-    verify_elf_header(elf).expect("Failed to verify ELF header");
-
     if let Some(phs) = elf.segments() {
         for ph in phs {
             if ph.p_type != PT_LOAD {
@@ -99,6 +99,36 @@ fn load_exec(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8]
             }
         }
     }
+
+    let rela_shdr = elf
+        .section_header_by_name(".rela.dyn")
+        .expect("section table should be parseable")
+        .expect("elf should have a .rela.dyn section header");
+
+    let relas = elf.section_data_as_relas(&rela_shdr)
+        .expect("Failed to parse .rela.dyn section");
+
+    for rela in relas {
+        debug!("Rela offset: 0x{:x}, sym: 0x{:x}, type: 0x{:x}, addend: 0x{:x}", 
+            rela.r_offset, 
+            rela.r_sym, 
+            rela.r_type, 
+            rela.r_addend
+        );
+
+        match rela.r_type {
+            // R_RISCV_RELATIVE
+            3 => {
+                let new_value = rela.r_addend as usize;
+                unsafe {
+                    *(rela.r_offset as *mut u64) = new_value as u64;
+                }
+            },
+            _ => {
+                debug!("Unsupported relocation type");
+            }
+        }
+    }
     
     Ok(())
 }
@@ -113,8 +143,32 @@ fn load_dyn(elf: &ElfBytes<LittleEndian>, elf_slice: &[u8], run_code: &mut [u8])
         phdr.p_offset, phdr.p_filesz, phdr.p_memsz, phdr.p_vaddr, phdr.p_paddr);
         load_segment(run_code, elf_slice, phdr.p_vaddr as usize, phdr.p_offset as usize, phdr.p_filesz as usize, phdr.p_memsz as usize);
     }
-    inner_func(elf);
-    modify_plt(elf);
+
+    if let Ok((shdrs_opt, strtab_opt)) = elf.section_headers_with_strtab() {
+        let shdrs = shdrs_opt.expect("shdrs should be Some");
+        let strtab = strtab_opt.expect("strtab should be Some");
+        
+        // 遍历所有节头，查找 .rela.dyn 和 .rela.plt
+        for shdr in shdrs {
+            // 获取节的名称
+            if let Ok(name) = strtab.get(shdr.sh_name as usize) {
+                match name {
+                    // 找到 .rela.dyn 节
+                    ".rela.dyn" => {
+                        debug!("Found .rela.dyn section at offset 0x{:x}", shdr.sh_offset);
+                        modify_rela_dyn(elf);
+                    },
+                    // 找到 .rela.plt 节
+                    ".rela.plt" => {
+                        debug!("Found .rela.plt section at offset 0x{:x}", shdr.sh_offset);
+                        modify_rela_plt(elf);
+                    },
+                    // 其他节可以忽略
+                    _ => continue,
+                }
+            }
+        }
+    }
 }
 
 fn load_segment(run_code: &mut [u8], elf_slice: &[u8], p_vaddr: usize, p_offset: usize, p_filesz: usize, p_memsz: usize) {
@@ -132,17 +186,17 @@ fn load_segment(run_code: &mut [u8], elf_slice: &[u8], p_vaddr: usize, p_offset:
     }
 }
 
-fn modify_plt(elf: &ElfBytes<LittleEndian>) {
+fn modify_rela_plt(elf: &ElfBytes<LittleEndian>) {
     let (dynsym_table, dynstr_table) = elf.dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")
         .expect("ELF should have a dynamic symbol table");
     let rela_shdr = elf
         .section_header_by_name(".rela.plt")
         .expect("section table should be parseable")
-        .expect("elf should have a .rela.plt section");
+        .expect("elf should have a .rela.plt section header");
 
     let relas = elf.section_data_as_relas(&rela_shdr)
-        .expect("Failed to parse .rela.dyn section");
+        .expect("Failed to parse .rela.plt section");
 
     for rela in relas {
         // get the r_sym'th symbol from the dynamic symbol table
@@ -157,23 +211,35 @@ fn modify_plt(elf: &ElfBytes<LittleEndian>) {
     }
 }
 
-fn inner_func(elf: &ElfBytes<LittleEndian>) {
-    let common = elf.find_common_data().expect("Failed to find common data");
+fn modify_rela_dyn(elf: &ElfBytes<LittleEndian>) {
+    let rela_shdr = elf
+        .section_header_by_name(".rela.dyn")
+        .expect("section table should be parseable")
+        .expect("elf should have a .rela.dyn section header");
 
-    let symtabs = common.symtab.unwrap();
-	let strtabs = common.symtab_strs.unwrap();
+    let relas = elf.section_data_as_relas(&rela_shdr)
+        .expect("Failed to parse .rela.dyn section");
 
-	for mut sym in symtabs {
-		// debug!("sym: {:?}", sym);
-		if sym.st_shndx == 8 && sym.st_size > 0 && sym.st_symtype() == STT_FUNC {
-			let name = strtabs.get(sym.st_name as usize).expect("Failed to get symbol name");
-			debug!("sym name: {}", name);
-			let value = sym.st_value;
-			debug!("sym value: 0x{:x}", value);
-            sym.st_value = EXEC_ZONE_START as u64 + value;
-            // unsafe {
-            //     *((EXEC_ZONE_START as u64 + value) as *mut usize) = value as usize;
-            // }
-		}
-	}
+    for rela in relas {
+        debug!("Rela offset: 0x{:x}, sym: 0x{:x}, type: 0x{:x}, addend: 0x{:x}", 
+            rela.r_offset, 
+            rela.r_sym, 
+            rela.r_type, 
+            rela.r_addend
+        );
+
+        match rela.r_type {
+            // R_RISCV_RELATIVE
+            3 => {
+                let reloc_addr = EXEC_ZONE_START + rela.r_offset as usize;
+                let new_value = EXEC_ZONE_START + rela.r_addend as usize;
+                unsafe {
+                    *(reloc_addr as *mut u64) = new_value as u64;
+                }
+            },
+            _ => {
+                debug!("Unsupported relocation type");
+            }
+        }
+    }
 }

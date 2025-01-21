@@ -7,7 +7,6 @@ extern crate alloc;
 
 use abi::abi_entry;
 use axlog::info;
-use axstd::println;
 
 mod abi;
 mod elf;
@@ -18,11 +17,7 @@ use load::load_elf;
 
 #[unsafe(no_mangle)]
 fn main() {
-    // init_heap();
-
     let entry = load_elf();
-
-	println!("Entry 0x{:x}", entry);
 
     info!("Execute app ...");
     unsafe { core::arch::asm!("

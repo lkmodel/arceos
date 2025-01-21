@@ -20,7 +20,7 @@
 
 1. 完成规划的全部5个阶段，实现Unikernel模式下直接运行Linux的原始应用，通过系统调用转函数调用，达到提升效率的目标。
    + ~~阶段1：支持基于musl静态链接的单应用。应用虽然需要重新编译和链接，但是源码不需要修改。~~
-   + 阶段2：支持基于musl动态链接的单应用。原始的二进制应用不需要修改，能够直接运行。
+   + ~~阶段2：支持基于musl动态链接的单应用。原始的二进制应用不需要修改，能够直接运行。~~
    + 阶段3：支持基于多地址空间从而支持多应用。通过支持`fork`，可以启动其它进程。
    + 阶段4：支持`procfs`和`sysfs`等文件系统。通过支持BusyBox、LTP等测试用例，扩大系统调用支持范围。
    + 阶段5：支持编译应用的工具链从musl到gcc。扩大对常见Linux应用的支持。
@@ -116,11 +116,11 @@ cargo xtask all
 
 ```toml
 [dev]
-rename = "hello" #覆盖文件夹名,例如hello_app文件夹下的hello.c
-ttype = "all" #链接方式。特别的,"all"="static"+"dynamic"
-snapshot = true #是否为该应用开启快照测试
-dynamic_flags = [] #用于动态链接的参数,在开发阶段,默认为所有应用启用了-fPIE,在此处填写可以覆盖
-static_flags = [] #用于静态链接的参数
+rename = "hello" # 覆盖文件夹名,例如`hello_app`文件夹下的`hello.c`
+ttype = "all" # 链接方式。特别的,"all"="static"+"dynamic"
+snapshot = true # 是否为该应用开启快照测试
+dynamic_flags = [] # 用于动态链接的参数,在开发阶段,默认为所有应用启用了`-fPIE`,在此处填写可以覆盖
+static_flags = [] # 用于静态链接的参数
 ```
 ## 快照审阅
 为了方便调试与测试，引入了[insta](https://insta.rs/)来存储与比对编译生成的应用。
@@ -129,7 +129,7 @@ static_flags = [] #用于静态链接的参数
     对于每个snap，按下`a`来接受审阅即可，会自动使用snap.new覆盖原有.snap
 2. 如果改动是非预期的，需要进一步比对和修改 <br>
     对于每个snap，按下`s`来暂时跳过审阅来运行应用。xxx_app/snapshot下会出现.snap.new，当确认无误后，可再次运行`cargo xtask xxx_app -s`来审阅快照。
-    >cargo_insta的比对是上下排列的，如果需要更好的对比体验，推荐使用[difftastic](https://difftastic.wilfred.me.uk/)或其他工具来获得更好的体验
+    > cargo_insta的比对是上下排列的，如果需要更好的对比体验，推荐使用[difftastic](https://difftastic.wilfred.me.uk/)或其他工具来获得更好的体验
 
 **注意**：为了健壮的编码与方便他人，如果还有快照尚未审阅就向仓库提交审阅，会被git hooks制止
 
@@ -163,7 +163,7 @@ static_flags = [] #用于静态链接的参数
    git push
    ```
 
-   随后，在GitHub上提交 Pull Request 到中心仓库的 mocklibc 分支，并等待代码审查和合并。
+   随后，在GitHub上提交 Pull Request 到中心仓库的 `mocklibc` 分支，并等待代码审查和合并。
 
 确保协作开发的有序性和代码库的一致性。
 
@@ -178,6 +178,6 @@ static_flags = [] #用于静态链接的参数
 
 ## TODO
 
-+ [ ] 扩大动态链接应用的支持范围
++ [X] 支持启动运行简易的原生基于musl动态链接的Linux应用
 + [ ] 构建一个成熟可用的CI测试框架
-+ [ ] 支持启动运行简易的原生Linux应用
++ [ ] 扩大动态链接应用的支持范围

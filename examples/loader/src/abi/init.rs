@@ -13,8 +13,6 @@ use printf_compat::{format, output};
 
 use alloc::string::String;
 
-use crate::load::EXEC_ZONE_START;
-
 type MainFn = unsafe extern "C" fn(argc: i32, argv: *mut *mut i8, envp: *mut *mut i8) -> i32;
 
 /// Description
@@ -34,10 +32,10 @@ pub extern "C" fn abi_libc_start_main(
 	init_scheduler();
 
     let main = unsafe {
-		mem::transmute::<usize, MainFn>(main as usize + EXEC_ZONE_START)
+		mem::transmute::<usize, MainFn>( main as usize)
 	};
 
-	unsafe { 
+	unsafe {
 		main(argc, argv, core::ptr::null_mut());
 	}
 
@@ -56,7 +54,8 @@ pub extern "C" fn abi_fini() {
 
 #[unsafe(no_mangle)]
 pub fn abi_putchar(c: char) {
-    info!("[ABI:Print] {c}");
+    // info!("[ABI:Print] {c}");
+    print!("{}", c);
 }
 
 #[unsafe(no_mangle)]
