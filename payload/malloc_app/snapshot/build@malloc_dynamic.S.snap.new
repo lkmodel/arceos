@@ -1,6 +1,0 @@
----
-source: xtask/src/main.rs
-assertion_line: 481
-expression: from_utf8(&output.stdout).unwrap()
----
-

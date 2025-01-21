@@ -1,0 +1,16 @@
+#!/bin/sh
+
+target_dir="payload"
+
+snap_new_files=$(find "$target_dir" -type f -name "*.snap.new")
+
+# 检查是否有 .snap.new 文件
+if [ -n "$snap_new_files" ]; then
+  echo "错误：发现 .snap.new 文件，请处理后再提交。"
+  echo "找到的文件："
+  echo "$snap_new_files"
+  exit 1  # 返回异常退出状态
+fi
+
+# 如果没有找到 .snap.new 文件，继续提交
+exit 0

@@ -69,52 +69,23 @@ b) 动态加载 (load_dyn):
 
 ## 编译运行
 
-### 安装Python环境
-
-首先，验证本地是否已安装Python环境
-
-``` bash
- ~ ❯ which python
-/usr/bin/python
- ~ ❯ which python3
-/usr/bin/python3
-```
-
-如果没有输出结果，说明系统未安装 Python 环境。以 Ubuntu 为例，可以使用以下命令安装：
-
-``` bash
-sudo apt-get update
-sudo apt-get install python3
-```
-
-安装完成后，再次运行上述命令，验证是否已经成功安装 Python 环境。
-
 ### 尝试运行
 
 ``` bash
 git clone https://github.com/lkmodel/arceos.git
 cd arceos
 git switch mocklibc
-./linux_abi.sh
+cargo xtask all
 ```
 
 > 注：如果所需工具已经安装，您可以跳过此步骤。
-> 如果在运行 .linux_abi.sh 时遇到网络问题，或希望手动安装工具，请按照以下步骤操作：
+> 如果在运行 cargo xtask 时遇到网络问题，或希望手动安装musl-cross-make工具，请按照以下步骤操作：
 >
 > ``` bash
-> git clone https://github.com/richfelker/musl-cross-make.git
-> cd ./musl-cross-make
-> cp ./config.mak.list ./config.mak
-> printf "TARGET = riscv64-linux-musl\nOUTPUT = /opt/musl_riscv64\n" >> config.mak
-> sed -i '15i\riscv64-linux-musl' config.mak
-> sed -i '22i\OUTPUT = /opt/musl_riscv64' config.mak
-> make
-> sudo make install
-> 
+> wget https://musl.cc/riscv64-linux-musl-cross.tgz
+> tar zxf riscv64-linux-musl-cross.tgz -C /opt/musl_riscv64
 > export PATH=$PATH:/opt/musl_riscv64/bin
 > ```
->
-> 有关更多信息，请参考 [musl-cross-make](https://github.com/richfelker/musl-cross-make.git) 仓库。
 >
 > 安装完成后，您可以通过运行以下命令来验证工具链是否正确安装：
 >
@@ -123,16 +94,44 @@ git switch mocklibc
 > ```
 >
 
-对于`linux_abi.sh`文件
+对于`cargo xtask`命令
+
+可以使用`CC=/path/to/gcc`来指定使用的编译器
 
 可用参数:
 
-+ `ARCH`: 目标架构: `x86_64`, `riscv64`, `aarch64`, 目前仅支持`riscv64`。
-+ `LOG`: 日志等级: `warn`, `error`, `info`, `debug`, `trace`, 默认为`warn`。
-+ `QEMU_LOG`: 是否开启QMEU日志 (日志文件为 "qemu.log"), 默认为`no`。
-+ `TTYPE`: 运行测试类型：`static`, `dynamic`, `all`, 默认为`dynamic`。
++ `<APP>` 指定需要运行的APP文件夹名,使用"all"来运行所有应用
 
-`linux_abi.sh`的内容也可根据情况进行自行调整
+可用选项:
+
++ `--arch <ARCH>`: 目标架构: `x86_64`, `riscv64`, `aarch64`, 目前仅支持`riscv64`。
++ `-l, --log <LOG>`: 日志等级: `warn`, `error`, `info`, `debug`, `trace`, 默认为`warn`。
++ `--qemu-log <QEMU_LOG>`: 是否开启QMEU日志 (日志文件为 "qemu.log"), 默认为`n`。
++ `-t, -ttype <TTYPE>`: 运行测试类型：`static`, `dynamic`, `all`, 默认为`dynamic`。
++ `-s, --snapshot`: 仅审阅编译快照，不运行应用
+
+也可在应用目录下根据情况进行自行修改`config.toml`
+
+现在支持的所有配置如下
+
+```toml
+[dev]
+rename = "hello" #覆盖文件夹名,例如hello_app文件夹下的hello.c
+ttype = "all" #链接方式。特别的,"all"="static"+"dynamic"
+snapshot = true #是否为该应用开启快照测试
+dynamic_flags = [] #用于动态链接的参数,在开发阶段,默认为所有应用启用了-fPIE,在此处填写可以覆盖
+static_flags = [] #用于静态链接的参数
+```
+## 快照审阅
+为了方便调试与测试，引入了[insta](https://insta.rs/)来存储与比对编译生成的应用。
+当在`config.toml`中指定`snapshot=true`后，运行xtask编译完成应用后，如果应用的`S` `dump` `elf`发生变化（或本来并没有.snap文件）会在运行前触发审阅。此时有两种选择：
+1. 如果明确发生的变化在预期中 <br>
+    对于每个snap，按下`a`来接受审阅即可，会自动使用snap.new覆盖原有.snap
+2. 如果改动是非预期的，需要进一步比对和修改 <br>
+    对于每个snap，按下`s`来暂时跳过审阅来运行应用。xxx_app/snapshot下会出现.snap.new，当确认无误后，可再次运行`cargo xtask xxx_app -s`来审阅快照。
+    >cargo_insta的比对是上下排列的，如果需要更好的对比体验，推荐使用[difftastic](https://difftastic.wilfred.me.uk/)或其他工具来获得更好的体验
+
+**注意**：为了健壮的编码与方便他人，如果还有快照尚未审阅就向仓库提交审阅，会被git hooks制止
 
 ## 协作开发流程
 
