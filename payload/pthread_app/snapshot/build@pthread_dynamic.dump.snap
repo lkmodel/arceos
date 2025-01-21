@@ -1,465 +1,472 @@
 ---
 source: xtask/src/main.rs
-description: riscv64-linux-musl-gcc (GCC) 9.4.0
+description: riscv64-linux-musl-gcc (GCC) 11.2.1 20211120
 expression: from_utf8(&output.stdout).unwrap()
 ---
 pthread:     file format elf64-littleriscv
 pthread
-architecture: riscv:rv64, flags 0x00000112:
-EXEC_P, HAS_SYMS, D_PAGED
-start address 0x0000000000010550
+architecture: riscv:rv64, flags 0x00000150:
+HAS_SYMS, DYNAMIC, D_PAGED
+start address 0x0000000000000720
 
 Program Header:
-    PHDR off    0x0000000000000040 vaddr 0x0000000000010040 paddr 0x0000000000010040 align 2**3
+    PHDR off    0x0000000000000040 vaddr 0x0000000000000040 paddr 0x0000000000000040 align 2**3
          filesz 0x0000000000000188 memsz 0x0000000000000188 flags r--
-  INTERP off    0x00000000000001c8 vaddr 0x00000000000101c8 paddr 0x00000000000101c8 align 2**0
+  INTERP off    0x00000000000001c8 vaddr 0x00000000000001c8 paddr 0x00000000000001c8 align 2**0
          filesz 0x000000000000001a memsz 0x000000000000001a flags r--
-    LOAD off    0x0000000000000000 vaddr 0x0000000000010000 paddr 0x0000000000010000 align 2**12
-         filesz 0x0000000000000998 memsz 0x0000000000000998 flags r-x
-    LOAD off    0x0000000000000e40 vaddr 0x0000000000011e40 paddr 0x0000000000011e40 align 2**12
-         filesz 0x0000000000000228 memsz 0x0000000000000260 flags rw-
- DYNAMIC off    0x0000000000000e50 vaddr 0x0000000000011e50 paddr 0x0000000000011e50 align 2**3
-         filesz 0x00000000000001b0 memsz 0x00000000000001b0 flags rw-
+    LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**12
+         filesz 0x0000000000000b80 memsz 0x0000000000000b80 flags r-x
+    LOAD off    0x0000000000000e30 vaddr 0x0000000000001e30 paddr 0x0000000000001e30 align 2**12
+         filesz 0x0000000000000268 memsz 0x00000000000002a0 flags rw-
+ DYNAMIC off    0x0000000000000e40 vaddr 0x0000000000001e40 paddr 0x0000000000001e40 align 2**3
+         filesz 0x00000000000001c0 memsz 0x00000000000001c0 flags rw-
    STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**4
          filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
-   RELRO off    0x0000000000000e40 vaddr 0x0000000000011e40 paddr 0x0000000000011e40 align 2**0
-         filesz 0x00000000000001c0 memsz 0x00000000000001c0 flags r--
+   RELRO off    0x0000000000000e30 vaddr 0x0000000000001e30 paddr 0x0000000000001e30 align 2**0
+         filesz 0x00000000000001d0 memsz 0x00000000000001d0 flags r--
 
 Dynamic Section:
   NEEDED               libc.so
-  INIT                 0x0000000000010510
-  FINI                 0x0000000000010520
-  INIT_ARRAY           0x0000000000011e40
+  INIT                 0x0000000000000000
+  FINI                 0x0000000000000000
+  INIT_ARRAY           0x0000000000001e30
   INIT_ARRAYSZ         0x0000000000000008
-  FINI_ARRAY           0x0000000000011e48
+  FINI_ARRAY           0x0000000000001e38
   FINI_ARRAYSZ         0x0000000000000008
-  HASH                 0x00000000000101e8
-  GNU_HASH             0x0000000000010228
-  STRTAB               0x0000000000010360
-  SYMTAB               0x0000000000010270
-  STRSZ                0x0000000000000062
+  HASH                 0x00000000000001e8
+  GNU_HASH             0x0000000000000240
+  STRTAB               0x0000000000000400
+  SYMTAB               0x0000000000000268
+  STRSZ                0x00000000000000d5
   SYMENT               0x0000000000000018
   DEBUG                0x0000000000000000
-  PLTGOT               0x0000000000012000
-  PLTRELSZ             0x00000000000000d8
+  PLTGOT               0x0000000000002008
+  PLTRELSZ             0x00000000000000a8
   PLTREL               0x0000000000000007
-  JMPREL               0x00000000000103c8
-  RELA                 0x00000000000103c8
-  RELASZ               0x00000000000000d8
+  JMPREL               0x00000000000005e0
+  RELA                 0x00000000000004d8
+  RELASZ               0x00000000000001b0
   RELAENT              0x0000000000000018
+  FLAGS_1              0x0000000008000000
+  RELACOUNT            0x0000000000000004
 
 Sections:
 Idx Name          Size      VMA               LMA               File off  Algn
-  0 .interp       0000001a  00000000000101c8  00000000000101c8  000001c8  2**0
+  0 .interp       0000001a  00000000000001c8  00000000000001c8  000001c8  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  1 .hash         0000003c  00000000000101e8  00000000000101e8  000001e8  2**3
+  1 .hash         00000058  00000000000001e8  00000000000001e8  000001e8  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  2 .gnu.hash     00000048  0000000000010228  0000000000010228  00000228  2**3
+  2 .gnu.hash     00000024  0000000000000240  0000000000000240  00000240  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .dynsym       000000f0  0000000000010270  0000000000010270  00000270  2**3
+  3 .dynsym       00000198  0000000000000268  0000000000000268  00000268  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  4 .dynstr       00000062  0000000000010360  0000000000010360  00000360  2**0
+  4 .dynstr       000000d5  0000000000000400  0000000000000400  00000400  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .rela.plt     000000d8  00000000000103c8  00000000000103c8  000003c8  2**3
+  5 .rela.dyn     00000108  00000000000004d8  00000000000004d8  000004d8  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  6 .plt          000000b0  00000000000104a0  00000000000104a0  000004a0  2**4
+  6 .rela.plt     000000a8  00000000000005e0  00000000000005e0  000005e0  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  7 .plt          00000090  0000000000000690  0000000000000690  00000690  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  7 .text         000002ee  0000000000010550  0000000000010550  00000550  2**1
+  8 .text         00000302  0000000000000720  0000000000000720  00000720  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  8 .rodata       00000154  0000000000010840  0000000000010840  00000840  2**3
+  9 .rodata       00000154  0000000000000a28  0000000000000a28  00000a28  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  9 .eh_frame     00000004  0000000000010994  0000000000010994  00000994  2**2
+ 10 .eh_frame     00000004  0000000000000b7c  0000000000000b7c  00000b7c  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
- 10 .init_array   00000008  0000000000011e40  0000000000011e40  00000e40  2**3
+ 11 .init_array   00000008  0000000000001e30  0000000000001e30  00000e30  2**3
                   CONTENTS, ALLOC, LOAD, DATA
- 11 .fini_array   00000008  0000000000011e48  0000000000011e48  00000e48  2**3
+ 12 .fini_array   00000008  0000000000001e38  0000000000001e38  00000e38  2**3
                   CONTENTS, ALLOC, LOAD, DATA
- 12 .dynamic      000001b0  0000000000011e50  0000000000011e50  00000e50  2**3
+ 13 .dynamic      000001c0  0000000000001e40  0000000000001e40  00000e40  2**3
                   CONTENTS, ALLOC, LOAD, DATA
- 13 .got          00000060  0000000000012000  0000000000012000  00001000  2**3
+ 14 .data         00000008  0000000000002000  0000000000002000  00001000  2**3
                   CONTENTS, ALLOC, LOAD, DATA
- 14 .sdata        00000008  0000000000012060  0000000000012060  00001060  2**3
+ 15 .got          00000090  0000000000002008  0000000000002008  00001008  2**3
                   CONTENTS, ALLOC, LOAD, DATA
- 15 .bss          00000038  0000000000012068  0000000000012068  00001068  2**3
+ 16 .bss          00000038  0000000000002098  0000000000002098  00001098  2**3
                   ALLOC
- 16 .comment      00000011  0000000000000000  0000000000000000  00001068  2**0
+ 17 .comment      0000001b  0000000000000000  0000000000000000  00001098  2**0
                   CONTENTS, READONLY
 SYMBOL TABLE:
-00000000000101c8 l    d  .interp	0000000000000000 .interp
-00000000000101e8 l    d  .hash	0000000000000000 .hash
-0000000000010228 l    d  .gnu.hash	0000000000000000 .gnu.hash
-0000000000010270 l    d  .dynsym	0000000000000000 .dynsym
-0000000000010360 l    d  .dynstr	0000000000000000 .dynstr
-00000000000103c8 l    d  .rela.plt	0000000000000000 .rela.plt
-00000000000104a0 l    d  .plt	0000000000000000 .plt
-0000000000010550 l    d  .text	0000000000000000 .text
-0000000000010840 l    d  .rodata	0000000000000000 .rodata
-0000000000010994 l    d  .eh_frame	0000000000000000 .eh_frame
-0000000000011e40 l    d  .init_array	0000000000000000 .init_array
-0000000000011e48 l    d  .fini_array	0000000000000000 .fini_array
-0000000000011e50 l    d  .dynamic	0000000000000000 .dynamic
-0000000000012000 l    d  .got	0000000000000000 .got
-0000000000012060 l    d  .sdata	0000000000000000 .sdata
-0000000000012068 l    d  .bss	0000000000000000 .bss
+00000000000001c8 l    d  .interp	0000000000000000 .interp
+00000000000001e8 l    d  .hash	0000000000000000 .hash
+0000000000000240 l    d  .gnu.hash	0000000000000000 .gnu.hash
+0000000000000268 l    d  .dynsym	0000000000000000 .dynsym
+0000000000000400 l    d  .dynstr	0000000000000000 .dynstr
+00000000000004d8 l    d  .rela.dyn	0000000000000000 .rela.dyn
+00000000000005e0 l    d  .rela.plt	0000000000000000 .rela.plt
+0000000000000690 l    d  .plt	0000000000000000 .plt
+0000000000000720 l    d  .text	0000000000000000 .text
+0000000000000a28 l    d  .rodata	0000000000000000 .rodata
+0000000000000b7c l    d  .eh_frame	0000000000000000 .eh_frame
+0000000000001e30 l    d  .init_array	0000000000000000 .init_array
+0000000000001e38 l    d  .fini_array	0000000000000000 .fini_array
+0000000000001e40 l    d  .dynamic	0000000000000000 .dynamic
+0000000000002000 l    d  .data	0000000000000000 .data
+0000000000002008 l    d  .got	0000000000000000 .got
+0000000000002098 l    d  .bss	0000000000000000 .bss
 0000000000000000 l    d  .comment	0000000000000000 .comment
-0000000000000000 l    df *ABS*	0000000000000000 crt1.c
+0000000000000000 l    df *ABS*	0000000000000000 Scrt1.c
 0000000000000000 l    df *ABS*	0000000000000000 crtstuff.c
-0000000000010994 l     O .eh_frame	0000000000000000 
-0000000000010584 l     F .text	0000000000000000 deregister_tm_clones
-00000000000105a8 l     F .text	0000000000000000 register_tm_clones
-00000000000105d8 l     F .text	0000000000000000 __do_global_dtors_aux
-0000000000012068 l     O .bss	0000000000000001 completed.4702
-0000000000011e48 l     O .fini_array	0000000000000000 __do_global_dtors_aux_fini_array_entry
-000000000001060e l     F .text	0000000000000000 frame_dummy
-0000000000012070 l     O .bss	0000000000000030 object.4707
-0000000000011e40 l     O .init_array	0000000000000000 __frame_dummy_init_array_entry
+000000000000075a l     F .text	0000000000000000 deregister_tm_clones
+000000000000077c l     F .text	0000000000000000 register_tm_clones
+00000000000007a8 l     F .text	0000000000000000 __do_global_dtors_aux
+0000000000002098 l     O .bss	0000000000000001 completed.1
+0000000000001e38 l     O .fini_array	0000000000000000 __do_global_dtors_aux_fini_array_entry
+00000000000007f6 l     F .text	0000000000000000 frame_dummy
+00000000000020a0 l     O .bss	0000000000000030 object.0
+0000000000001e30 l     O .init_array	0000000000000000 __frame_dummy_init_array_entry
 0000000000000000 l    df *ABS*	0000000000000000 pthread.c
 0000000000000000 l    df *ABS*	0000000000000000 crtstuff.c
-0000000000010994 l     O .eh_frame	0000000000000000 __FRAME_END__
-0000000000000000 l    df *ABS*	0000000000000000 
-0000000000011e50 l     O .dynamic	0000000000000000 _DYNAMIC
-00000000000104a0 l     O .plt	0000000000000000 _PROCEDURE_LINKAGE_TABLE_
-0000000000012058 l     O .got	0000000000000000 _GLOBAL_OFFSET_TABLE_
-00000000000104c0       F *UND*	0000000000000000 printf
-0000000000012800 g       *ABS*	0000000000000000 .hidden __global_pointer$
-00000000000104d0       F *UND*	0000000000000000 pthread_create
-00000000000104e0       F *UND*	0000000000000000 pthread_exit
-0000000000012060 g       .sdata	0000000000000000 __SDATA_BEGIN__
-0000000000012000 g     O .got	0000000000000000 .hidden __TMC_END__
-00000000000104f0       F *UND*	0000000000000000 puts
-0000000000010500       F *UND*	0000000000000000 sleep
-0000000000012060 g     O .sdata	0000000000000000 .hidden __dso_handle
+0000000000000b7c l     O .eh_frame	0000000000000000 __FRAME_END__
+0000000000001e40 l     O *ABS*	0000000000000000 _DYNAMIC
+0000000000000690 l     O *ABS*	0000000000000000 _PROCEDURE_LINKAGE_TABLE_
+0000000000002050 l     O *ABS*	0000000000000000 _GLOBAL_OFFSET_TABLE_
+0000000000000000       F *UND*	0000000000000000 printf
+0000000000002800 g       *ABS*	0000000000000000 .hidden __global_pointer$
+0000000000000000       F *UND*	0000000000000000 pthread_create
+0000000000000000       F *UND*	0000000000000000 pthread_exit
+0000000000002098 g       .got	0000000000000000 __SDATA_BEGIN__
+0000000000002008 g     O .got	0000000000000000 .hidden __TMC_END__
+0000000000000000       F *UND*	0000000000000000 puts
+0000000000000000  w    F *UND*	0000000000000000 __cxa_finalize
+0000000000000000       F *UND*	0000000000000000 sleep
+0000000000002000 g     O .data	0000000000000000 .hidden __dso_handle
 0000000000000000  w    F *UND*	0000000000000000 _init
-0000000000010550 g     F .text	0000000000000000 _start
-0000000000010568 g     F .text	000000000000001c _start_c
-00000000000120a0 g       .bss	0000000000000000 __BSS_END__
-0000000000012068 g       .bss	0000000000000000 __bss_start
-0000000000010636 g     F .text	0000000000000168 main
+0000000000000000  w      *UND*	0000000000000000 __deregister_frame_info
+0000000000000000  w      *UND*	0000000000000000 _ITM_registerTMCloneTable
+0000000000000720 g     F .text	0000000000000000 _start
+0000000000000738 g     F .text	0000000000000022 _start_c
+00000000000020d0 g       .bss	0000000000000000 __BSS_END__
+0000000000000000  w      *UND*	0000000000000000 _ITM_deregisterTMCloneTable
+0000000000002098 g       .bss	0000000000000000 __bss_start
+000000000000081e g     F .text	0000000000000164 main
 0000000000000000  w    F *UND*	0000000000000000 _fini
-000000000001079e g     F .text	000000000000001c addtwo
-0000000000012000 g       .got	0000000000000000 __DATA_BEGIN__
-0000000000012068 g       .sdata	0000000000000000 _edata
-00000000000120a0 g       .bss	0000000000000000 _end
-00000000000107ba g     F .text	0000000000000084 thread_function
-0000000000010530       F *UND*	0000000000000000 __libc_start_main
-0000000000010540       F *UND*	0000000000000000 pthread_join
+0000000000000982 g     F .text	000000000000001c addtwo
+0000000000002000 g       .data	0000000000000000 __DATA_BEGIN__
+0000000000002098 g       .got	0000000000000000 _edata
+00000000000020d0 g       .bss	0000000000000000 _end
+000000000000099e g     F .text	0000000000000084 thread_function
+0000000000000000       F *UND*	0000000000000000 __libc_start_main
+0000000000000000       F *UND*	0000000000000000 pthread_join
+0000000000000000  w      *UND*	0000000000000000 __register_frame_info
 
 
 
 Disassembly of section .plt:
 
-00000000000104a0 <_PROCEDURE_LINKAGE_TABLE_>:
-   104a0:	97 23 00 00 33 03 c3 41 03 be 03 b6 13 03 43 fd     .#..3..A......C.
-   104b0:	93 82 03 b6 13 53 13 00 83 b2 82 00 67 00 0e 00     .....S......g...
+0000000000000690 <.plt>:
+ 690:	00002397          	auipc	t2,0x2
+ 694:	41c30333          	sub	t1,t1,t3
+ 698:	9783be03          	ld	t3,-1672(t2) # 2008 <__TMC_END__>
+ 69c:	fd430313          	addi	t1,t1,-44
+ 6a0:	97838293          	addi	t0,t2,-1672
+ 6a4:	00135313          	srli	t1,t1,0x1
+ 6a8:	0082b283          	ld	t0,8(t0)
+ 6ac:	000e0067          	jr	t3
 
-00000000000104c0 <printf@plt>:
-   104c0:	00002e17          	auipc	t3,0x2
-   104c4:	b50e3e03          	ld	t3,-1200(t3) # 12010 <printf>
-   104c8:	000e0367          	jalr	t1,t3
-   104cc:	00000013          	nop
+00000000000006b0 <printf@plt>:
+ 6b0:	00002e17          	auipc	t3,0x2
+ 6b4:	968e3e03          	ld	t3,-1688(t3) # 2018 <printf>
+ 6b8:	000e0367          	jalr	t1,t3
+ 6bc:	00000013          	nop
 
-00000000000104d0 <pthread_create@plt>:
-   104d0:	00002e17          	auipc	t3,0x2
-   104d4:	b48e3e03          	ld	t3,-1208(t3) # 12018 <pthread_create>
-   104d8:	000e0367          	jalr	t1,t3
-   104dc:	00000013          	nop
+00000000000006c0 <pthread_create@plt>:
+ 6c0:	00002e17          	auipc	t3,0x2
+ 6c4:	960e3e03          	ld	t3,-1696(t3) # 2020 <pthread_create>
+ 6c8:	000e0367          	jalr	t1,t3
+ 6cc:	00000013          	nop
 
-00000000000104e0 <pthread_exit@plt>:
-   104e0:	00002e17          	auipc	t3,0x2
-   104e4:	b40e3e03          	ld	t3,-1216(t3) # 12020 <pthread_exit>
-   104e8:	000e0367          	jalr	t1,t3
-   104ec:	00000013          	nop
+00000000000006d0 <pthread_exit@plt>:
+ 6d0:	00002e17          	auipc	t3,0x2
+ 6d4:	958e3e03          	ld	t3,-1704(t3) # 2028 <pthread_exit>
+ 6d8:	000e0367          	jalr	t1,t3
+ 6dc:	00000013          	nop
 
-00000000000104f0 <puts@plt>:
-   104f0:	00002e17          	auipc	t3,0x2
-   104f4:	b38e3e03          	ld	t3,-1224(t3) # 12028 <puts>
-   104f8:	000e0367          	jalr	t1,t3
-   104fc:	00000013          	nop
+00000000000006e0 <puts@plt>:
+ 6e0:	00002e17          	auipc	t3,0x2
+ 6e4:	950e3e03          	ld	t3,-1712(t3) # 2030 <puts>
+ 6e8:	000e0367          	jalr	t1,t3
+ 6ec:	00000013          	nop
 
-0000000000010500 <sleep@plt>:
-   10500:	00002e17          	auipc	t3,0x2
-   10504:	b30e3e03          	ld	t3,-1232(t3) # 12030 <sleep>
-   10508:	000e0367          	jalr	t1,t3
-   1050c:	00000013          	nop
+00000000000006f0 <sleep@plt>:
+ 6f0:	00002e17          	auipc	t3,0x2
+ 6f4:	948e3e03          	ld	t3,-1720(t3) # 2038 <sleep>
+ 6f8:	000e0367          	jalr	t1,t3
+ 6fc:	00000013          	nop
 
-0000000000010510 <_init@plt>:
-   10510:	00002e17          	auipc	t3,0x2
-   10514:	b28e3e03          	ld	t3,-1240(t3) # 12038 <_init>
-   10518:	000e0367          	jalr	t1,t3
-   1051c:	00000013          	nop
+0000000000000700 <__libc_start_main@plt>:
+ 700:	00002e17          	auipc	t3,0x2
+ 704:	940e3e03          	ld	t3,-1728(t3) # 2040 <__libc_start_main>
+ 708:	000e0367          	jalr	t1,t3
+ 70c:	00000013          	nop
 
-0000000000010520 <_fini@plt>:
-   10520:	00002e17          	auipc	t3,0x2
-   10524:	b20e3e03          	ld	t3,-1248(t3) # 12040 <_fini>
-   10528:	000e0367          	jalr	t1,t3
-   1052c:	00000013          	nop
-
-0000000000010530 <__libc_start_main@plt>:
-   10530:	00002e17          	auipc	t3,0x2
-   10534:	b18e3e03          	ld	t3,-1256(t3) # 12048 <__libc_start_main>
-   10538:	000e0367          	jalr	t1,t3
-   1053c:	00000013          	nop
-
-0000000000010540 <pthread_join@plt>:
-   10540:	00002e17          	auipc	t3,0x2
-   10544:	b10e3e03          	ld	t3,-1264(t3) # 12050 <pthread_join>
-   10548:	000e0367          	jalr	t1,t3
-   1054c:	00000013          	nop
+0000000000000710 <pthread_join@plt>:
+ 710:	00002e17          	auipc	t3,0x2
+ 714:	938e3e03          	ld	t3,-1736(t3) # 2048 <pthread_join>
+ 718:	000e0367          	jalr	t1,t3
+ 71c:	00000013          	nop
 
 Disassembly of section .text:
 
-0000000000010550 <_start>:
-   10550:	00002197          	auipc	gp,0x2
-   10554:	2b018193          	addi	gp,gp,688 # 12800 <__global_pointer$>
-   10558:	850a                	mv	a0,sp
-   1055a:	00002597          	auipc	a1,0x2
-   1055e:	8f658593          	addi	a1,a1,-1802 # 11e50 <_DYNAMIC>
-   10562:	ff017113          	andi	sp,sp,-16
-   10566:	a009                	j	10568 <_start_c>
+0000000000000720 <_start>:
+ 720:	00002197          	auipc	gp,0x2
+ 724:	0e018193          	addi	gp,gp,224 # 2800 <__global_pointer$>
+ 728:	850a                	mv	a0,sp
+ 72a:	00001597          	auipc	a1,0x1
+ 72e:	71658593          	addi	a1,a1,1814 # 1e40 <_DYNAMIC>
+ 732:	ff017113          	andi	sp,sp,-16
+ 736:	a009                	j	738 <_start_c>
 
-0000000000010568 <_start_c>:
-   10568:	410c                	lw	a1,0(a0)
-   1056a:	6741                	lui	a4,0x10
-   1056c:	66c1                	lui	a3,0x10
-   1056e:	00850613          	addi	a2,a0,8
-   10572:	6541                	lui	a0,0x10
-   10574:	4781                	li	a5,0
-   10576:	52070713          	addi	a4,a4,1312 # 10520 <_fini@plt>
-   1057a:	51068693          	addi	a3,a3,1296 # 10510 <_init@plt>
-   1057e:	63650513          	addi	a0,a0,1590 # 10636 <main>
-   10582:	b77d                	j	10530 <__libc_start_main@plt>
+0000000000000738 <_start_c>:
+ 738:	410c                	lw	a1,0(a0)
+ 73a:	00850613          	addi	a2,a0,8
+ 73e:	4781                	li	a5,0
+ 740:	00002717          	auipc	a4,0x2
+ 744:	94873703          	ld	a4,-1720(a4) # 2088 <_fini>
+ 748:	00002697          	auipc	a3,0x2
+ 74c:	9186b683          	ld	a3,-1768(a3) # 2060 <_init>
+ 750:	00002517          	auipc	a0,0x2
+ 754:	93053503          	ld	a0,-1744(a0) # 2080 <_GLOBAL_OFFSET_TABLE_+0x30>
+ 758:	b765                	j	700 <__libc_start_main@plt>
 
-0000000000010584 <deregister_tm_clones>:
-   10584:	6549                	lui	a0,0x12
-   10586:	6749                	lui	a4,0x12
-   10588:	00050793          	mv	a5,a0
-   1058c:	00070713          	mv	a4,a4
-   10590:	00f70b63          	beq	a4,a5,105a6 <deregister_tm_clones+0x22>
-   10594:	00000337          	lui	t1,0x0
-   10598:	00030313          	mv	t1,t1
-   1059c:	00030563          	beqz	t1,105a6 <deregister_tm_clones+0x22>
-   105a0:	00050513          	mv	a0,a0
-   105a4:	8302                	jr	t1
-   105a6:	8082                	ret
+000000000000075a <deregister_tm_clones>:
+ 75a:	00002517          	auipc	a0,0x2
+ 75e:	8ae50513          	addi	a0,a0,-1874 # 2008 <__TMC_END__>
+ 762:	00002797          	auipc	a5,0x2
+ 766:	8a678793          	addi	a5,a5,-1882 # 2008 <__TMC_END__>
+ 76a:	00a78863          	beq	a5,a0,77a <deregister_tm_clones+0x20>
+ 76e:	00002797          	auipc	a5,0x2
+ 772:	90a7b783          	ld	a5,-1782(a5) # 2078 <_ITM_deregisterTMCloneTable>
+ 776:	c391                	beqz	a5,77a <deregister_tm_clones+0x20>
+ 778:	8782                	jr	a5
+ 77a:	8082                	ret
 
-00000000000105a8 <register_tm_clones>:
-   105a8:	6549                	lui	a0,0x12
-   105aa:	00050593          	mv	a1,a0
-   105ae:	67c9                	lui	a5,0x12
-   105b0:	00078793          	mv	a5,a5
-   105b4:	8f8d                	sub	a5,a5,a1
-   105b6:	4037d713          	srai	a4,a5,0x3
-   105ba:	03f7d593          	srli	a1,a5,0x3f
-   105be:	95ba                	add	a1,a1,a4
-   105c0:	8585                	srai	a1,a1,0x1
-   105c2:	c991                	beqz	a1,105d6 <register_tm_clones+0x2e>
-   105c4:	00000337          	lui	t1,0x0
-   105c8:	00030313          	mv	t1,t1
-   105cc:	00030563          	beqz	t1,105d6 <register_tm_clones+0x2e>
-   105d0:	00050513          	mv	a0,a0
-   105d4:	8302                	jr	t1
-   105d6:	8082                	ret
+000000000000077c <register_tm_clones>:
+ 77c:	00002517          	auipc	a0,0x2
+ 780:	88c50513          	addi	a0,a0,-1908 # 2008 <__TMC_END__>
+ 784:	00002597          	auipc	a1,0x2
+ 788:	88458593          	addi	a1,a1,-1916 # 2008 <__TMC_END__>
+ 78c:	8d89                	sub	a1,a1,a0
+ 78e:	4035d793          	srai	a5,a1,0x3
+ 792:	91fd                	srli	a1,a1,0x3f
+ 794:	95be                	add	a1,a1,a5
+ 796:	8585                	srai	a1,a1,0x1
+ 798:	c599                	beqz	a1,7a6 <register_tm_clones+0x2a>
+ 79a:	00002797          	auipc	a5,0x2
+ 79e:	8d67b783          	ld	a5,-1834(a5) # 2070 <_ITM_registerTMCloneTable>
+ 7a2:	c391                	beqz	a5,7a6 <register_tm_clones+0x2a>
+ 7a4:	8782                	jr	a5
+ 7a6:	8082                	ret
 
-00000000000105d8 <__do_global_dtors_aux>:
-   105d8:	1141                	addi	sp,sp,-16
-   105da:	e022                	sd	s0,0(sp)
-   105dc:	8681c783          	lbu	a5,-1944(gp) # 12068 <_edata>
-   105e0:	e406                	sd	ra,8(sp)
-   105e2:	e395                	bnez	a5,10606 <__do_global_dtors_aux+0x2e>
-   105e4:	fa1ff0ef          	jal	ra,10584 <deregister_tm_clones>
-   105e8:	000007b7          	lui	a5,0x0
-   105ec:	00078793          	mv	a5,a5
-   105f0:	cb81                	beqz	a5,10600 <__do_global_dtors_aux+0x28>
-   105f2:	6545                	lui	a0,0x11
-   105f4:	99450513          	addi	a0,a0,-1644 # 10994 <__FRAME_END__>
-   105f8:	00000097          	auipc	ra,0x0
-   105fc:	000000e7          	jalr	zero # 0 <_PROCEDURE_LINKAGE_TABLE_-0x104a0>
-   10600:	4785                	li	a5,1
-   10602:	86f18423          	sb	a5,-1944(gp) # 12068 <_edata>
-   10606:	60a2                	ld	ra,8(sp)
-   10608:	6402                	ld	s0,0(sp)
-   1060a:	0141                	addi	sp,sp,16
-   1060c:	8082                	ret
+00000000000007a8 <__do_global_dtors_aux>:
+ 7a8:	1141                	addi	sp,sp,-16
+ 7aa:	e022                	sd	s0,0(sp)
+ 7ac:	00002417          	auipc	s0,0x2
+ 7b0:	8ec40413          	addi	s0,s0,-1812 # 2098 <completed.1>
+ 7b4:	00044783          	lbu	a5,0(s0)
+ 7b8:	e406                	sd	ra,8(sp)
+ 7ba:	eb95                	bnez	a5,7ee <__do_global_dtors_aux+0x46>
+ 7bc:	00002797          	auipc	a5,0x2
+ 7c0:	89c7b783          	ld	a5,-1892(a5) # 2058 <__cxa_finalize>
+ 7c4:	c791                	beqz	a5,7d0 <__do_global_dtors_aux+0x28>
+ 7c6:	00002517          	auipc	a0,0x2
+ 7ca:	83a53503          	ld	a0,-1990(a0) # 2000 <__dso_handle>
+ 7ce:	9782                	jalr	a5
+ 7d0:	f8bff0ef          	jal	ra,75a <deregister_tm_clones>
+ 7d4:	00002797          	auipc	a5,0x2
+ 7d8:	8947b783          	ld	a5,-1900(a5) # 2068 <__deregister_frame_info>
+ 7dc:	c791                	beqz	a5,7e8 <__do_global_dtors_aux+0x40>
+ 7de:	00000517          	auipc	a0,0x0
+ 7e2:	39e50513          	addi	a0,a0,926 # b7c <__FRAME_END__>
+ 7e6:	9782                	jalr	a5
+ 7e8:	4785                	li	a5,1
+ 7ea:	00f40023          	sb	a5,0(s0)
+ 7ee:	60a2                	ld	ra,8(sp)
+ 7f0:	6402                	ld	s0,0(sp)
+ 7f2:	0141                	addi	sp,sp,16
+ 7f4:	8082                	ret
 
-000000000001060e <frame_dummy>:
-   1060e:	000007b7          	lui	a5,0x0
-   10612:	00078793          	mv	a5,a5
-   10616:	cf99                	beqz	a5,10634 <frame_dummy+0x26>
-   10618:	6545                	lui	a0,0x11
-   1061a:	1141                	addi	sp,sp,-16
-   1061c:	87018593          	addi	a1,gp,-1936 # 12070 <object.4707>
-   10620:	99450513          	addi	a0,a0,-1644 # 10994 <__FRAME_END__>
-   10624:	e406                	sd	ra,8(sp)
-   10626:	00000097          	auipc	ra,0x0
-   1062a:	000000e7          	jalr	zero # 0 <_PROCEDURE_LINKAGE_TABLE_-0x104a0>
-   1062e:	60a2                	ld	ra,8(sp)
-   10630:	0141                	addi	sp,sp,16
-   10632:	bf9d                	j	105a8 <register_tm_clones>
-   10634:	bf95                	j	105a8 <register_tm_clones>
+00000000000007f6 <frame_dummy>:
+ 7f6:	00002797          	auipc	a5,0x2
+ 7fa:	89a7b783          	ld	a5,-1894(a5) # 2090 <__register_frame_info>
+ 7fe:	cf99                	beqz	a5,81c <frame_dummy+0x26>
+ 800:	1141                	addi	sp,sp,-16
+ 802:	e406                	sd	ra,8(sp)
+ 804:	00002597          	auipc	a1,0x2
+ 808:	89c58593          	addi	a1,a1,-1892 # 20a0 <object.0>
+ 80c:	00000517          	auipc	a0,0x0
+ 810:	37050513          	addi	a0,a0,880 # b7c <__FRAME_END__>
+ 814:	9782                	jalr	a5
+ 816:	60a2                	ld	ra,8(sp)
+ 818:	0141                	addi	sp,sp,16
+ 81a:	b78d                	j	77c <register_tm_clones>
+ 81c:	b785                	j	77c <register_tm_clones>
 
-0000000000010636 <main>:
-   10636:	7139                	addi	sp,sp,-64
-   10638:	fc06                	sd	ra,56(sp)
-   1063a:	f822                	sd	s0,48(sp)
-   1063c:	0080                	addi	s0,sp,64
-   1063e:	4589                	li	a1,2
-   10640:	00000517          	auipc	a0,0x0
-   10644:	20050513          	addi	a0,a0,512 # 10840 <thread_function+0x86>
-   10648:	e79ff0ef          	jal	ra,104c0 <printf@plt>
-   1064c:	00000597          	auipc	a1,0x0
-   10650:	15258593          	addi	a1,a1,338 # 1079e <addtwo>
-   10654:	00000517          	auipc	a0,0x0
-   10658:	20c50513          	addi	a0,a0,524 # 10860 <thread_function+0xa6>
-   1065c:	e65ff0ef          	jal	ra,104c0 <printf@plt>
-   10660:	00000597          	auipc	a1,0x0
-   10664:	15a58593          	addi	a1,a1,346 # 107ba <thread_function>
-   10668:	00000517          	auipc	a0,0x0
-   1066c:	21050513          	addi	a0,a0,528 # 10878 <thread_function+0xbe>
-   10670:	e51ff0ef          	jal	ra,104c0 <printf@plt>
-   10674:	00000597          	auipc	a1,0x0
-   10678:	fc258593          	addi	a1,a1,-62 # 10636 <main>
-   1067c:	00000517          	auipc	a0,0x0
-   10680:	21c50513          	addi	a0,a0,540 # 10898 <thread_function+0xde>
-   10684:	e3dff0ef          	jal	ra,104c0 <printf@plt>
-   10688:	4505                	li	a0,1
-   1068a:	114000ef          	jal	ra,1079e <addtwo>
-   1068e:	87aa                	mv	a5,a0
-   10690:	fef42223          	sw	a5,-28(s0)
-   10694:	fe442783          	lw	a5,-28(s0)
-   10698:	85be                	mv	a1,a5
-   1069a:	00000517          	auipc	a0,0x0
-   1069e:	21650513          	addi	a0,a0,534 # 108b0 <thread_function+0xf6>
-   106a2:	e1fff0ef          	jal	ra,104c0 <printf@plt>
-   106a6:	fe042623          	sw	zero,-20(s0)
-   106aa:	a071                	j	10736 <main+0x100>
-   106ac:	fec42783          	lw	a5,-20(s0)
-   106b0:	078a                	slli	a5,a5,0x2
-   106b2:	ff040713          	addi	a4,s0,-16
-   106b6:	97ba                	add	a5,a5,a4
-   106b8:	fec42703          	lw	a4,-20(s0)
-   106bc:	fce7ac23          	sw	a4,-40(a5) # ffffffffffffffd8 <__global_pointer$+0xfffffffffffed7d8>
-   106c0:	fd040713          	addi	a4,s0,-48
-   106c4:	fec42783          	lw	a5,-20(s0)
-   106c8:	078e                	slli	a5,a5,0x3
-   106ca:	00f70533          	add	a0,a4,a5
-   106ce:	fc840713          	addi	a4,s0,-56
-   106d2:	fec42783          	lw	a5,-20(s0)
-   106d6:	078a                	slli	a5,a5,0x2
-   106d8:	97ba                	add	a5,a5,a4
-   106da:	86be                	mv	a3,a5
-   106dc:	00000617          	auipc	a2,0x0
-   106e0:	0de60613          	addi	a2,a2,222 # 107ba <thread_function>
-   106e4:	4581                	li	a1,0
-   106e6:	debff0ef          	jal	ra,104d0 <pthread_create@plt>
-   106ea:	87aa                	mv	a5,a0
-   106ec:	fef42023          	sw	a5,-32(s0)
-   106f0:	fe042783          	lw	a5,-32(s0)
-   106f4:	85be                	mv	a1,a5
-   106f6:	00000517          	auipc	a0,0x0
-   106fa:	1ca50513          	addi	a0,a0,458 # 108c0 <thread_function+0x106>
-   106fe:	dc3ff0ef          	jal	ra,104c0 <printf@plt>
-   10702:	fe042783          	lw	a5,-32(s0)
-   10706:	2781                	sext.w	a5,a5
-   10708:	cb89                	beqz	a5,1071a <main+0xe4>
-   1070a:	00000517          	auipc	a0,0x0
-   1070e:	1be50513          	addi	a0,a0,446 # 108c8 <thread_function+0x10e>
-   10712:	ddfff0ef          	jal	ra,104f0 <puts@plt>
-   10716:	4785                	li	a5,1
-   10718:	a8b5                	j	10794 <main+0x15e>
-   1071a:	fec42783          	lw	a5,-20(s0)
-   1071e:	85be                	mv	a1,a5
-   10720:	00000517          	auipc	a0,0x0
-   10724:	1c850513          	addi	a0,a0,456 # 108e8 <thread_function+0x12e>
-   10728:	d99ff0ef          	jal	ra,104c0 <printf@plt>
-   1072c:	fec42783          	lw	a5,-20(s0)
-   10730:	2785                	addiw	a5,a5,1
-   10732:	fef42623          	sw	a5,-20(s0)
-   10736:	fec42783          	lw	a5,-20(s0)
-   1073a:	0007871b          	sext.w	a4,a5
-   1073e:	4785                	li	a5,1
-   10740:	f6e7d6e3          	bge	a5,a4,106ac <main+0x76>
-   10744:	00000517          	auipc	a0,0x0
-   10748:	1bc50513          	addi	a0,a0,444 # 10900 <thread_function+0x146>
-   1074c:	da5ff0ef          	jal	ra,104f0 <puts@plt>
-   10750:	fe042423          	sw	zero,-24(s0)
-   10754:	a015                	j	10778 <main+0x142>
-   10756:	fe842783          	lw	a5,-24(s0)
-   1075a:	078e                	slli	a5,a5,0x3
-   1075c:	ff040713          	addi	a4,s0,-16
-   10760:	97ba                	add	a5,a5,a4
-   10762:	fe07b783          	ld	a5,-32(a5)
-   10766:	4581                	li	a1,0
-   10768:	853e                	mv	a0,a5
-   1076a:	dd7ff0ef          	jal	ra,10540 <pthread_join@plt>
-   1076e:	fe842783          	lw	a5,-24(s0)
-   10772:	2785                	addiw	a5,a5,1
-   10774:	fef42423          	sw	a5,-24(s0)
-   10778:	fe842783          	lw	a5,-24(s0)
-   1077c:	0007871b          	sext.w	a4,a5
-   10780:	4785                	li	a5,1
-   10782:	fce7dae3          	bge	a5,a4,10756 <main+0x120>
-   10786:	00000517          	auipc	a0,0x0
-   1078a:	18a50513          	addi	a0,a0,394 # 10910 <thread_function+0x156>
-   1078e:	d63ff0ef          	jal	ra,104f0 <puts@plt>
-   10792:	4781                	li	a5,0
-   10794:	853e                	mv	a0,a5
-   10796:	70e2                	ld	ra,56(sp)
-   10798:	7442                	ld	s0,48(sp)
-   1079a:	6121                	addi	sp,sp,64
-   1079c:	8082                	ret
+000000000000081e <main>:
+ 81e:	7139                	addi	sp,sp,-64
+ 820:	fc06                	sd	ra,56(sp)
+ 822:	f822                	sd	s0,48(sp)
+ 824:	0080                	addi	s0,sp,64
+ 826:	4589                	li	a1,2
+ 828:	00000517          	auipc	a0,0x0
+ 82c:	20050513          	addi	a0,a0,512 # a28 <thread_function+0x8a>
+ 830:	e81ff0ef          	jal	ra,6b0 <printf@plt>
+ 834:	00000597          	auipc	a1,0x0
+ 838:	14e58593          	addi	a1,a1,334 # 982 <addtwo>
+ 83c:	00000517          	auipc	a0,0x0
+ 840:	20c50513          	addi	a0,a0,524 # a48 <thread_function+0xaa>
+ 844:	e6dff0ef          	jal	ra,6b0 <printf@plt>
+ 848:	00000597          	auipc	a1,0x0
+ 84c:	15658593          	addi	a1,a1,342 # 99e <thread_function>
+ 850:	00000517          	auipc	a0,0x0
+ 854:	21050513          	addi	a0,a0,528 # a60 <thread_function+0xc2>
+ 858:	e59ff0ef          	jal	ra,6b0 <printf@plt>
+ 85c:	00000597          	auipc	a1,0x0
+ 860:	fc258593          	addi	a1,a1,-62 # 81e <main>
+ 864:	00000517          	auipc	a0,0x0
+ 868:	21c50513          	addi	a0,a0,540 # a80 <thread_function+0xe2>
+ 86c:	e45ff0ef          	jal	ra,6b0 <printf@plt>
+ 870:	4505                	li	a0,1
+ 872:	110000ef          	jal	ra,982 <addtwo>
+ 876:	87aa                	mv	a5,a0
+ 878:	fef42223          	sw	a5,-28(s0)
+ 87c:	fe442783          	lw	a5,-28(s0)
+ 880:	85be                	mv	a1,a5
+ 882:	00000517          	auipc	a0,0x0
+ 886:	21650513          	addi	a0,a0,534 # a98 <thread_function+0xfa>
+ 88a:	e27ff0ef          	jal	ra,6b0 <printf@plt>
+ 88e:	fe042623          	sw	zero,-20(s0)
+ 892:	a069                	j	91c <main+0xfe>
+ 894:	fec42783          	lw	a5,-20(s0)
+ 898:	078a                	slli	a5,a5,0x2
+ 89a:	17c1                	addi	a5,a5,-16
+ 89c:	97a2                	add	a5,a5,s0
+ 89e:	fec42703          	lw	a4,-20(s0)
+ 8a2:	fce7ac23          	sw	a4,-40(a5)
+ 8a6:	fd040713          	addi	a4,s0,-48
+ 8aa:	fec42783          	lw	a5,-20(s0)
+ 8ae:	078e                	slli	a5,a5,0x3
+ 8b0:	00f70533          	add	a0,a4,a5
+ 8b4:	fc840713          	addi	a4,s0,-56
+ 8b8:	fec42783          	lw	a5,-20(s0)
+ 8bc:	078a                	slli	a5,a5,0x2
+ 8be:	97ba                	add	a5,a5,a4
+ 8c0:	86be                	mv	a3,a5
+ 8c2:	00000617          	auipc	a2,0x0
+ 8c6:	0dc60613          	addi	a2,a2,220 # 99e <thread_function>
+ 8ca:	4581                	li	a1,0
+ 8cc:	df5ff0ef          	jal	ra,6c0 <pthread_create@plt>
+ 8d0:	87aa                	mv	a5,a0
+ 8d2:	fef42023          	sw	a5,-32(s0)
+ 8d6:	fe042783          	lw	a5,-32(s0)
+ 8da:	85be                	mv	a1,a5
+ 8dc:	00000517          	auipc	a0,0x0
+ 8e0:	1cc50513          	addi	a0,a0,460 # aa8 <thread_function+0x10a>
+ 8e4:	dcdff0ef          	jal	ra,6b0 <printf@plt>
+ 8e8:	fe042783          	lw	a5,-32(s0)
+ 8ec:	2781                	sext.w	a5,a5
+ 8ee:	cb89                	beqz	a5,900 <main+0xe2>
+ 8f0:	00000517          	auipc	a0,0x0
+ 8f4:	1c050513          	addi	a0,a0,448 # ab0 <thread_function+0x112>
+ 8f8:	de9ff0ef          	jal	ra,6e0 <puts@plt>
+ 8fc:	4785                	li	a5,1
+ 8fe:	a8ad                	j	978 <main+0x15a>
+ 900:	fec42783          	lw	a5,-20(s0)
+ 904:	85be                	mv	a1,a5
+ 906:	00000517          	auipc	a0,0x0
+ 90a:	1ca50513          	addi	a0,a0,458 # ad0 <thread_function+0x132>
+ 90e:	da3ff0ef          	jal	ra,6b0 <printf@plt>
+ 912:	fec42783          	lw	a5,-20(s0)
+ 916:	2785                	addiw	a5,a5,1
+ 918:	fef42623          	sw	a5,-20(s0)
+ 91c:	fec42783          	lw	a5,-20(s0)
+ 920:	0007871b          	sext.w	a4,a5
+ 924:	4785                	li	a5,1
+ 926:	f6e7d7e3          	bge	a5,a4,894 <main+0x76>
+ 92a:	00000517          	auipc	a0,0x0
+ 92e:	1be50513          	addi	a0,a0,446 # ae8 <thread_function+0x14a>
+ 932:	dafff0ef          	jal	ra,6e0 <puts@plt>
+ 936:	fe042423          	sw	zero,-24(s0)
+ 93a:	a00d                	j	95c <main+0x13e>
+ 93c:	fe842783          	lw	a5,-24(s0)
+ 940:	078e                	slli	a5,a5,0x3
+ 942:	17c1                	addi	a5,a5,-16
+ 944:	97a2                	add	a5,a5,s0
+ 946:	fe07b783          	ld	a5,-32(a5)
+ 94a:	4581                	li	a1,0
+ 94c:	853e                	mv	a0,a5
+ 94e:	dc3ff0ef          	jal	ra,710 <pthread_join@plt>
+ 952:	fe842783          	lw	a5,-24(s0)
+ 956:	2785                	addiw	a5,a5,1
+ 958:	fef42423          	sw	a5,-24(s0)
+ 95c:	fe842783          	lw	a5,-24(s0)
+ 960:	0007871b          	sext.w	a4,a5
+ 964:	4785                	li	a5,1
+ 966:	fce7dbe3          	bge	a5,a4,93c <main+0x11e>
+ 96a:	00000517          	auipc	a0,0x0
+ 96e:	18e50513          	addi	a0,a0,398 # af8 <thread_function+0x15a>
+ 972:	d6fff0ef          	jal	ra,6e0 <puts@plt>
+ 976:	4781                	li	a5,0
+ 978:	853e                	mv	a0,a5
+ 97a:	70e2                	ld	ra,56(sp)
+ 97c:	7442                	ld	s0,48(sp)
+ 97e:	6121                	addi	sp,sp,64
+ 980:	8082                	ret
 
-000000000001079e <addtwo>:
-   1079e:	1101                	addi	sp,sp,-32
-   107a0:	ec22                	sd	s0,24(sp)
-   107a2:	1000                	addi	s0,sp,32
-   107a4:	87aa                	mv	a5,a0
-   107a6:	fef42623          	sw	a5,-20(s0)
-   107aa:	fec42783          	lw	a5,-20(s0)
-   107ae:	2789                	addiw	a5,a5,2
-   107b0:	2781                	sext.w	a5,a5
-   107b2:	853e                	mv	a0,a5
-   107b4:	6462                	ld	s0,24(sp)
-   107b6:	6105                	addi	sp,sp,32
-   107b8:	8082                	ret
+0000000000000982 <addtwo>:
+ 982:	1101                	addi	sp,sp,-32
+ 984:	ec22                	sd	s0,24(sp)
+ 986:	1000                	addi	s0,sp,32
+ 988:	87aa                	mv	a5,a0
+ 98a:	fef42623          	sw	a5,-20(s0)
+ 98e:	fec42783          	lw	a5,-20(s0)
+ 992:	2789                	addiw	a5,a5,2
+ 994:	2781                	sext.w	a5,a5
+ 996:	853e                	mv	a0,a5
+ 998:	6462                	ld	s0,24(sp)
+ 99a:	6105                	addi	sp,sp,32
+ 99c:	8082                	ret
 
-00000000000107ba <thread_function>:
-   107ba:	7179                	addi	sp,sp,-48
-   107bc:	f406                	sd	ra,40(sp)
-   107be:	f022                	sd	s0,32(sp)
-   107c0:	1800                	addi	s0,sp,48
-   107c2:	fca43c23          	sd	a0,-40(s0)
-   107c6:	fd843783          	ld	a5,-40(s0)
-   107ca:	439c                	lw	a5,0(a5)
-   107cc:	fef42423          	sw	a5,-24(s0)
-   107d0:	fe842783          	lw	a5,-24(s0)
-   107d4:	00000617          	auipc	a2,0x0
-   107d8:	fe660613          	addi	a2,a2,-26 # 107ba <thread_function>
-   107dc:	85be                	mv	a1,a5
-   107de:	00000517          	auipc	a0,0x0
-   107e2:	14a50513          	addi	a0,a0,330 # 10928 <thread_function+0x16e>
-   107e6:	cdbff0ef          	jal	ra,104c0 <printf@plt>
-   107ea:	fe042623          	sw	zero,-20(s0)
-   107ee:	a02d                	j	10818 <thread_function+0x5e>
-   107f0:	fec42703          	lw	a4,-20(s0)
-   107f4:	fe842783          	lw	a5,-24(s0)
-   107f8:	863a                	mv	a2,a4
-   107fa:	85be                	mv	a1,a5
-   107fc:	00000517          	auipc	a0,0x0
-   10800:	15c50513          	addi	a0,a0,348 # 10958 <thread_function+0x19e>
-   10804:	cbdff0ef          	jal	ra,104c0 <printf@plt>
-   10808:	4505                	li	a0,1
-   1080a:	cf7ff0ef          	jal	ra,10500 <sleep@plt>
-   1080e:	fec42783          	lw	a5,-20(s0)
-   10812:	2785                	addiw	a5,a5,1
-   10814:	fef42623          	sw	a5,-20(s0)
-   10818:	fec42783          	lw	a5,-20(s0)
-   1081c:	0007871b          	sext.w	a4,a5
-   10820:	4785                	li	a5,1
-   10822:	fce7d7e3          	bge	a5,a4,107f0 <thread_function+0x36>
-   10826:	fe842783          	lw	a5,-24(s0)
-   1082a:	85be                	mv	a1,a5
-   1082c:	00000517          	auipc	a0,0x0
-   10830:	15450513          	addi	a0,a0,340 # 10980 <thread_function+0x1c6>
-   10834:	c8dff0ef          	jal	ra,104c0 <printf@plt>
-   10838:	4501                	li	a0,0
-   1083a:	ca7ff0ef          	jal	ra,104e0 <pthread_exit@plt>
+000000000000099e <thread_function>:
+ 99e:	7179                	addi	sp,sp,-48
+ 9a0:	f406                	sd	ra,40(sp)
+ 9a2:	f022                	sd	s0,32(sp)
+ 9a4:	1800                	addi	s0,sp,48
+ 9a6:	fca43c23          	sd	a0,-40(s0)
+ 9aa:	fd843783          	ld	a5,-40(s0)
+ 9ae:	439c                	lw	a5,0(a5)
+ 9b0:	fef42423          	sw	a5,-24(s0)
+ 9b4:	fe842783          	lw	a5,-24(s0)
+ 9b8:	00000617          	auipc	a2,0x0
+ 9bc:	fe660613          	addi	a2,a2,-26 # 99e <thread_function>
+ 9c0:	85be                	mv	a1,a5
+ 9c2:	00000517          	auipc	a0,0x0
+ 9c6:	14e50513          	addi	a0,a0,334 # b10 <thread_function+0x172>
+ 9ca:	ce7ff0ef          	jal	ra,6b0 <printf@plt>
+ 9ce:	fe042623          	sw	zero,-20(s0)
+ 9d2:	a02d                	j	9fc <thread_function+0x5e>
+ 9d4:	fec42703          	lw	a4,-20(s0)
+ 9d8:	fe842783          	lw	a5,-24(s0)
+ 9dc:	863a                	mv	a2,a4
+ 9de:	85be                	mv	a1,a5
+ 9e0:	00000517          	auipc	a0,0x0
+ 9e4:	16050513          	addi	a0,a0,352 # b40 <thread_function+0x1a2>
+ 9e8:	cc9ff0ef          	jal	ra,6b0 <printf@plt>
+ 9ec:	4505                	li	a0,1
+ 9ee:	d03ff0ef          	jal	ra,6f0 <sleep@plt>
+ 9f2:	fec42783          	lw	a5,-20(s0)
+ 9f6:	2785                	addiw	a5,a5,1
+ 9f8:	fef42623          	sw	a5,-20(s0)
+ 9fc:	fec42783          	lw	a5,-20(s0)
+ a00:	0007871b          	sext.w	a4,a5
+ a04:	4785                	li	a5,1
+ a06:	fce7d7e3          	bge	a5,a4,9d4 <thread_function+0x36>
+ a0a:	fe842783          	lw	a5,-24(s0)
+ a0e:	85be                	mv	a1,a5
+ a10:	00000517          	auipc	a0,0x0
+ a14:	15850513          	addi	a0,a0,344 # b68 <thread_function+0x1ca>
+ a18:	c99ff0ef          	jal	ra,6b0 <printf@plt>
+ a1c:	4501                	li	a0,0
+ a1e:	cb3ff0ef          	jal	ra,6d0 <pthread_exit@plt>

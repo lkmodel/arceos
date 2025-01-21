@@ -6,11 +6,13 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str::from_utf8;
+use std::sync::OnceLock;
 use std::{env, fs, io};
 
 const MUSL: &str = "xtask/riscv64-linux-musl-cross/bin/";
 const DYNAMIC_FLAG: [&str; 1] = ["-fPIE", ];
 const STATIC_FLAG: [&str; 0] = [];
+static DIR: OnceLock<PathBuf> = OnceLock::new();
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -55,13 +57,19 @@ struct DevConfig {
 
 fn main() {
     let args = Args::parse();
-    let current_dir = env::current_dir().expect("Failed to get current directory");
+    DIR.set(PathBuf::from(env!("CARGO_MANIFEST_DIR").strip_suffix("xtask").unwrap())).unwrap();
+    let current_dir = DIR.get().unwrap();
 
     Command::new("cargo")
         .args(&["install", "cargo-insta"])
         .status()
         .expect("Can`t install cargo-insta");
 
+    Command::new("git")
+        .args(&["config", "core.hooksPath", ".githooks/"])
+        .current_dir(current_dir)
+        .status()
+        .expect("Can`t set git hooks");
 
     if args.snapshot {
         review_snap(&current_dir.join("payload").join(args.app));
@@ -204,17 +212,17 @@ fn check_installation() -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
-        || PathBuf::from("xtask/riscv64-linux-musl-cross").exists()
+        || DIR.get().unwrap().join("xtask").join("riscv64-linux-musl-cross").exists()
 }
 
 fn install_musl_riscv64() -> bool {
     if check_installation() {
         return true;
     }
-
+    let cur_dir = DIR.get().unwrap().join("xtask");
     let status = Command::new("wget")
         .args(["-N", "https://musl.cc/riscv64-linux-musl-cross.tgz"])
-        .current_dir(env::current_dir().unwrap().join("xtask"))
+        .current_dir(&cur_dir)
         .status()
         .expect("Failed to download riscv64-linux-musl-cross");
 
@@ -225,7 +233,7 @@ fn install_musl_riscv64() -> bool {
 
     let status = Command::new("tar")
         .args(["-xzf", "riscv64-linux-musl-cross.tgz"])
-        .current_dir(env::current_dir().unwrap().join("xtask"))
+        .current_dir(&cur_dir)
         .status()
         .expect("Failed to unzip riscv64-linux-musl-cross");
 
@@ -236,7 +244,7 @@ fn install_musl_riscv64() -> bool {
 
 
     println!("Musl RISC-V64 toolchain installation complete");
-    std::fs::remove_file("xtask/riscv64-linux-musl-cross.tgz").expect("Failed to remove musl-cross-make.tgz");
+    std::fs::remove_file(cur_dir.join("riscv64-linux-musl-cross.tgz")).expect("Failed to remove musl-cross-make.tgz");
 
     true
 }
@@ -385,7 +393,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .map(|flags| flags.iter().map(|s| s.as_str()).collect::<Vec<_>>())
         .unwrap_or_else(|| STATIC_FLAG.iter().map(|s| *s).collect());
 
-    let cur_dir = env::current_dir()?;
+    let cur_dir = DIR.get().unwrap();
     let tools = if !env::var("CC").is_err() {
         env::var("CC").unwrap()
     } else if (!env::var("CI").is_err()) || (Command::new("which")
