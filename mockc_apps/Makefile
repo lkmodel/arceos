@@ -8,6 +8,7 @@ subdir:
 	$(MAKE) -C $(SRC) $(TYPE)
 
 toplash:
+	rm ../payload/apps.bin
 	dd if=/dev/zero of=./apps.bin bs=1M count=32
 	touch size.bin
 	bash size.sh --infile ./$(SRC)/apps.bin --outfile size.bin

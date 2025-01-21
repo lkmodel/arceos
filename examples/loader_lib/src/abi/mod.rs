@@ -12,11 +12,15 @@ use core::{
     slice::from_raw_parts,
 };
 use cty::{c_char, c_int, size_t};
+use noimpl::noimpl;
 use printf_compat::output::display;
 use thread::{abi_pthread_create, abi_pthread_exit, abi_pthread_join, abi_pthread_self};
 
+mod file;
+mod noimpl;
 mod thread;
 
+const NOIMPL: usize = 0;
 const SYS_HELLO: usize = 1;
 const SYS_PUTCHAR: usize = 2;
 pub const SYS_TERMINATE: usize = 3;
@@ -34,9 +38,18 @@ const SYS_PTHREAD_MUTEX_UNLOCK: usize = 14;
 const SYS_SLEEP: usize = 15;
 const SYS_OUT: usize = 16;
 
+const SYS_OPEN: usize = 17;
+const SYS_LSEEK: usize = 18;
+const SYS_STAT: usize = 19;
+const SYS_FSTAT: usize = 20;
+const SYS_LSTAT: usize = 21;
+const SYS_GETCWD: usize = 22;
+const SYS_RENAME: usize = 23;
+
 pub static mut ABI_TABLE: [usize; 32] = [0; 32];
 
 pub fn init_abis() {
+    register_abi("noimpl", NOIMPL, noimpl as usize);
     register_abi("hello", SYS_HELLO, abi_hello as usize);
     register_abi("putchar", SYS_PUTCHAR, abi_putchar as usize);
     register_abi("exit", SYS_TERMINATE, abi_terminate as usize);
@@ -73,18 +86,12 @@ fn abi_hello() {
 /// `SYS_PUTCHAR: 2`
 #[no_mangle]
 fn abi_putchar(c: char) {
-    print!("\x1b[34m");
     print!("{c}");
-    print!("\x1b[0m");
 }
 
 /// `SYS_TERMINATE: 3`
 #[no_mangle]
 fn abi_terminate() -> ! {
-    print!("\x1b[34m");
-    println!("Bye");
-    print!("\x1b[0m");
-
     exit(0);
 }
 
@@ -111,7 +118,7 @@ fn abi_timespec(ts: *mut TimeSpec) {
 #[no_mangle]
 unsafe extern "C" fn vfprintf(str: *const c_char, args: VaList) -> c_int {
     let format = display(str, args);
-    print!("\x1b[34m{}\x1b[0m", format);
+    print!("{}", format);
     format.bytes_written()
 }
 

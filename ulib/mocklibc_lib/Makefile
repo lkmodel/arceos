@@ -26,6 +26,7 @@ LIBSRC = $(wildcard c/stdio/*.c) \
 				 $(wildcard c/thread/*.c) \
 				 $(wildcard c/unistd/*.c) \
 				 $(wildcard c/__hidden/*.c) \
+				 $(wildcard c/__file/*.c) \
 				 $(wildcard c/math/*.c) \
 				 $(wildcard c/complex/*.c) \
 				 $(wildcard c/errno/*.c) \
@@ -51,19 +52,19 @@ $(LIBOBJS): | $(dir $(LIBOBJS))
 $(CRTOBJS): | $(dir $(CRTOBJS))
 
 $(CRTOBJS): c/crt1.c include/crt_arch.h
-	@$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(OBJ_DIRS)/%.o: c/%.c
-	@$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(OBJ_DIRS)/%.o: c/%.s
-	@$(AS) $(ASFLAGS) -o $@ $<
+	$(AS) $(ASFLAGS) -o $@ $<
 
 $(LIB): $(LIBOBJS) $(CRTOBJS)
-	@$(AR) rcs $@ $(LIBOBJS)
+	$(AR) rcs $@ $(LIBOBJS)
 
 $(SHARED_LIB): $(LIBOBJS) $(CRTOBJS)
-	@$(CC) $(CFLAGS) $(LDFLAGS) -shared -fPIC -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -fPIC -o $@ $^
 
 clean:
 	@rm $(SHARED_LIB) -rf

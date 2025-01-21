@@ -1,3 +1,7 @@
 #include <__hidden.h>
+#include <mocklibc.h>
 
-void __fixtfsi() {}
+void __fixtfsi()
+{
+    NOIMPL
+}

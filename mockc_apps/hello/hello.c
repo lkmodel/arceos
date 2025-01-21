@@ -3,8 +3,15 @@
 #include <stdio.h>
 #include <time.h>
 
+int test()
+{
+    printf("WTF\n");
+}
+
 int main()
 {
+    test();
+    test();
     puts("[test puts] Hello world\n");
     int a = 1;
     int b = 2;
@@ -32,11 +39,10 @@ int main()
     printf("isalnum %s\n", isalnum('1') ? "PASS!" : "BAD!");
     printf("isalpha %s\n", isalpha('a') ? "PASS!" : "BAD!");
     printf("isblank %s\n", isblank(' ') ? "PASS!" : "BAD!");
+    printf("fff %f\n", 3.14f);
 
     // FIXME: 需要注意！这里是有BUG的
-    //    printf("fff %f\n", 3.14f);
     //    printf("%d\n", errno);
-    //    printf("fff %lf\n", 3.14);
 
     return 0;
 }

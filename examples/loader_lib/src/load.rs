@@ -69,7 +69,7 @@ pub fn load_elf() -> u64 {
 
             let lib_elf: ElfBytes<'_, LittleEndian> =
                 ElfBytes::<LittleEndian>::minimal_parse(lib_elf_slice)
-                    .expect("Failed to parse ELF at SO file");
+                    .expect("Failed to parse ELF at LIB file");
 
             debug!(
                 "ELF Headers App: 0x{:x}, Lib: 0x{:x}",
@@ -202,134 +202,159 @@ fn load_segment(
     }
 }
 
-fn modify_plt_for_lib(elf: &ElfBytes<LittleEndian>, so_elf: &ElfBytes<LittleEndian>) {
+fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
     debug!("modify for solib");
-    let (so_dynsym_table, so_dynstr_table) = so_elf
+    let (lib_dynsym_table, lib_dynstr_table) = lib_elf
         .dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")
         .expect("ELF should have a dynamic symbol table");
-    let so_rela_shdr = so_elf
+    let lib_rela_shdr = lib_elf
         .section_header_by_name(".rela.plt")
         .expect("section table should be parseable")
         .expect("elf should have a .rela.plt section");
-    let so_relas = so_elf
-        .section_data_as_relas(&so_rela_shdr)
+    let lib_relas = lib_elf
+        .section_data_as_relas(&lib_rela_shdr)
         .expect("Failed to parse .rela.plt section");
+    let (app_dynsym_table, app_dynstr_table) = app_elf
+        .dynamic_symbol_table()
+        .expect("Failed to parse dynamic symbol table")
+        .expect("ELF should have a dynamic symbol table");
 
     let run_code_entry_name = "main";
 
-    for rela in so_relas {
-        let sym = so_dynsym_table
-            .get(rela.r_sym as usize)
+    for lib_rela in lib_relas {
+        let lib_sym = lib_dynsym_table
+            .get(lib_rela.r_sym as usize)
             .expect("Failed to get symbol");
-        let rela_name = so_dynstr_table
-            .get(sym.st_name as usize)
+        let lib_rela_name = lib_dynstr_table
+            .get(lib_sym.st_name as usize)
             .expect("Failed to get symbol name");
-        if rela_name == run_code_entry_name {
+
+        if lib_rela_name == run_code_entry_name {
+            // Find symbol main in APP ELF
+            let app_sym = app_dynsym_table
+                .iter()
+                .find(|s| {
+                    let name = app_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                    name == lib_rela_name
+                })
+                .expect("Failed to find symbol in APP dynamic symbol table");
+
             unsafe {
-                *((LIB_START as u64 + rela.r_offset) as *mut usize) =
-                    APP_START + elf.ehdr.e_entry as usize;
+                *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
+                    APP_START + app_sym.st_value as usize;
+
                 debug!(
                     "[plt] @0x{:x} value 0x{:x} st_name {}",
-                    LIB_START as u64 + rela.r_offset,
-                    APP_START + elf.ehdr.e_entry as usize,
-                    rela_name
+                    LIB_START as u64 + lib_rela.r_offset,
+                    APP_START + app_sym.st_value as usize,
+                    lib_rela_name
                 );
             }
         } else {
             unsafe {
-                *((LIB_START as u64 + rela.r_offset) as *mut usize) =
-                    LIB_START + sym.st_value as usize;
+                *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
+                    LIB_START + lib_sym.st_value as usize;
                 debug!(
                     "[plt] @0x{:x} value 0x{:x} st_name {}",
-                    LIB_START as u64 + rela.r_offset,
-                    LIB_START + sym.st_value as usize,
-                    rela_name
+                    LIB_START as u64 + lib_rela.r_offset,
+                    LIB_START + lib_sym.st_value as usize,
+                    lib_rela_name
                 );
             }
         }
     }
 
-    let so_rela_shdr = so_elf
+    let lib_rela_shdr = lib_elf
         .section_header_by_name(".rela.dyn")
         .expect("section table should be parseable")
         .expect("elf should have a .rela.dyn section");
-    let so_relas = so_elf
-        .section_data_as_relas(&so_rela_shdr)
+    let lib_relas = lib_elf
+        .section_data_as_relas(&lib_rela_shdr)
         .expect("Failed to parse .rela.dyn section");
 
     let symbols_to_find = ["abi_entry"];
 
-    for rela in so_relas {
-        let sym = so_dynsym_table
-            .get(rela.r_sym as usize)
+    for lib_rela in lib_relas {
+        let lib_sym = lib_dynsym_table
+            .get(lib_rela.r_sym as usize)
             .expect("Failed to get symbol");
-        let rela_name = so_dynstr_table
-            .get(sym.st_name as usize)
+        let lib_rela_name = lib_dynstr_table
+            .get(lib_sym.st_name as usize)
             .expect("Failed to get symbol name");
-        for symbol_name in symbols_to_find.iter() {
-            debug!("[got] name {}", rela_name);
-            if rela_name == *symbol_name {
-                unsafe {
-                    *((LIB_START as u64 + rela.r_offset) as *mut usize) =
-                        ABI_TABLE.as_ptr() as usize;
-                    debug!(
-                        "[got] @0x{:x} value 0x{:x} st_name {}",
-                        LIB_START as u64 + rela.r_offset,
-                        ABI_TABLE.as_ptr() as usize,
-                        rela_name
-                    );
-                }
-                break;
-            }
+        unsafe {
+            *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
+                LIB_START + lib_sym.st_value as usize;
+            debug!(
+                "[TEST] name {} @0x{:x} modify value 0x{:x}",
+                lib_rela_name,
+                LIB_START as u64 + lib_rela.r_offset,
+                LIB_START + lib_sym.st_value as usize
+            );
         }
+        //        for symbol_name in symbols_to_find.iter() {
+        //            debug!("[got] name {}", lib_rela_name);
+        //            if lib_rela_name == *symbol_name {
+        //                unsafe {
+        //                    *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
+        //                        ABI_TABLE.as_ptr() as usize;
+        //                    debug!(
+        //                        "[got] @0x{:x} value 0x{:x} st_name {}",
+        //                        LIB_START as u64 + lib_rela.r_offset,
+        //                        ABI_TABLE.as_ptr() as usize,
+        //                        lib_rela_name
+        //                    );
+        //                }
+        //                break;
+        //            }
+        //        }
     }
 }
 
-fn modify_plt(elf: &ElfBytes<LittleEndian>, so_elf: &ElfBytes<LittleEndian>) {
+fn modify_plt(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
     debug!("modify for run code");
-    let (dynsym_table, dynstr_table) = elf
+    let (app_dynsym_table, app_dynstr_table) = app_elf
         .dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")
         .expect("ELF should have a dynamic symbol table");
-    let rela_shdr = elf
+    let app_rela_shdr = app_elf
         .section_header_by_name(".rela.plt")
         .expect("section table should be parseable")
         .expect("elf should have a .rela.plt section");
-    let relas = elf
-        .section_data_as_relas(&rela_shdr)
+    let app_relas = app_elf
+        .section_data_as_relas(&app_rela_shdr)
         .expect("Failed to parse .rela.dyn section");
-    // Get SO lib symbol table
-    let (so_dynsym_table, so_dynstr_table) = so_elf
+    // Get LIB symbol table
+    let (lib_dynsym_table, lib_dynstr_table) = lib_elf
         .dynamic_symbol_table()
-        .expect("Failed to parse SO dynamic symbol table")
-        .expect("SO ELF should have a dynamic symbol table");
+        .expect("Failed to parse LIB dynamic symbol table")
+        .expect("LIB ELF should have a dynamic symbol table");
 
-    for rela in relas {
+    for app_rela in app_relas {
         // Get the `r_sym'th` symbol from the dynamic symbol table
-        let sym = dynsym_table
-            .get(rela.r_sym as usize)
+        let app_sym = app_dynsym_table
+            .get(app_rela.r_sym as usize)
             .expect("Failed to get symbol");
-        let rela_name = dynstr_table
-            .get(sym.st_name as usize)
+        let app_rela_name = app_dynstr_table
+            .get(app_sym.st_name as usize)
             .expect("Failed to get symbol name");
-        // Find symbol in SO ELF
-        let so_sym = so_dynsym_table
+        // Find symbol in LIB ELF
+        let lib_sym = lib_dynsym_table
             .iter()
             .find(|s| {
-                let name = so_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
-                name == rela_name
+                let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                name == app_rela_name
             })
-            .expect("Failed to find symbol in SO dynamic symbol table");
+            .expect("Failed to find symbol in LIB dynamic symbol table");
 
         unsafe {
-            *((APP_START as u64 + rela.r_offset) as *mut usize) =
-                LIB_START + so_sym.st_value as usize;
+            *((APP_START as u64 + app_rela.r_offset) as *mut usize) =
+                LIB_START + lib_sym.st_value as usize;
             debug!(
                 "[plt] @0x{:x} value 0x{:x} st_name {}",
-                APP_START as u64 + rela.r_offset,
-                LIB_START + so_sym.st_value as usize,
-                rela_name
+                APP_START as u64 + app_rela.r_offset,
+                LIB_START + lib_sym.st_value as usize,
+                app_rela_name
             );
         }
     }

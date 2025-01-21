@@ -1,3 +1,7 @@
 #include <__hidden.h>
+#include <mocklibc.h>
 
-void __floatditf() {}
+void __floatditf()
+{
+    NOIMPL
+}
