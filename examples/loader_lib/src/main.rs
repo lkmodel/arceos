@@ -1,19 +1,26 @@
 #![feature(c_variadic)]
 #![no_std]
 #![no_main]
+extern crate arceos_posix_api;
+extern crate axstd;
 extern crate axstd as std;
+extern crate cty;
+extern crate printf_compat;
 use std::println;
 
 mod abi;
-use abi::{init_abis, ABI_TABLE, SYS_TERMINATE};
+use abi::{ABI_TABLE, SYS_TERMINATE, init_abis};
 
 mod load;
-use load::{load_elf, APP_START};
+use init::init_loader_lib;
+use load::{APP_START, load_elf};
 
 mod elf;
+mod init;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
+    // init_loader_lib();
     init_abis();
     let entry = load_elf();
     println!("Entry: 0x{:x} and RUN", entry);

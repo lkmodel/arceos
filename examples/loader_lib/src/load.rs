@@ -7,11 +7,11 @@ use axstd::println;
 
 use axlog::debug;
 
-use elf::{abi::PT_LOAD, endian::LittleEndian, ElfBytes};
+use elf::{ElfBytes, abi::PT_LOAD, endian::LittleEndian};
 
 use crate::{
     abi::ABI_TABLE,
-    elf::{verify_elf_header, LoadError},
+    elf::{LoadError, verify_elf_header},
 };
 
 /// `bin`的开始位置

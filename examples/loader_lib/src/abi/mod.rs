@@ -1,3 +1,7 @@
+mod file;
+mod noimpl;
+mod thread;
+
 use axhal::time::monotonic_time;
 use axlog::{debug, info};
 use axstd::{
@@ -6,37 +10,41 @@ use axstd::{
     process::exit,
     string::{String, ToString},
 };
+use axtask::init_scheduler;
 use core::{
     ffi::{CStr, VaList},
     ptr::copy_nonoverlapping,
     slice::from_raw_parts,
 };
 use cty::{c_char, c_int, size_t};
-use noimpl::noimpl;
+use noimpl::abi_noimpl;
 use printf_compat::output::display;
-use thread::{abi_pthread_create, abi_pthread_exit, abi_pthread_join, abi_pthread_self};
+use thread::{
+    abi_pthread_create, abi_pthread_exit, abi_pthread_join, abi_pthread_mutex_destroy,
+    abi_pthread_mutex_init, abi_pthread_mutex_lock, abi_pthread_mutex_unlock, abi_pthread_self,
+    abi_sleep,
+};
 
-mod file;
-mod noimpl;
-mod thread;
-
-const NOIMPL: usize = 0;
-const SYS_HELLO: usize = 1;
+const SYS_NOIMPL: usize = 0;
+const SYS_INIT_SCHEDULER: usize = 1;
 const SYS_PUTCHAR: usize = 2;
 pub const SYS_TERMINATE: usize = 3;
 const SYS_TIMESPEC: usize = 4;
 const SYS_VFPRINTF: usize = 5;
 const SYS_VSNPRINTF: usize = 6;
 const SYS_VSCANF: usize = 7;
+
 const SYS_PTHREAD_CREATE: usize = 8;
 const SYS_PTHREAD_JOIN: usize = 9;
 const SYS_PTHREAD_EXIT: usize = 10;
 const SYS_PTHREAD_SELF: usize = 11;
-const SYS_PTHREAD_MUTEX_INIT: usize = 12;
-const SYS_PTHREAD_MUTEX_LOCK: usize = 13;
-const SYS_PTHREAD_MUTEX_UNLOCK: usize = 14;
-const SYS_SLEEP: usize = 15;
-const SYS_OUT: usize = 16;
+const SYS_SLEEP: usize = 12;
+const SYS_PTHREAD_MUTEX_INIT: usize = 13;
+const SYS_PTHREAD_MUTEX_LOCK: usize = 14;
+const SYS_PTHREAD_MUTEX_UNLOCK: usize = 15;
+const SYS_PTHREAD_MUTEX_DESTORY: usize = 16;
+
+const SYS_OUT: usize = 17;
 
 const SYS_OPEN: usize = 17;
 const SYS_LSEEK: usize = 18;
@@ -49,8 +57,8 @@ const SYS_RENAME: usize = 23;
 pub static mut ABI_TABLE: [usize; 32] = [0; 32];
 
 pub fn init_abis() {
-    register_abi("noimpl", NOIMPL, noimpl as usize);
-    register_abi("hello", SYS_HELLO, abi_hello as usize);
+    register_abi("noimpl", SYS_NOIMPL, abi_noimpl as usize);
+    register_abi("hello", SYS_INIT_SCHEDULER, abi_init_scheduler as usize);
     register_abi("putchar", SYS_PUTCHAR, abi_putchar as usize);
     register_abi("exit", SYS_TERMINATE, abi_terminate as usize);
     register_abi("timespec", SYS_TIMESPEC, abi_timespec as usize);
@@ -65,6 +73,27 @@ pub fn init_abis() {
     register_abi("pthread_join", SYS_PTHREAD_JOIN, abi_pthread_join as usize);
     register_abi("pthread_exit", SYS_PTHREAD_EXIT, abi_pthread_exit as usize);
     register_abi("pthread_self", SYS_PTHREAD_SELF, abi_pthread_self as usize);
+    register_abi("sleep", SYS_SLEEP, abi_sleep as usize);
+    register_abi(
+        "pthread_mutex_init",
+        SYS_PTHREAD_MUTEX_INIT,
+        abi_pthread_mutex_init as usize,
+    );
+    register_abi(
+        "pthread_mutex_lock",
+        SYS_PTHREAD_MUTEX_LOCK,
+        abi_pthread_mutex_lock as usize,
+    );
+    register_abi(
+        "pthread_mutex_unlock",
+        SYS_PTHREAD_MUTEX_UNLOCK,
+        abi_pthread_mutex_unlock as usize,
+    );
+    register_abi(
+        "pthread_mutex_destroy",
+        SYS_PTHREAD_MUTEX_DESTORY,
+        abi_pthread_mutex_destroy as usize,
+    );
     register_abi("out", SYS_OUT, abi_out as usize);
 }
 
@@ -76,21 +105,19 @@ fn register_abi(name: &str, num: usize, handle: usize) {
 }
 
 /// `SYS_HELLO: 1`
-#[no_mangle]
-fn abi_hello() {
-    print!("\x1b[34m");
-    println!("[ABI:Hello] Hello, Apps!");
-    print!("\x1b[0m");
+#[unsafe(no_mangle)]
+fn abi_init_scheduler() {
+    init_scheduler();
 }
 
 /// `SYS_PUTCHAR: 2`
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn abi_putchar(c: char) {
     print!("{c}");
 }
 
 /// `SYS_TERMINATE: 3`
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn abi_terminate() -> ! {
     exit(0);
 }
@@ -103,7 +130,7 @@ struct TimeSpec {
 }
 
 /// `SYS_TIMESPEC: 4`
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn abi_timespec(ts: *mut TimeSpec) {
     unsafe {
         let ts = &mut *ts;
@@ -115,15 +142,17 @@ fn abi_timespec(ts: *mut TimeSpec) {
 }
 
 /// `SYS_VFPRINTF: 5`
-#[no_mangle]
+#[unsafe(no_mangle)]
 unsafe extern "C" fn vfprintf(str: *const c_char, args: VaList) -> c_int {
-    let format = display(str, args);
-    print!("{}", format);
-    format.bytes_written()
+    unsafe {
+        let format = display(str, args);
+        print!("{}", format);
+        format.bytes_written()
+    }
 }
 
 /// `SYS_VSNPRINTF: 6`
-#[no_mangle]
+#[unsafe(no_mangle)]
 unsafe extern "C" fn vsnprintf(
     out: *mut c_char,
     maxlen: size_t,
@@ -150,7 +179,7 @@ unsafe extern "C" fn vsnprintf(
 }
 
 /// `SYS_VSCANF: 7`
-#[no_mangle]
+#[unsafe(no_mangle)]
 unsafe extern "C" fn vscanf(str: *mut c_char, args: VaList) -> c_int {
     println!("DONT USE THIS YET");
     return -1;
@@ -169,7 +198,7 @@ unsafe extern "C" fn vscanf(str: *mut c_char, args: VaList) -> c_int {
 }
 
 /// `SYS_OUT: 16`
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn abi_out(s: *const c_char, l: size_t) {
     unsafe {
         let bytes = from_raw_parts(s as *const u8, l);

@@ -10,9 +10,19 @@ __attribute__((visibility("hidden"))) void _start_c(long *p)
     int argc = p[0];
     char **argv = (void *)(p + 1);
 
+    init_scheduler();
+
     main(argc, argv);
 
     terminate();
+}
+
+void init_scheduler()
+{
+    typedef void (*Fn)();
+    long *abi_ptr = (long *)(abi_entry + 8 * SYS_INIT_SCHEDULER);
+    Fn func = (Fn)(*abi_ptr);
+    func();
 }
 
 void terminate()

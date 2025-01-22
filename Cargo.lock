@@ -125,6 +125,7 @@ dependencies = [
  "axhal",
  "axlog",
  "axstd",
+ "axtask",
  "cty",
  "elf",
  "printf-compat",
