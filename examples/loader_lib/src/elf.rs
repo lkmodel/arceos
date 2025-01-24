@@ -1,14 +1,10 @@
 use core::fmt;
 
 use axlog::debug;
-use elf::{
-    ElfBytes,
-    abi::{EM_RISCV, ET_EXEC},
-    endian::LittleEndian,
-};
+use elf::{ElfBytes, abi::EM_RISCV, endian::LittleEndian};
 
 pub fn verify_elf_header(elf: &ElfBytes<LittleEndian>) -> Result<(), LoadError> {
-    let header = elf.ehdr;
+    let header: elf::file::FileHeader<LittleEndian> = elf.ehdr;
     debug!("ELF header: {:?}", header);
 
     // 1. 验证目标架构
@@ -20,40 +16,25 @@ pub fn verify_elf_header(elf: &ElfBytes<LittleEndian>) -> Result<(), LoadError> 
         return Err(LoadError::WrongArchitecture);
     }
 
-    // 2. 验证文件类型
-    if header.e_type != ET_EXEC {
-        debug!("Not an executable file: {:?}", header.e_type);
-        return Err(LoadError::NotExecutable);
-    }
-
-    // 3. 验证目标架构
-    if header.e_machine != EM_RISCV {
-        debug!(
-            "Wrong architecture: expected RISC-V, got {:?}",
-            header.e_machine
-        );
-        return Err(LoadError::WrongArchitecture);
-    }
-
-    // 4. 验证程序头表是否存在
+    // 2. 验证程序头表是否存在
     if header.e_phnum == 0 {
         debug!("No program headers found");
         return Err(LoadError::NoSegments);
     }
 
-    // 5. 验证 ELF 版本
+    // 3. 验证 ELF 版本
     if header.version != EV_CURRENT {
         debug!("Invalid ELF version");
         return Err(LoadError::InvalidVersion);
     }
 
-    // 6. 验证入口点是否有效
+    // 4. 验证入口点是否有效
     if header.e_entry == 0 {
         debug!("Invalid entry point");
         return Err(LoadError::InvalidEntryPoint);
     }
 
-    // 7. 验证程序头表偏移
+    // 5. 验证程序头表偏移
     if header.e_phoff == 0 {
         debug!("Invalid program header offset");
         return Err(LoadError::InvalidProgramHeaderOffset);
@@ -100,4 +81,3 @@ const ELFMAG1: u8 = b'E';
 const ELFMAG2: u8 = b'L';
 const ELFMAG3: u8 = b'F';
 const EV_CURRENT: u32 = 1;
-

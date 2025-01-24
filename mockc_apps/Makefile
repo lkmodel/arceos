@@ -15,7 +15,7 @@ toplash:
 	dd if=./size.bin of=./tmp.bin bs=1 count=$$(stat -c %s ./size.bin)
 	rm size.bin
 	dd if=./$(SRC)/apps.bin of=./tmp.bin bs=1 oflag=append conv=notrunc
-	#	
+	#
 	touch size.bin
 	bash size.sh --infile $(MOCK_LIBC)/lib/libmock.so --outfile size.bin
 	dd if=./size.bin of=./tmp.bin bs=1 oflag=append conv=notrunc

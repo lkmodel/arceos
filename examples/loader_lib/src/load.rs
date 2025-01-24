@@ -82,8 +82,8 @@ pub fn load_elf() -> u64 {
             modify_plt_for_lib(&app_elf, &lib_elf);
 
             println!("Lib elf size: 0x{:x}", lib_elf_size);
-            // LIB_START as u64 + lib_elf.ehdr.e_entry
-            APP_START as u64 + app_elf.ehdr.e_entry
+            LIB_START as u64 + lib_elf.ehdr.e_entry
+            // APP_START as u64 + app_elf.ehdr.e_entry
         }
     };
 
