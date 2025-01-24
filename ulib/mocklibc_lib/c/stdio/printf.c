@@ -10,7 +10,7 @@ int printf(const char *restrict fmt, ...)
     va_start(ap, fmt);
 
     typedef int (*FnABI)(const char *, va_list);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_VFPRINTF);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_VFPRINTF);
     FnABI func = (FnABI)(*abi_ptr);
     va_list *ap_ptr = &ap;
     ret = func(fmt, ap);

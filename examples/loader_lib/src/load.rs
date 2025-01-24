@@ -9,17 +9,14 @@ use axlog::debug;
 
 use elf::{ElfBytes, abi::PT_LOAD, endian::LittleEndian};
 
-use crate::{
-    abi::ABI_TABLE,
-    elf::{LoadError, verify_elf_header},
-};
+use crate::elf::{LoadError, verify_elf_header};
 
 /// `bin`的开始位置
 const PLASH_START: usize = 0xffff_ffc0_2200_0000;
-const MAX_APP_SIZE: usize = 0x10_0000;
-pub const APP_START: usize = 0xffff_ffc0_8010_0000;
-const MAX_LIB_SIZE: usize = 0x10_0000;
-const LIB_START: usize = 0xffff_ffc0_8030_0000;
+const MAX_APP_SIZE: usize = 0x08_0000;
+const APP_START: usize = 0xffff_ffc0_8010_0000;
+const MAX_LIB_SIZE: usize = 0x08_0000;
+const LIB_START: usize = 0xffff_ffc0_8018_0000;
 
 pub fn load_elf() -> u64 {
     debug!("Load payload ...");
@@ -85,7 +82,8 @@ pub fn load_elf() -> u64 {
             modify_plt_for_lib(&app_elf, &lib_elf);
 
             println!("Lib elf size: 0x{:x}", lib_elf_size);
-            LIB_START as u64 + lib_elf.ehdr.e_entry
+            // LIB_START as u64 + lib_elf.ehdr.e_entry
+            APP_START as u64 + app_elf.ehdr.e_entry
         }
     };
 
@@ -273,8 +271,6 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
         .section_data_as_relas(&lib_rela_shdr)
         .expect("Failed to parse .rela.dyn section");
 
-    let symbols_to_find = ["abi_entry"];
-
     for lib_rela in lib_relas {
         let lib_sym = lib_dynsym_table
             .get(lib_rela.r_sym as usize)
@@ -286,28 +282,12 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
             *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
                 LIB_START + lib_sym.st_value as usize;
             debug!(
-                "[TEST] name {} @0x{:x} modify value 0x{:x}",
+                "[GOT] name {} @0x{:x} modify value 0x{:x}",
                 lib_rela_name,
                 LIB_START as u64 + lib_rela.r_offset,
                 LIB_START + lib_sym.st_value as usize
             );
         }
-        //        for symbol_name in symbols_to_find.iter() {
-        //            debug!("[got] name {}", lib_rela_name);
-        //            if lib_rela_name == *symbol_name {
-        //                unsafe {
-        //                    *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
-        //                        ABI_TABLE.as_ptr() as usize;
-        //                    debug!(
-        //                        "[got] @0x{:x} value 0x{:x} st_name {}",
-        //                        LIB_START as u64 + lib_rela.r_offset,
-        //                        ABI_TABLE.as_ptr() as usize,
-        //                        lib_rela_name
-        //                    );
-        //                }
-        //                break;
-        //            }
-        //        }
     }
 }
 
@@ -329,6 +309,15 @@ fn modify_plt(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>
         .dynamic_symbol_table()
         .expect("Failed to parse LIB dynamic symbol table")
         .expect("LIB ELF should have a dynamic symbol table");
+    lib_dynsym_table.iter().find(|s| {
+        let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+        debug!(
+            "LIB dynamic_symbol_table value 0x{:016x} st_name {}",
+            LIB_START + s.st_value as usize,
+            name,
+        );
+        false
+    });
 
     for app_rela in app_relas {
         // Get the `r_sym'th` symbol from the dynamic symbol table
@@ -338,11 +327,14 @@ fn modify_plt(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>
         let app_rela_name = app_dynstr_table
             .get(app_sym.st_name as usize)
             .expect("Failed to get symbol name");
+        debug!("Finding symbol name {}", app_rela_name);
+
         // Find symbol in LIB ELF
         let lib_sym = lib_dynsym_table
             .iter()
             .find(|s| {
                 let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                // 如果开始寻找`__libc_start_main`，就替换成我们的实现
                 name == app_rela_name
             })
             .expect("Failed to find symbol in LIB dynamic symbol table");

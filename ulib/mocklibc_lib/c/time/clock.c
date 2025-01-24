@@ -9,7 +9,7 @@ clock_t clock()
     struct timespec *ts_ptr = &ts;
 
     typedef int (*FnABI)(long);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_TIMESPEC);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_TIMESPEC);
     FnABI func = (FnABI)(*abi_ptr);
     func((long)ts_ptr);
 

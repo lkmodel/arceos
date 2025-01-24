@@ -5,7 +5,7 @@
 unsigned sleep(unsigned seconds)
 {
     typedef int (*FnABI)(unsigned);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_SLEEP);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_SLEEP);
     FnABI func = (FnABI)(*abi_ptr);
     return func(seconds);
 

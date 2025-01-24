@@ -7,7 +7,7 @@
 int sys_fstat(int fd, stat *buf)
 {
     typedef int (*FnABI)(int, stat *);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_FSTAT);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_FSTAT);
     FnABI func = (FnABI)(*abi_ptr);
-    func(fd, buf);
+    return func(fd, buf);
 }

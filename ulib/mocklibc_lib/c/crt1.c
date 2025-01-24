@@ -1,34 +1,45 @@
 #include "crt_arch.h"
 #include <mocklibc.h>
 
-void terminate();
-
 unsigned long volatile abi_entry = 0;
-__attribute__((visibility("hidden"))) void _start_c(long *p)
+
+__attribute__((visibility("hidden"))) void _start(long *p)
 {
     __asm__ volatile("mv %0, a7" : "=r"(abi_entry));
     int argc = p[0];
     char **argv = (void *)(p + 1);
-
-    init_scheduler();
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
 
     main(argc, argv);
 
     terminate();
 }
 
-void init_scheduler()
+/// void mock_start_main(long *p)
+void __libc_start_main(long *p)
 {
-    typedef void (*Fn)();
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_INIT_SCHEDULER);
-    Fn func = (Fn)(*abi_ptr);
-    func();
+    __asm__ volatile("mv %0, a7" : "=r"(abi_entry));
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    __asm__ volatile("nop");
+    int argc = p[0];
+    char **argv = (void *)(p + 1);
+
+    main(argc, argv);
+
+    terminate();
 }
 
 void terminate()
 {
     typedef void (*Fn)();
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_TERMINATE);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_TERMINATE);
     Fn func = (Fn)(*abi_ptr);
-    func();
+    return func();
 }

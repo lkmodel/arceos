@@ -56,7 +56,7 @@
 _Noreturn void __pthread_exit(void *result)
 {
     typedef void (*FnABI)(void *);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_PTHREAD_EXIT);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_PTHREAD_EXIT);
     FnABI func = (FnABI)(*abi_ptr);
     func(result);
     while (1);
@@ -130,7 +130,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 {
     typedef int (*FnABI)(pthread_t *restrict, const pthread_attr_t *restrict, void *(*)(void *),
                          void *restrict);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_PTHREAD_CREATE);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_PTHREAD_CREATE);
     FnABI func = (FnABI)(*abi_ptr);
     return func(res, attrp, entry, arg);
 }

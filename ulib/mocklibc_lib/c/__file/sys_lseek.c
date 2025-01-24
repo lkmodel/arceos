@@ -5,8 +5,8 @@
 
 off_t sys_lseek(int fd, off_t offset, int whence)
 {
-    typedef int (*FnABI)(int, off_t, int);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_LSEEK);
+    typedef off_t (*FnABI)(int, off_t, int);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_LSEEK);
     FnABI func = (FnABI)(*abi_ptr);
-    func(fd, offset, whence);
+    return func(fd, offset, whence);
 }

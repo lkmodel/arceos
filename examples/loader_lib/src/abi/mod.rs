@@ -1,4 +1,5 @@
 mod file;
+mod mem;
 mod noimpl;
 mod thread;
 
@@ -10,13 +11,15 @@ use axstd::{
     process::exit,
     string::{String, ToString},
 };
-use axtask::init_scheduler;
+
+use axtask::{init_scheduler, spawn};
 use core::{
     ffi::{CStr, VaList},
     ptr::copy_nonoverlapping,
     slice::from_raw_parts,
 };
 use cty::{c_char, c_int, size_t};
+use mem::{abi_calloc, abi_free, abi_malloc, abi_realloc};
 use noimpl::abi_noimpl;
 use printf_compat::output::display;
 use thread::{
@@ -25,76 +28,96 @@ use thread::{
     abi_sleep,
 };
 
-const SYS_NOIMPL: usize = 0;
-const SYS_INIT_SCHEDULER: usize = 1;
-const SYS_PUTCHAR: usize = 2;
-pub const SYS_TERMINATE: usize = 3;
-const SYS_TIMESPEC: usize = 4;
-const SYS_VFPRINTF: usize = 5;
-const SYS_VSNPRINTF: usize = 6;
-const SYS_VSCANF: usize = 7;
+// `0-10提供ArceOS相关ABI调用`
+const ABI_NOIMPL: usize = 0;
+const ABI_INIT_SCHEDULER: usize = 1;
+pub const ABI_TERMINATE: usize = 2;
+// `stdio`
+const ABI_PUTCHAR: usize = 10;
+const ABI_TIMESPEC: usize = 11;
+const ABI_VFPRINTF: usize = 12;
+const ABI_VSNPRINTF: usize = 13;
+const ABI_VSCANF: usize = 14;
+const ABI_OUT: usize = 15;
+// `pthread`
+const ABI_PTHREAD_CREATE: usize = 20;
+const ABI_PTHREAD_JOIN: usize = 21;
+const ABI_PTHREAD_EXIT: usize = 22;
+const ABI_PTHREAD_SELF: usize = 23;
+const ABI_PTHREAD_MUTEX_INIT: usize = 24;
+const ABI_PTHREAD_MUTEX_LOCK: usize = 25;
+const ABI_PTHREAD_MUTEX_UNLOCK: usize = 26;
+const ABI_PTHREAD_MUTEX_DESTORY: usize = 27;
+// `file`
+const ABI_OPEN: usize = 30;
+const ABI_LSEEK: usize = 31;
+const ABI_STAT: usize = 32;
+const ABI_FSTAT: usize = 33;
+const ABI_LSTAT: usize = 34;
+const ABI_GETCWD: usize = 35;
+const ABI_RENAME: usize = 36;
+// `malloc`
+const ABI_MALLOC: usize = 40;
+const ABI_CALLOC: usize = 41;
+const ABI_REALLOC: usize = 42;
+const ABI_FREE: usize = 43;
+// `unistd`
+const ABI_SLEEP: usize = 50;
 
-const SYS_PTHREAD_CREATE: usize = 8;
-const SYS_PTHREAD_JOIN: usize = 9;
-const SYS_PTHREAD_EXIT: usize = 10;
-const SYS_PTHREAD_SELF: usize = 11;
-const SYS_SLEEP: usize = 12;
-const SYS_PTHREAD_MUTEX_INIT: usize = 13;
-const SYS_PTHREAD_MUTEX_LOCK: usize = 14;
-const SYS_PTHREAD_MUTEX_UNLOCK: usize = 15;
-const SYS_PTHREAD_MUTEX_DESTORY: usize = 16;
-
-const SYS_OUT: usize = 17;
-
-const SYS_OPEN: usize = 17;
-const SYS_LSEEK: usize = 18;
-const SYS_STAT: usize = 19;
-const SYS_FSTAT: usize = 20;
-const SYS_LSTAT: usize = 21;
-const SYS_GETCWD: usize = 22;
-const SYS_RENAME: usize = 23;
-
-pub static mut ABI_TABLE: [usize; 32] = [0; 32];
+pub static mut ABI_TABLE: [usize; 100] = [0; 100];
 
 pub fn init_abis() {
-    register_abi("noimpl", SYS_NOIMPL, abi_noimpl as usize);
-    register_abi("hello", SYS_INIT_SCHEDULER, abi_init_scheduler as usize);
-    register_abi("putchar", SYS_PUTCHAR, abi_putchar as usize);
-    register_abi("exit", SYS_TERMINATE, abi_terminate as usize);
-    register_abi("timespec", SYS_TIMESPEC, abi_timespec as usize);
-    register_abi("vfprintf", SYS_VFPRINTF, vfprintf as usize);
-    register_abi("vsnprintf", SYS_VSNPRINTF, vsnprintf as usize);
-    register_abi("vscanf", SYS_VSCANF, vscanf as usize);
+    register_abi("noimpl", ABI_NOIMPL, abi_noimpl as usize);
+    //    register_abi(
+    //        "hello",
+    //        ABI_INIT_SCHEDULER,
+    //        abi_init_scheduler::<fn()> as usize,
+    //    );
+    register_abi("init", ABI_INIT_SCHEDULER, abi_init_scheduler as usize);
+    register_abi("exit", ABI_TERMINATE, abi_terminate as usize);
+
+    register_abi("putchar", ABI_PUTCHAR, abi_putchar as usize);
+    register_abi("timespec", ABI_TIMESPEC, abi_timespec as usize);
+    register_abi("vfprintf", ABI_VFPRINTF, vfprintf as usize);
+    register_abi("vsnprintf", ABI_VSNPRINTF, vsnprintf as usize);
+    register_abi("vscanf", ABI_VSCANF, vscanf as usize);
+    register_abi("out", ABI_OUT, abi_out as usize);
+
     register_abi(
         "pthread_create",
-        SYS_PTHREAD_CREATE,
+        ABI_PTHREAD_CREATE,
         abi_pthread_create as usize,
     );
-    register_abi("pthread_join", SYS_PTHREAD_JOIN, abi_pthread_join as usize);
-    register_abi("pthread_exit", SYS_PTHREAD_EXIT, abi_pthread_exit as usize);
-    register_abi("pthread_self", SYS_PTHREAD_SELF, abi_pthread_self as usize);
-    register_abi("sleep", SYS_SLEEP, abi_sleep as usize);
+    register_abi("pthread_join", ABI_PTHREAD_JOIN, abi_pthread_join as usize);
+    register_abi("pthread_exit", ABI_PTHREAD_EXIT, abi_pthread_exit as usize);
+    register_abi("pthread_self", ABI_PTHREAD_SELF, abi_pthread_self as usize);
     register_abi(
         "pthread_mutex_init",
-        SYS_PTHREAD_MUTEX_INIT,
+        ABI_PTHREAD_MUTEX_INIT,
         abi_pthread_mutex_init as usize,
     );
     register_abi(
         "pthread_mutex_lock",
-        SYS_PTHREAD_MUTEX_LOCK,
+        ABI_PTHREAD_MUTEX_LOCK,
         abi_pthread_mutex_lock as usize,
     );
     register_abi(
         "pthread_mutex_unlock",
-        SYS_PTHREAD_MUTEX_UNLOCK,
+        ABI_PTHREAD_MUTEX_UNLOCK,
         abi_pthread_mutex_unlock as usize,
     );
     register_abi(
         "pthread_mutex_destroy",
-        SYS_PTHREAD_MUTEX_DESTORY,
+        ABI_PTHREAD_MUTEX_DESTORY,
         abi_pthread_mutex_destroy as usize,
     );
-    register_abi("out", SYS_OUT, abi_out as usize);
+
+    register_abi("malloc", ABI_MALLOC, abi_malloc as usize);
+    register_abi("calloc", ABI_CALLOC, abi_calloc as usize);
+    register_abi("realloc", ABI_REALLOC, abi_realloc as usize);
+    register_abi("free", ABI_FREE, abi_free as usize);
+
+    register_abi("sleep", ABI_SLEEP, abi_sleep as usize);
 }
 
 fn register_abi(name: &str, num: usize, handle: usize) {
@@ -105,8 +128,16 @@ fn register_abi(name: &str, num: usize, handle: usize) {
 }
 
 /// `SYS_HELLO: 1`
-#[unsafe(no_mangle)]
-fn abi_init_scheduler() {
+// #[unsafe(no_mangle)]
+// fn abi_init_scheduler<F>(f: F)
+// where
+//     F: FnOnce() + Send + 'static,
+// {
+//     debug!("Init scheduler 0x{:x}", init_scheduler as usize);
+//     spawn(f);
+// }
+
+pub fn abi_init_scheduler() {
     init_scheduler();
 }
 
@@ -164,37 +195,42 @@ unsafe extern "C" fn vsnprintf(
         return -1; // 返回一个错误代码
     }
     // 创建格式化字符串
-    let format = display(str, args);
+    let format = unsafe { display(str, args) };
     let output_string = format.to_string();
     let bytes_written = output_string.len();
 
     // 限制写入的字节数
     let len_to_copy = bytes_written.min(maxlen - 1); // 保留一个字节用于Null终止符
-    copy_nonoverlapping(output_string.as_ptr(), out, len_to_copy);
+    unsafe {
+        copy_nonoverlapping(output_string.as_ptr(), out as *mut u8, len_to_copy);
+    }
 
     // 添加null终止符
-    *out.add(len_to_copy) = 0;
+    unsafe {
+        *out.add(len_to_copy) = 0;
+    }
 
     bytes_written as c_int
 }
 
 /// `SYS_VSCANF: 7`
 #[unsafe(no_mangle)]
-unsafe extern "C" fn vscanf(str: *mut c_char, args: VaList) -> c_int {
+unsafe extern "C" fn vscanf(_str: *mut c_char, _args: VaList) -> c_int {
     println!("DONT USE THIS YET");
     return -1;
-    if str.is_null() {
-        return -1;
-    }
-
-    let mut output: String = String::new();
-    let bytes_read = stdin().read_line(&mut output).unwrap_or(0);
-
-    let output_string = output.to_string();
-
-    // 读取
-    copy_nonoverlapping(output_string.as_ptr(), str, output_string.len());
-    0
+    // ```
+    //     if str.is_null() {
+    //         return -1;
+    //     }
+    //
+    //     let mut output: String = String::new();
+    //     let bytes_read = stdin().read_line(&mut output).unwrap_or(0);
+    //
+    //     let output_string = output.to_string();
+    //
+    //     // 读取
+    //     copy_nonoverlapping(output_string.as_ptr(), str, output_string.len());
+    //     0
 }
 
 /// `SYS_OUT: 16`

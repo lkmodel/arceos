@@ -8,7 +8,7 @@ time_t time(time_t *t)
     struct timespec *ts_ptr = &ts;
     //    __clock_gettime(CLOCK_REALTIME, &ts);
     typedef int (*FnABI)(long);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_TIMESPEC);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_TIMESPEC);
     FnABI func = (FnABI)(*abi_ptr);
     func((long)ts_ptr);
 

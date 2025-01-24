@@ -9,15 +9,17 @@ READELF := riscv64-unknown-elf-readelf
 HEADER_FILE=header.bin
 OUTPUT_BIN?=apps.bin
 
-SRC?=pthread # TODO: 处理
-SRC_C=$(SRC).c # TODO: 改成Makefile函数
-SRC_O=$(SRC).o # TODO: 改成Makefile函数
+SRC?=malloc
+SRC_C=$(SRC).c
+SRC_O=$(SRC).o
 SRC_BIN=$(OUTPUT_BIN)#$(SRC).bin
 SRC_DIR=$(SRC)_apps
 
 CFLAGS := -nostdlib -nodefaultlibs -ffreestanding -O0 -mcmodel=medany -nostartfiles
 STATIC_CFLAGS := -static -no-pie
 LINK_FLAGS := # -T$(ARCEOS_HOME)/mockc_apps/link.ld
+LINK_FLAGS += # $($(CC) -print-libgcc-file-name)
+#LINK_FLAGS += /home/marinatoo/App/riscv64-linux-musl-cross/bin/../lib/gcc/riscv64-linux-musl/11.2.1/libgcc.a
 
 all: default_build
 
@@ -32,14 +34,9 @@ static:
 	#rust-objcopy --binary-architecture=riscv64 --strip-all -O binary $(SRC) ./$(SRC_BIN)
 	#$(OBJCOPY) --strip-all -O binary $(SRC) $(SRC_BIN)
 
-# dynamic:
-# 	$(CC) $(CFLAGS) -I$(MOCK_LIBC)/include -c $(SRC_C) -o $(SRC_O)
-# 	$(LD) $(SRC_O)  -L$(MOCK_LIBC)/lib -lmock $(LINK_FLAGS) -o $(SRC)
-# 	$(STRIP) -s $(SRC)
-# 	mv $(SRC) $(SRC_BIN)
-
 dynamic:
-	$(CC) $(SRC_C) -o $(SRC)
+	$(CC) $(CFLAGS) -I$(MOCK_LIBC)/include -c $(SRC_C) -o $(SRC_O)
+	$(LD) $(SRC_O) -L$(MOCK_LIBC)/lib -lmock $(LINK_FLAGS) -o $(SRC)
 	$(STRIP) -s $(SRC)
 	mv $(SRC) $(SRC_BIN)
 

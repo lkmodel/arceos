@@ -6,8 +6,8 @@
 
 ssize_t sys_lstat(const char *path, stat *buf)
 {
-    typedef int (*FnABI)(const char *, stat *);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_LSTAT);
+    typedef size_t (*FnABI)(const char *, stat *);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_LSTAT);
     FnABI func = (FnABI)(*abi_ptr);
-    func(path, buf);
+    return func(path, buf);
 }

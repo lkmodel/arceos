@@ -5,7 +5,6 @@ use api::{
 use arceos_posix_api::{self as api, ctypes};
 use axlog::{debug, info};
 use axstd::thread::sleep;
-use axtask::init_scheduler;
 use core::ffi::{c_int, c_void};
 use core::time::Duration;
 
@@ -23,7 +22,6 @@ pub extern "C" fn abi_pthread_create(
     info!("start_routine: {:p}", start_routine);
     info!("arg: {:p}", arg);
 
-    //    init_scheduler();
     unsafe { sys_pthread_create(res, attr, start_routine, arg) }
 }
 

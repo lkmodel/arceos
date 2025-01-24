@@ -1,12 +1,24 @@
 use core::fmt;
 
 use axlog::debug;
-use elf::{abi::{EM_RISCV, ET_EXEC}, endian::LittleEndian, ElfBytes};
+use elf::{
+    ElfBytes,
+    abi::{EM_RISCV, ET_EXEC},
+    endian::LittleEndian,
+};
 
 pub fn verify_elf_header(elf: &ElfBytes<LittleEndian>) -> Result<(), LoadError> {
     let header = elf.ehdr;
+    debug!("ELF header: {:?}", header);
 
-    // 1. TODO: 验证 ELF 魔数
+    // 1. 验证目标架构
+    if header.e_machine != EM_RISCV {
+        debug!(
+            "Wrong architecture: expected RISC-V, got {:?}",
+            header.e_machine
+        );
+        return Err(LoadError::WrongArchitecture);
+    }
 
     // 2. 验证文件类型
     if header.e_type != ET_EXEC {
@@ -16,7 +28,10 @@ pub fn verify_elf_header(elf: &ElfBytes<LittleEndian>) -> Result<(), LoadError> 
 
     // 3. 验证目标架构
     if header.e_machine != EM_RISCV {
-        debug!("Wrong architecture: expected RISC-V, got {:?}", header.e_machine);
+        debug!(
+            "Wrong architecture: expected RISC-V, got {:?}",
+            header.e_machine
+        );
         return Err(LoadError::WrongArchitecture);
     }
 
@@ -85,3 +100,4 @@ const ELFMAG1: u8 = b'E';
 const ELFMAG2: u8 = b'L';
 const ELFMAG3: u8 = b'F';
 const EV_CURRENT: u32 = 1;
+

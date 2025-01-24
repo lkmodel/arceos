@@ -6,7 +6,7 @@
 int sys_open(const char *fimename, int flags, mode_t ctypes)
 {
     typedef int (*FnABI)(const char *, int, mode_t);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_OPEN);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_OPEN);
     FnABI func = (FnABI)(*abi_ptr);
-    func(fimename, flags, ctypes);
+    return func(fimename, flags, ctypes);
 }

@@ -32,9 +32,9 @@
 int __pthread_join(pthread_t t, void **res)
 {
     typedef int (*FnABI)(pthread_t, void **);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_PTHREAD_JOIN);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_PTHREAD_JOIN);
     FnABI func = (FnABI)(*abi_ptr);
-    func(t, res);
+    return func(t, res);
 }
 
 // static int __pthread_tryjoin_np(pthread_t t, void **res)

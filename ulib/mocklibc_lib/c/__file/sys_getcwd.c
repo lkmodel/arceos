@@ -6,8 +6,8 @@
 
 char sys_getcwd(char *buf, size_t size)
 {
-    typedef int (*FnABI)(char *, size_t);
-    long *abi_ptr = (long *)(abi_entry + 8 * SYS_GETCWD);
+    typedef char (*FnABI)(char *, size_t);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_GETCWD);
     FnABI func = (FnABI)(*abi_ptr);
-    func(buf, size);
+    return func(buf, size);
 }
