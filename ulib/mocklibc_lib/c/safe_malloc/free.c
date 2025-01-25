@@ -1,3 +1,4 @@
+#include <mocklibc.h>
 #include <stdlib.h>
 
 void free(void *p)

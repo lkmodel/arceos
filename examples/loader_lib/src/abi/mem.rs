@@ -38,7 +38,7 @@ pub unsafe extern "C" fn abi_malloc(size: ctypes::size_t) -> *mut c_void {
 /// (currently used) does not check the validity of address to be released.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_free(ptr: *mut c_void) {
-    info!("ABI:Mem] free");
+    info!("[ABI:Mem] free");
     if ptr.is_null() {
         return;
     }

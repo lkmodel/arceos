@@ -12,7 +12,7 @@ use axstd::{
     string::{String, ToString},
 };
 
-use axtask::{init_scheduler, spawn};
+use axtask::init_scheduler;
 use core::{
     ffi::{CStr, VaList},
     ptr::copy_nonoverlapping,
@@ -64,15 +64,11 @@ const ABI_FREE: usize = 43;
 // `unistd`
 const ABI_SLEEP: usize = 50;
 
+/// 当访问到没有被绑定的`ABI`时，将会使用`ABI_NOIMPL`
 pub static mut ABI_TABLE: [usize; 100] = [0; 100];
 
 pub fn init_abis() {
     register_abi("noimpl", ABI_NOIMPL, abi_noimpl as usize);
-    //    register_abi(
-    //        "hello",
-    //        ABI_INIT_SCHEDULER,
-    //        abi_init_scheduler::<fn()> as usize,
-    //    );
     register_abi("init", ABI_INIT_SCHEDULER, abi_init_scheduler as usize);
     register_abi("exit", ABI_TERMINATE, abi_terminate as usize);
 
@@ -126,16 +122,6 @@ fn register_abi(name: &str, num: usize, handle: usize) {
     }
     info!("[ABI]{}: 0x{:x}", name, handle);
 }
-
-/// `SYS_HELLO: 1`
-// #[unsafe(no_mangle)]
-// fn abi_init_scheduler<F>(f: F)
-// where
-//     F: FnOnce() + Send + 'static,
-// {
-//     debug!("Init scheduler 0x{:x}", init_scheduler as usize);
-//     spawn(f);
-// }
 
 pub fn abi_init_scheduler() {
     init_scheduler();
