@@ -1,6 +1,7 @@
 mod file;
 mod mem;
 mod noimpl;
+mod syscall;
 mod thread;
 
 use axhal::time::monotonic_time;
@@ -19,14 +20,11 @@ use core::{
     slice::from_raw_parts,
 };
 use cty::{c_char, c_int, size_t};
-use mem::{abi_calloc, abi_free, abi_malloc, abi_realloc};
+use mem::*;
 use noimpl::abi_noimpl;
 use printf_compat::output::display;
-use thread::{
-    abi_pthread_create, abi_pthread_exit, abi_pthread_join, abi_pthread_mutex_destroy,
-    abi_pthread_mutex_init, abi_pthread_mutex_lock, abi_pthread_mutex_unlock, abi_pthread_self,
-    abi_sleep,
-};
+use syscall::*;
+use thread::*;
 
 // `0-10提供ArceOS相关ABI调用`
 const ABI_NOIMPL: usize = 0;
@@ -63,6 +61,14 @@ const ABI_REALLOC: usize = 42;
 const ABI_FREE: usize = 43;
 // `unistd`
 const ABI_SLEEP: usize = 50;
+// `syscall`
+const ABI_SYSCALL0: usize = 60;
+const ABI_SYSCALL1: usize = 61;
+const ABI_SYSCALL2: usize = 62;
+const ABI_SYSCALL3: usize = 63;
+const ABI_SYSCALL4: usize = 64;
+const ABI_SYSCALL5: usize = 65;
+const ABI_SYSCALL6: usize = 66;
 
 /// 当访问到没有被绑定的`ABI`时，将会使用`ABI_NOIMPL`
 pub static mut ABI_TABLE: [usize; 100] = [0; 100];
@@ -114,6 +120,14 @@ pub fn init_abis() {
     register_abi("free", ABI_FREE, abi_free as usize);
 
     register_abi("sleep", ABI_SLEEP, abi_sleep as usize);
+
+    register_abi("syscall0", ABI_SYSCALL0, abi_syscall0 as usize);
+    register_abi("syscall1", ABI_SYSCALL1, abi_syscall1 as usize);
+    register_abi("syscall2", ABI_SYSCALL2, abi_syscall2 as usize);
+    register_abi("syscall3", ABI_SYSCALL3, abi_syscall3 as usize);
+    register_abi("syscall4", ABI_SYSCALL4, abi_syscall4 as usize);
+    register_abi("syscall5", ABI_SYSCALL5, abi_syscall5 as usize);
+    register_abi("syscall6", ABI_SYSCALL6, abi_syscall6 as usize);
 }
 
 fn register_abi(name: &str, num: usize, handle: usize) {

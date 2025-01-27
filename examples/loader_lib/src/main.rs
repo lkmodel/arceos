@@ -1,4 +1,5 @@
 #![feature(c_variadic)]
+#![feature(stmt_expr_attributes)]
 #![no_std]
 #![no_main]
 extern crate arceos_posix_api;
@@ -17,6 +18,9 @@ use load::load_elf;
 
 mod elf;
 mod init;
+
+mod linux_env;
+mod syscall;
 
 #[unsafe(no_mangle)]
 fn main() {
