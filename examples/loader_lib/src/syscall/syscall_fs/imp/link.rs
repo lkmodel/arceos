@@ -1,5 +1,10 @@
-use crate::syscall::SyscallResult;
+use crate::{
+    linux_env::linux_fs::link::{FilePath, deal_with_path, remove_link},
+    syscall::{SyscallError, SyscallResult},
+};
+use axlog::debug;
 
+pub const AT_REMOVEDIR: usize = 0x200; // Remove directory instead of `unlinking` file.
 /// 功能:创建文件的链接；
 /// # Arguments
 /// * `old_dir_fd: usize`, 原来的文件所在目录的文件描述符。
@@ -21,6 +26,34 @@ pub fn sys_linkat(_args: [usize; 6]) -> SyscallResult {
 /// * `flags: usize`, 可设置为0或`AT_REMOVEDIR`。
 /// # Return
 /// 成功执行,返回0。失败,返回-1。
-pub fn syscall_unlinkat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let flags = args[2];
+    let path = deal_with_path(dir_fd, Some(path), false).unwrap();
+
+    if path.start_with(&FilePath::new("/proc").unwrap()) {
+        return Ok(-1);
+    }
+
+    // `Unlink` file
+    if flags == 0 {
+        if remove_link(&path).is_none() {
+            debug!("unlink file error");
+            return Err(SyscallError::EINVAL);
+        }
+    }
+    // Remove `dir`
+    else if flags == AT_REMOVEDIR {
+        if let Err(e) = axfs::api::remove_dir(path.path()) {
+            debug!("rmdir error: {:?}", e);
+            return Err(SyscallError::EINVAL);
+        }
+    }
+    // Flags error
+    else {
+        debug!("flags error");
+        return Err(SyscallError::EINVAL);
+    }
+    Ok(0)
 }

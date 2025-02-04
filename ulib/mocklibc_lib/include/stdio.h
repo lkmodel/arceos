@@ -62,6 +62,7 @@ int vscanf(const char *__restrict, __isoc_va_list);
 void puts(char *s);
 void hello();
 void putchar(char c);
+int remove(const char *);
 
 // TODO:
 

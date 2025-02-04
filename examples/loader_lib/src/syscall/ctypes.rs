@@ -123,3 +123,24 @@ impl TimeSecs {
         }
     }
 }
+
+numeric_enum_macro::numeric_enum! {
+    #[repr(usize)]
+    #[allow(non_camel_case_types)]
+    #[derive(Debug)]
+    /// sys_fcntl64 使用的选项
+    pub enum Fcntl64Cmd {
+        /// 复制这个 fd，相当于 sys_dup
+        F_DUPFD = 0,
+        /// 获取 cloexec 信息，即 exec 成功时是否删除该 fd
+        F_GETFD = 1,
+        /// 设置 cloexec 信息，即 exec 成功时删除该 fd
+        F_SETFD = 2,
+        /// 获取 flags 信息
+        F_GETFL = 3,
+        /// 设置 flags 信息
+        F_SETFL = 4,
+        /// 复制 fd，然后设置 cloexec 信息，即 exec 成功时删除该 fd
+        F_DUPFD_CLOEXEC = 1030,
+    }
+}

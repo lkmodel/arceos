@@ -248,6 +248,9 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                     APP_START + app_sym.st_value as usize,
                     lib_rela_name
                 );
+                if app_sym.st_value == 0 {
+                    panic!("Bad st_value");
+                }
             }
         } else {
             unsafe {
@@ -259,6 +262,9 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                     LIB_START + lib_sym.st_value as usize,
                     lib_rela_name
                 );
+                if lib_sym.st_value == 0 {
+                    panic!("Bad st_value");
+                }
             }
         }
     }
@@ -287,6 +293,9 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                 LIB_START as u64 + lib_rela.r_offset,
                 LIB_START + lib_sym.st_value as usize
             );
+            if lib_sym.st_value == 0 {
+                panic!("Bad st_value");
+            }
         }
     }
 }
@@ -348,6 +357,9 @@ fn modify_plt(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>
                 LIB_START + lib_sym.st_value as usize,
                 app_rela_name
             );
+            if lib_sym.st_value == 0 {
+                panic!("Bad st_value");
+            }
         }
     }
 }

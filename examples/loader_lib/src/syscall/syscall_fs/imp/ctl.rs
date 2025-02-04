@@ -1,4 +1,11 @@
-use crate::syscall::SyscallResult;
+use crate::{
+    linux_env::{
+        axfs_ext::api::OpenFlags,
+        linux_fs::fd_manager::{FDM, alloc_fd},
+    },
+    syscall::{SyscallError, SyscallResult, ctypes::Fcntl64Cmd},
+};
+use axlog::{debug, info};
 
 /// 功能:获取当前工作目录；
 /// # Arguments
@@ -74,8 +81,73 @@ pub fn syscall_renameat2(_args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`
 /// * `cmd: usize`
 /// * `arg: usize`
-pub fn syscall_fcntl64(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let cmd = args[1];
+    let arg = args[2];
+    let mut fd_table = FDM.fd_table.lock();
+
+    if fd >= fd_table.len() {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EBADF);
+    }
+    if fd_table[fd].is_none() {
+        debug!("fd {} is none", fd);
+        return Err(SyscallError::EBADF);
+    }
+    let file = fd_table[fd].clone().unwrap();
+    info!("fd: {}, cmd: {}", fd, cmd);
+    match Fcntl64Cmd::try_from(cmd) {
+        Ok(Fcntl64Cmd::F_DUPFD) => {
+            let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+                fd
+            } else {
+                // 文件描述符达到上限了
+                return Err(SyscallError::EMFILE);
+            };
+            fd_table[new_fd] = fd_table[fd].clone();
+            Ok(new_fd as isize)
+        }
+        Ok(Fcntl64Cmd::F_GETFD) => {
+            if file.get_status().contains(OpenFlags::CLOEXEC) {
+                Ok(1)
+            } else {
+                Ok(0)
+            }
+        }
+        Ok(Fcntl64Cmd::F_SETFD) => {
+            if file.set_close_on_exec((arg & 1) != 0) {
+                Ok(0)
+            } else {
+                Err(SyscallError::EINVAL)
+            }
+        }
+        Ok(Fcntl64Cmd::F_GETFL) => Ok(file.get_status().bits() as isize),
+        Ok(Fcntl64Cmd::F_SETFL) => {
+            if let Some(flags) = OpenFlags::from_bits(arg as u32) {
+                if file.set_status(flags) {
+                    return Ok(0);
+                }
+            }
+            Err(SyscallError::EINVAL)
+        }
+        Ok(Fcntl64Cmd::F_DUPFD_CLOEXEC) => {
+            let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+                fd
+            } else {
+                // 文件描述符达到上限了
+                return Err(SyscallError::EMFILE);
+            };
+
+            if file.set_close_on_exec((arg & 1) != 0) {
+                fd_table[new_fd] = fd_table[fd].clone();
+                Ok(new_fd as isize)
+            } else {
+                Err(SyscallError::EINVAL)
+            }
+        }
+        _ => Err(SyscallError::EINVAL),
+    }
 }
 
 /// 53

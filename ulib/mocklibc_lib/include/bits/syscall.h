@@ -322,7 +322,7 @@
 // #define SYS_epoll_pwait 22
 // #define SYS_dup 23
 // #define SYS_dup3 24
-// #define SYS_fcntl 25
+#define SYS_fcntl 25
 // #define SYS_inotify_init1 26
 // #define SYS_inotify_add_watch 27
 // #define SYS_inotify_rm_watch 28
@@ -332,7 +332,7 @@
 // #define SYS_flock 32
 // #define SYS_mknodat 33
 // #define SYS_mkdirat 34
-// #define SYS_unlinkat 35
+#define SYS_unlinkat 35
 // #define SYS_symlinkat 36
 // #define SYS_linkat 37
 // #define SYS_umount2 39
