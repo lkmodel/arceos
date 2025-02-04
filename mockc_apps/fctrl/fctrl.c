@@ -24,27 +24,27 @@ void test_openat()
     if (fd1 >= 0)
         close(fd1); // 清理
 
-    //    // 测试用例 2: 测试打开一个不存在的文件（应失败）
-    //    fd2 = openat(AT_FDCWD, "nonexistent.txt", O_RDONLY);
-    //    TEST_RESULT("openat nonexistent file", fd2 < 0);
-    //
-    //    // 测试用例 3: 测试使用无效的标志
-    //    fd1 = openat(AT_FDCWD, "testfile.txt", 99999); // 使用无效标志
-    //    TEST_RESULT("openat invalid flags", fd1 < 0);
-    //    if (fd1 >= 0)
-    //        close(fd1); // 清理
-    //
-    //    // 测试用例 4: 测试打开文件并写入数据
-    //    fd1 = openat(AT_FDCWD, "testfile.txt", O_WRONLY);
-    //    TEST_RESULT("openat write to file", fd1 >= 0);
-    //    if (fd1 >= 0)
-    //        close(fd1); // 清理
-    //
-    //    // 测试用例 5: 测试打开文件并读取数据
-    //    fd1 = openat(AT_FDCWD, "testfile.txt", O_RDONLY);
-    //    TEST_RESULT("openat read from file", fd1 >= 0);
-    //    if (fd1 >= 0)
-    //        close(fd1); // 清理
+    // 测试用例 2: 测试打开一个不存在的文件（应失败）
+    fd2 = openat(AT_FDCWD, "nonexistent.txt", O_RDONLY);
+    TEST_RESULT("openat nonexistent file", fd2 < 0);
+
+    // 测试用例 3: 测试使用无效的标志
+    fd1 = openat(AT_FDCWD, "testfile.txt", 99999); // 使用无效标志
+    TEST_RESULT("openat invalid flags", fd1 < 0);
+    if (fd1 >= 0)
+        close(fd1); // 清理
+
+    // 测试用例 4: 测试打开文件并写入数据
+    fd1 = openat(AT_FDCWD, "testfile.txt", O_WRONLY);
+    TEST_RESULT("openat write to file", fd1 >= 0);
+    if (fd1 >= 0)
+        close(fd1); // 清理
+
+    // 测试用例 5: 测试打开文件并读取数据
+    fd1 = openat(AT_FDCWD, "testfile.txt", O_RDONLY);
+    TEST_RESULT("openat read from file", fd1 >= 0);
+    if (fd1 >= 0)
+        close(fd1); // 清理
 }
 
 int main()
