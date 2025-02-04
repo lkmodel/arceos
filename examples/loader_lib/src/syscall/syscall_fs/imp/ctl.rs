@@ -9,7 +9,7 @@ use crate::syscall::SyscallResult;
 /// 暂时:成功执行,则返回当前工作目录的字符串的指针 `as isize`。失败,返回0。
 ///
 /// TODO: 当前写法存在问题,`cwd`应当是各个进程独立的,而这里修改的是整个`fs`的目录
-pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_getcwd(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -19,7 +19,7 @@ pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`, 要创建的目录的名称。如果`path`是相对路径,则它是相对于`dirfd`目录而言的。如果`path`是相对路径,且`dirfd`的值为`AT_FDCWD`,则它是相对于当前路径而言的。如果`path`是绝对路径,则`dirfd`被忽略。
 /// * `mode: u32`, 文件的所有权描述。详见`man 7 inode`。
 /// 返回值:成功执行,返回0。失败,返回-1。
-pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_mkdirat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -28,7 +28,7 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`, 需要切换到的目录。
 /// # Return
 /// 成功执行:返回0。失败, 返回-1。
-pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_chdir(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -41,7 +41,7 @@ pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
 /// # Return
 /// * On success, the number of bytes read is returned. On end of directory, 0 is returned.
 /// * On error, -1 is returned.
-pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_getdents64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -66,7 +66,7 @@ pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
 /// * `new_dirfd: usize`, 新文件所在的目录的文件描述符。
 /// * `new_path: *const u8`, 新文件的名称。如果`new_path`是相对路径,则它是相对于`new_dirfd`目录而言的。如果`new_path`是相对路径,且`new_dirfd`的值为`AT_FDCWD`,则它是相对于当前路径而言的。如果`new_path`是绝对路径,则`new_dirfd`被忽略。
 /// * `flags: usize`, 重命名的标志位。目前只支持`RENAME_NOREPLACE`、`RENAME_EXCHANGE`和`RENAME_WHITEOUT`。
-pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_renameat2(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -74,7 +74,7 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`
 /// * `cmd: usize`
 /// * `arg: usize`
-pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_fcntl64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -90,7 +90,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
 /// * `dir_fd: usize`, 目录的文件描述符
 /// * `path: *const u8`, 文件的路径
 /// * `mode: usize`, 文件的权限
-pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_fchmodat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -108,7 +108,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
 /// * `dir_fd: usize`, 目录的文件描述符
 /// * `path: *const u8`, 文件的路径
 /// * `mode: usize`, 文件的权限
-pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_faccessat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -119,7 +119,7 @@ pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`, 文件描述符
 /// * `request: usize`, 控制命令
 /// * `argp: *mut usize`, 参数
-pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_ioctl(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -132,6 +132,6 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`, 文件的路径
 /// * `times: *const TimeSecs`, 时间戳
 /// * `flags: usize`, 选项
-pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_utimensat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

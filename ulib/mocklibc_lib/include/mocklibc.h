@@ -53,30 +53,6 @@ extern unsigned long volatile abi_entry;
     FnABI func = (FnABI)(*abi_ptr);                       \
     func();
 
-typedef int (*__fn_abi_syscall0)(long n);
-typedef int (*__fn_abi_syscall1)(long n, long a);
-typedef int (*__fn_abi_syscall2)(long n, long a, long b);
-typedef int (*__fn_abi_syscall3)(long n, long a, long b, long c);
-typedef int (*__fn_abi_syscall4)(long n, long a, long b, long c, long d);
-typedef int (*__fn_abi_syscall5)(long n, long a, long b, long c, long d, long e);
-typedef int (*__fn_abi_syscall6)(long n, long a, long b, long c, long d, long e, long f);
-
-long *__abi_syscall0_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL0);
-long *__abi_syscall1_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL1);
-long *__abi_syscall2_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL2);
-long *__abi_syscall3_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL3);
-long *__abi_syscall4_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL4);
-long *__abi_syscall5_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL5);
-long *__abi_syscall6_ptr = (long *)(abi_entry + 8 * ABI_SYSCALL6);
-
-__fn_abi_syscall0 __abi_syscall0 = (__fn_abi_syscall0)(*__abi_syscall0_ptr);
-__fn_abi_syscall1 __abi_syscall1 = (__fn_abi_syscall1)(*__abi_syscall1_ptr);
-__fn_abi_syscall2 __abi_syscall2 = (__fn_abi_syscall2)(*__abi_syscall2_ptr);
-__fn_abi_syscall3 __abi_syscall3 = (__fn_abi_syscall3)(*__abi_syscall3_ptr);
-__fn_abi_syscall4 __abi_syscall4 = (__fn_abi_syscall4)(*__abi_syscall4_ptr);
-__fn_abi_syscall5 __abi_syscall5 = (__fn_abi_syscall5)(*__abi_syscall5_ptr);
-__fn_abi_syscall6 __abi_syscall6 = (__fn_abi_syscall6)(*__abi_syscall6_ptr);
-
 #include <stdarg.h>
 extern int main(int, char **);
 

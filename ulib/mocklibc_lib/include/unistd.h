@@ -38,7 +38,7 @@ extern "C" {
 
 // int pipe(int[2]);
 // int pipe2(int[2], int);
-// int close(int);
+int close(int);
 // int posix_close(int, int);
 // int dup(int);
 // int dup2(int, int);

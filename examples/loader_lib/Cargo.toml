@@ -5,20 +5,24 @@ authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
 [dependencies]
+# `ArceOS` modules
 axstd = { workspace = true, features = ["alloc"] }
 axlog = { workspace = true }
 axhal = { workspace = true, features = ["paging"] }
 axtask = { workspace = true }
-# axdriver = { workspace = true, features = ["block","ramdisk"] }
+axalloc = { workspace = true }
+axsync = { workspace = true, features = ["multitask"] }
+axfs = { workspace = true, features = ["default", "use-ramdisk"] }
+arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
+axruntime = { workspace = true, features = ["fs"] }
+axdriver = { workspace = true, features = ["block", "ramdisk"]}
+
+# Other crates
 elf = { version = "0.7.4", default-features = false }
 printf-compat = { version = "0.1.1", default-features = false }
 axio = { version = "0.1", features = ["alloc"] }
 cty = "0.2.2"
-arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
-axalloc = { workspace = true }
 axerrno = "0.1.0"
 numeric-enum-macro = "0.2.0"
 bitflags = "2.0"
-axfs = { workspace = true }
-axsync = { workspace = true }
 lazyinit = "0.2"

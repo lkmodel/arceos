@@ -9,7 +9,7 @@ READELF := riscv64-unknown-elf-readelf
 HEADER_FILE=header.bin
 OUTPUT_BIN?=apps.bin
 
-SRC?=file_opers
+SRC?=fctrl
 SRC_C=$(SRC).c
 SRC_O=$(SRC).o
 SRC_BIN=$(OUTPUT_BIN)

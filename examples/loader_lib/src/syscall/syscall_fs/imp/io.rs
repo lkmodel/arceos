@@ -1,8 +1,22 @@
 use crate::{
-    linux_env::axfs_ext::api::OpenFlags,
-    linux_env::linux_fs::link::deal_with_path,
-    syscall::{SyscallError, SyscallResult},
+    linux_env::{
+        axfs_ext::api::OpenFlags,
+        linux_fs::{
+            fd_manager::{FDM, alloc_fd},
+            link::{create_link, deal_with_path},
+        },
+    },
+    syscall::{
+        SyscallError, SyscallResult,
+        syscall_fs::ctype::{
+            dir::new_dir,
+            epoll::{EpollCtl, EpollEvent, EpollEventType, EpollFile},
+            file::{new_fd, new_inode},
+        },
+    },
 };
+use alloc::{string::ToString, sync::Arc};
+use axlog::{debug, info};
 
 /// 功能:打开或创建一个文件；
 /// # Arguments
@@ -15,20 +29,51 @@ use crate::{
 /// 说明:如果打开的是一个目录,那么返回的文件描述符指向的是该目录的描述符。(后面会用到针对目录的文件描述符)
 /// `flags: O_RDONLY: 0, O_WRONLY: 1, O_RDWR: 2, O_CREAT: 64, O_DIRECTORY: 65536`
 pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    //    let fd = args[0];
-    //    let path = args[1] as *const u8;
-    //    let flags = args[2];
-    //    let _mode = args[3] as u8;
-    //    let force_dir = OpenFlags::from(flags).is_dir();
-    //    let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
-    //        path
-    //    } else {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //    let mut fd_table = fd_manager.fd_table.lock();
-    //
-    //    Ok(0)
+    let fd = args[0];
+    let path = args[1] as *const u8;
+    let flags = args[2];
+    let _mode = args[3] as u8;
+    let force_dir = OpenFlags::from(flags).is_dir();
+    let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
+        path
+    } else {
+        return Err(SyscallError::EINVAL);
+    };
+    let mut fd_table = FDM.fd_table.lock();
+    let fd_num: usize = if let Ok(fd) = alloc_fd(&mut fd_table) {
+        fd
+    } else {
+        return Err(SyscallError::EMFILE);
+    };
+    debug!("allocated fd_num: {}", fd_num);
+    // 分配`inode`
+    new_inode(path.path().to_string()).unwrap();
+    // 如果是`DIR`
+    info!("path: {:?}", path.path());
+    if path.is_dir() {
+        debug!("open dir");
+        if let Ok(dir) = new_dir(path.path().to_string(), flags.into()) {
+            debug!("new dir_desc successfully allocated: {}", path.path());
+            fd_table[fd_num] = Some(Arc::new(dir));
+            Ok(fd_num as isize)
+        } else {
+            debug!("open dir failed");
+            Err(SyscallError::ENOENT)
+        }
+    }
+    // 如果是FILE,注意若创建了新文件,需要添加链接
+    else {
+        debug!("open file");
+        if let Ok(file) = new_fd(path.path().to_string(), flags.into()) {
+            debug!("new file_desc successfully allocated");
+            fd_table[fd_num] = Some(Arc::new(file));
+            let _ = create_link(&path, &path); // 不需要检查是否成功,因为如果成功,说明是新建的文件,如果失败,说明已经存在了
+            Ok(fd_num as isize)
+        } else {
+            debug!("open file failed");
+            Err(SyscallError::ENOENT)
+        }
+    }
 }
 
 /// 功能:关闭一个文件描述符；
@@ -36,7 +81,48 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`, 要关闭的文件描述符。
 /// 返回值:成功执行,返回0。失败,返回-1。
 pub fn syscall_close(args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+    let fd = args[0];
+    info!("Into syscall_close. fd: {}", fd);
+
+    let mut fd_table = FDM.fd_table.lock();
+    if fd >= fd_table.len() {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EPERM);
+    }
+    // ```
+    // if fd == 3 {
+    //     debug!("fd {} is reserved for cwd", fd);
+    //     return -1;
+    // }
+    if fd_table[fd].is_none() {
+        debug!("fd {} is none", fd);
+        return Err(SyscallError::EPERM);
+    }
+    // ```
+    // let file = process_inner.fd_manager.fd_table[fd].unwrap();
+    for i in 0..fd_table.len() {
+        if let Some(file) = fd_table[i].as_ref() {
+            if let Some(epoll_file) = file.as_any().downcast_ref::<EpollFile>() {
+                if epoll_file.contains(fd as i32) {
+                    let ev = EpollEvent {
+                        event_type: EpollEventType::EPOLLMSG,
+                        data: 0,
+                    };
+                    epoll_file.epoll_ctl(EpollCtl::DEL, fd as i32, ev)?;
+                }
+            }
+        }
+    }
+
+    fd_table[fd] = None;
+    // ```
+    // for i in 0..process_inner.fd_table.len() {
+    //     if let Some(file) = process_inner.fd_table[i].as_ref() {
+    //         debug!("fd: {} has file", i);
+    //     }
+    // }
+
+    Ok(0)
 }
 
 /// 功能:从一个文件描述符中读取；
@@ -45,7 +131,7 @@ pub fn syscall_close(args: [usize; 6]) -> SyscallResult {
 /// * `buf: *mut u8`, 一个缓存区,用于存放读取的内容。
 /// * `count: usize`, 要读取的字节数。
 /// 返回值:成功执行,返回读取的字节数。如为0,表示文件结束。错误,则返回-1。
-pub fn syscall_read(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_read(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -55,7 +141,7 @@ pub fn syscall_read(args: [usize; 6]) -> SyscallResult {
 /// * `buf: *const u8`, 一个缓存区,用于存放要写入的内容。
 /// * `count: usize`, 要写入的字节数。
 /// 返回值:成功执行,返回写入的字节数。错误,则返回-1。
-pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_write(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -66,7 +152,7 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
 /// 返回值:成功执行,返回0。失败,返回-1。
 ///
 /// 注意:`fd[2]`是32位数组,所以这里的`fd`是 u32 类型的指针,而不是`usize`类型的指针。
-pub fn syscall_pipe2(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_pipe2(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -74,7 +160,7 @@ pub fn syscall_pipe2(args: [usize; 6]) -> SyscallResult {
 /// # Arguments
 /// * `fd: usize`, 被复制的文件描述符。
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
-pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_dup(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -84,7 +170,7 @@ pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
 /// * `new_fd: usize`, 新的文件描述符
 /// * `flags: usize`, 文件描述符标志
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
-pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_dup3(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -93,7 +179,7 @@ pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`, 要读取文件的文件描述符。
 /// * `iov: *mut IoVec`, 一个缓存区,用于存放读取的内容。
 /// * `iov_cnt: usize`, 要读取的字节数。
-pub fn syscall_readv(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_readv(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -102,7 +188,7 @@ pub fn syscall_readv(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`, 要写入文件的文件描述符。
 /// * `iov: *mut IoVec`, 一个缓存区,用于存放要写入的内容。
 /// * `iov_cnt: usize`, 要写入的字节数。
-pub fn syscall_writev(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_writev(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -112,7 +198,7 @@ pub fn syscall_writev(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`
 /// * `offset: isize`
 /// * `whence: usize`
-pub fn syscall_lseek(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_lseek(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -124,7 +210,7 @@ pub fn syscall_lseek(args: [usize; 6]) -> SyscallResult {
 /// * `buf: *mut u8`
 /// * `count: usize`
 /// * `offset: usize`
-pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_pread64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -139,7 +225,7 @@ pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`
 /// * `buf: *mut u8`
 /// * `bufsiz: usize`
-pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_readlinkat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -151,7 +237,7 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
 /// * `buf: *const u8`
 /// * `count: usize`
 /// * `offset: usize`
-pub fn syscall_pwrite64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_pwrite64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -165,14 +251,14 @@ pub fn syscall_pwrite64(args: [usize; 6]) -> SyscallResult {
 /// * `in_fd: usize`
 /// * `offset: *mut usize`
 /// * `count: usize`
-pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_sendfile64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
 /// # Arguments
 /// * `fd: usize`
 /// * `len: usize`
-pub fn syscall_ftruncate64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_ftruncate64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -190,6 +276,6 @@ pub fn syscall_ftruncate64(args: [usize; 6]) -> SyscallResult {
 /// * `off_out: *mut usize`
 /// * `len: usize`
 /// * `flags: usize`
-pub fn syscall_copyfilerange(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_copyfilerange(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

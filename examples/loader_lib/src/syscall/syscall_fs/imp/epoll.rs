@@ -9,7 +9,7 @@ use crate::syscall::SyscallResult;
 /// If flag equals to `EPOLL_CLOEXEC`, than set the `cloexec` flag for the `fd`
 /// # Arguments
 /// * `flag - usize`
-pub fn syscall_epoll_create1(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_epoll_create1(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -22,7 +22,7 @@ pub fn syscall_epoll_create1(args: [usize; 6]) -> SyscallResult {
 /// * `op: i32`, 修改操作的类型
 /// * `fd: i32`, 接受事件的文件的`fd`
 /// * `event: *const EpollEvent`, 接受的事件
-pub fn syscall_epoll_ctl(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_epoll_ctl(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -35,6 +35,6 @@ pub fn syscall_epoll_ctl(args: [usize; 6]) -> SyscallResult {
 /// * `timeout: i32`, 超时时间，是一段相对时间，需要手动转化为绝对时间
 ///
 /// `ret`: 实际写入的响应事件数目
-pub fn syscall_epoll_wait(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_epoll_wait(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

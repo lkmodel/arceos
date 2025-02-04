@@ -1,10 +1,8 @@
 use crate::linux_env::axfs_ext::api::{FileExt, FileIO, FileIOType, OpenFlags};
 use axerrno::{AxError, AxResult};
-use axhal::console::write_bytes;
+use axhal::console::{read_bytes, write_bytes};
 use axio::{Read, Seek, SeekFrom, Write};
-use axlog::warn;
 use axsync::Mutex;
-use axtask::yield_now;
 /// `stdin` file for getting chars from console
 pub struct Stdin {
     pub flags: Mutex<OpenFlags>,
@@ -20,8 +18,14 @@ pub struct Stderr {
     pub flags: Mutex<OpenFlags>,
 }
 
+// XXX: Check here if you can.
 fn stdin_read(buf: &mut [u8]) -> AxResult<usize> {
-    unimplemented!();
+    // Use `read_bytes` to get.
+    let bytes_read = read_bytes(buf);
+
+    Ok(bytes_read)
+
+    // ```
     //    let ch: u8;
     //    loop {
     //        match getchar() {
@@ -108,32 +112,33 @@ impl FileIO for Stdin {
         false
     }
 
-    fn ioctl(&self, request: usize, data: usize) -> AxResult<isize> {
+    fn ioctl(&self, _request: usize, _data: usize) -> AxResult<isize> {
         unimplemented!();
-        //        match request {
-        //            TIOCGWINSZ => {
-        //                let winsize = data as *mut ConsoleWinSize;
-        //                unsafe {
-        //                    *winsize = ConsoleWinSize::default();
-        //                }
-        //                Ok(0)
-        //            }
-        //            TCGETS | TIOCSPGRP => {
-        //                warn!("stdin TCGETS | TIOCSPGRP, pretend to be tty.");
-        //                // pretend to be tty
-        //                Ok(0)
-        //            }
+        // ```
+        // match request {
+        //     TIOCGWINSZ => {
+        //         let winsize = data as *mut ConsoleWinSize;
+        //         unsafe {
+        //             *winsize = ConsoleWinSize::default();
+        //         }
+        //         Ok(0)
+        //     }
+        //     TCGETS | TIOCSPGRP => {
+        //         warn!("stdin TCGETS | TIOCSPGRP, pretend to be tty.");
+        //         // pretend to be tty
+        //         Ok(0)
+        //     }
         //
-        //            TIOCGPGRP => {
-        //                warn!("stdin TIOCGPGRP, pretend to be have a tty process group.");
-        //                unsafe {
-        //                    *(data as *mut u32) = 0;
-        //                }
-        //                Ok(0)
-        //            }
-        //            FIOCLEX => Ok(0),
-        //            _ => Err(AxError::Unsupported),
-        //        }
+        //     TIOCGPGRP => {
+        //         warn!("stdin TIOCGPGRP, pretend to be have a tty process group.");
+        //         unsafe {
+        //             *(data as *mut u32) = 0;
+        //         }
+        //         Ok(0)
+        //     }
+        //     FIOCLEX => Ok(0),
+        //     _ => Err(AxError::Unsupported),
+        // }
     }
 
     fn set_status(&self, flags: OpenFlags) -> bool {
@@ -172,7 +177,7 @@ impl Write for Stdout {
         Ok(buf.len())
     }
     fn flush(&mut self) -> AxResult {
-        // stdout is always flushed
+        // `stdout` is always flushed
         Ok(())
     }
 }
@@ -200,7 +205,7 @@ impl FileIO for Stdout {
     }
 
     fn flush(&self) -> AxResult {
-        // stdout is always flushed
+        // `stdout` is always flushed
         Ok(())
     }
 
@@ -251,32 +256,33 @@ impl FileIO for Stdout {
         true
     }
 
-    fn ioctl(&self, request: usize, data: usize) -> AxResult<isize> {
+    fn ioctl(&self, _request: usize, _data: usize) -> AxResult<isize> {
         unimplemented!();
-        //        match request {
-        //            TIOCGWINSZ => {
-        //                let winsize = data as *mut ConsoleWinSize;
-        //                unsafe {
-        //                    *winsize = ConsoleWinSize::default();
-        //                }
-        //                Ok(0)
-        //            }
-        //            TCGETS | TIOCSPGRP => {
-        //                warn!("stdout TCGETS | TIOCSPGRP, pretend to be tty.");
-        //                // pretend to be tty
-        //                Ok(0)
-        //            }
+        // ```
+        // match request {
+        //     TIOCGWINSZ => {
+        //         let winsize = data as *mut ConsoleWinSize;
+        //         unsafe {
+        //             *winsize = ConsoleWinSize::default();
+        //         }
+        //         Ok(0)
+        //     }
+        //     TCGETS | TIOCSPGRP => {
+        //         warn!("stdout TCGETS | TIOCSPGRP, pretend to be tty.");
+        //         // pretend to be tty
+        //         Ok(0)
+        //     }
         //
-        //            TIOCGPGRP => {
-        //                warn!("stdout TIOCGPGRP, pretend to be have a tty process group.");
-        //                unsafe {
-        //                    *(data as *mut u32) = 0;
-        //                }
-        //                Ok(0)
-        //            }
-        //            FIOCLEX => Ok(0),
-        //            _ => Err(AxError::Unsupported),
-        //        }
+        //     TIOCGPGRP => {
+        //         warn!("stdout TIOCGPGRP, pretend to be have a tty process group.");
+        //         unsafe {
+        //             *(data as *mut u32) = 0;
+        //         }
+        //         Ok(0)
+        //     }
+        //     FIOCLEX => Ok(0),
+        //     _ => Err(AxError::Unsupported),
+        // }
     }
 }
 
@@ -351,31 +357,32 @@ impl FileIO for Stderr {
         true
     }
 
-    fn ioctl(&self, request: usize, data: usize) -> AxResult<isize> {
+    fn ioctl(&self, _request: usize, _data: usize) -> AxResult<isize> {
         unimplemented!();
-        //            match request {
-        //                TIOCGWINSZ => {
-        //                    let winsize = data as *mut ConsoleWinSize;
-        //                    unsafe {
-        //                        *winsize = ConsoleWinSize::default();
-        //                    }
-        //                    Ok(0)
-        //                }
-        //                TCGETS | TIOCSPGRP => {
-        //                    warn!("stderr TCGETS | TIOCSPGRP, pretend to be tty.");
-        //                    // pretend to be tty
-        //                    Ok(0)
-        //                }
+        // ```
+        // match request {
+        //     TIOCGWINSZ => {
+        //         let winsize = data as *mut ConsoleWinSize;
+        //         unsafe {
+        //             *winsize = ConsoleWinSize::default();
+        //         }
+        //         Ok(0)
+        //     }
+        //     TCGETS | TIOCSPGRP => {
+        //         warn!("stderr TCGETS | TIOCSPGRP, pretend to be tty.");
+        //         // pretend to be tty
+        //         Ok(0)
+        //     }
         //
-        //                TIOCGPGRP => {
-        //                    warn!("stderr TIOCGPGRP, pretend to be have a tty process group.");
-        //                    unsafe {
-        //                        *(data as *mut u32) = 0;
-        //                    }
-        //                    Ok(0)
-        //                }
-        //                FIOCLEX => Ok(0),
-        //                _ => Err(AxError::Unsupported),
-        //            }
+        //     TIOCGPGRP => {
+        //         warn!("stderr TIOCGPGRP, pretend to be have a tty process group.");
+        //         unsafe {
+        //             *(data as *mut u32) = 0;
+        //         }
+        //         Ok(0)
+        //     }
+        //     FIOCLEX => Ok(0),
+        //     _ => Err(AxError::Unsupported),
+        // }
     }
 }

@@ -10,7 +10,7 @@ use crate::syscall::SyscallResult;
 /// # Return
 /// 成功执行,返回0。失败,返回-1。
 #[allow(dead_code)]
-pub fn sys_linkat(args: [usize; 6]) -> SyscallResult {
+pub fn sys_linkat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -21,6 +21,6 @@ pub fn sys_linkat(args: [usize; 6]) -> SyscallResult {
 /// * `flags: usize`, 可设置为0或`AT_REMOVEDIR`。
 /// # Return
 /// 成功执行,返回0。失败,返回-1。
-pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_unlinkat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

@@ -14,6 +14,7 @@ mod abi;
 use abi::{ABI_TABLE, ABI_TERMINATE, init_abis};
 
 mod load;
+use init::init_all;
 use load::load_elf;
 
 mod elf;
@@ -24,6 +25,7 @@ mod syscall;
 
 #[unsafe(no_mangle)]
 fn main() {
+    init_all();
     init_abis();
     // ```
     // let (run_entry, init_abi_entry) = load_elf();

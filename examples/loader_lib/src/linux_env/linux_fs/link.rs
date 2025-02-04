@@ -1,14 +1,93 @@
-use crate::linux_env::{axfs_ext::api::FileIOType, linux_fs::fd_manager::FdManager};
+use crate::linux_env::{axfs_ext::api::FileIOType, linux_fs::fd_manager::FDM};
 use alloc::{
     collections::BTreeMap,
+    format,
     string::{String, ToString},
 };
 use axerrno::{AxError, AxResult};
-use axfs::api::canonicalize;
-use axlog::trace;
+use axfs::api::{canonicalize, remove_file};
+use axlog::{debug, info, trace};
 use axsync::Mutex;
 
 pub const AT_FDCWD: usize = -100isize as usize;
+
+/// 创建一个链接
+///
+/// 返回是否创建成功(已存在的链接也会返回 true)
+/// 创建新文件时注意调用该函数创建链接
+pub fn create_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
+    info!("create_link: {} -> {}", src_path.path(), dest_path.path());
+    // assert!(src_path.is_file() && dest_path.is_file(), "link only support file");
+    // assert_ne!(src_path.path(), dest_path.path(), "link src and dest should not be the same");  // 否则在第一步删除旧链接时可能会删除源文件
+    // 检查是否是文件
+    if !src_path.is_file() || !dest_path.is_file() {
+        debug!("link only support file");
+        return false;
+    }
+    // 检查被链接到的文件是否存在
+    //    if !path_exists(dest_path.path()) {
+    //        debug!("link dest file not exists");
+    //        return false;
+    //    }
+
+    // 一次性锁定LINK_PATH_MAP，避免重复加锁解锁
+    let mut map = LINK_PATH_MAP.lock();
+
+    // 检查链接是否已存在，并处理旧链接
+    if let Some(old_dest_path) = map.get(&src_path.path().to_string()) {
+        if old_dest_path != &dest_path.path().to_string() {
+            // 旧链接存在且与新链接不同，移除旧链接
+            drop(map); // 释放锁，因为remove_link可能需要锁
+            remove_link(src_path);
+            map = LINK_PATH_MAP.lock(); // 重新获取锁
+        } else {
+            // 链接已存在且相同，无需进一步操作
+            debug!("link already exists");
+            return true;
+        }
+    }
+
+    // 创建新链接
+    map.insert(
+        src_path.path().to_string(),
+        dest_path.path().to_string().clone(),
+    );
+
+    // 更新链接计数
+    let mut count_map = LINK_COUNT_MAP.lock();
+    let count = count_map.entry(dest_path.path().to_string()).or_insert(0);
+    *count += 1;
+    true
+}
+
+/// 删除一个链接
+///
+/// 如果在 map 中找不到对应链接，则什么都不做
+/// 返回被删除的链接指向的文件
+///
+/// 现在的一个问题是，如果建立了dir1/A，并将dir2/B链接到dir1/A，那么删除dir1/A时，实际的文件不会被删除(连接数依然大于1)，只有当删除dir2/B时，实际的文件才会被删除
+/// 这样的话，如果新建了dir1/A，那么就会报错(create_new)或者覆盖原文件(create)，从而影响到dir2/B
+pub fn remove_link(src_path: &FilePath) -> Option<String> {
+    trace!("remove_link: {}", src_path.path());
+    let mut map = LINK_PATH_MAP.lock();
+    // 找到对应的链接
+    match map.remove(&src_path.path().to_string()) {
+        Some(dest_path) => {
+            // 更新链接数
+            let mut count_map = LINK_COUNT_MAP.lock();
+            let count = count_map.entry(dest_path.clone()).or_insert(0);
+            assert!(*count > 0, "before removing, the link count should > 0");
+            *count -= 1;
+            // 如果链接数为0，那么删除文件
+            if *count == 0 {
+                debug!("link num down to zero, remove file: {}", dest_path);
+                let _ = remove_file(dest_path.as_str());
+            }
+            Some(dest_path)
+        }
+        None => None,
+    }
+}
 
 /// 这个是无涉其他代码的，不需要进行检查
 pub struct FilePath(String);
@@ -161,98 +240,99 @@ pub fn deal_with_path(
     path_addr: Option<*const u8>,
     force_dir: bool,
 ) -> Option<FilePath> {
-    unimplemented!();
-    //    let mut path = "".to_string();
-    //
-    //    if let Some(path_addr) = path_addr {
-    //        if path_addr.is_null() {
-    //            axlog::warn!("path address is null");
-    //            return None;
-    //        }
-    //        // 判断某一个虚拟地址是否在内存集中。
-    //        // 若当前虚拟地址在内存集中，且对应的是`lazy`分配，暂未分配物理页的情况下，
-    //        // 则为其分配物理页面。
-    //        //
-    //        // 若不在内存集中，则返回`None`。
-    //        //
-    //        // 若在内存集中，且已经分配了物理页面，则不做处理。
-    //        // ```
-    //        // NOTE: 我们暂时默认其是存在的。
-    //        // if process
-    //        //     .manual_alloc_for_lazy((path_addr as usize).into())
-    //        //     .is_ok()
-    //        // {
-    //        // 直接访问前需要确保已经被分配
-    //        path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
-    //        // } else {
-    //        //     axlog::warn!("path address is invalid");
-    //        //     return None;
-    //        // }
-    //    }
-    //    // 处理空路径的情况
-    //    if path.is_empty() {
-    //        // If pathname is an empty string, in this case, dirfd can refer to any type of file, not just a directory
-    //        // and the behavior of fstatat() is similar to that of fstat()
-    //        // If dirfd is AT_FDCWD, the call operates on the current working directory.
-    //        // if dir_fd == AT_FDCWD && dir_fd as u32 == AT_FDCWD as u32 {
-    //        if dir_fd == AT_FDCWD && dir_fd as u32 == AT_FDCWD as u32 {
-    //            path = String::from(".");
-    //        } else {
-    //            // 直接获取文件描述符表，我们要自行实现有一个全局的 fd_table
-    //            let fd_table =  // 替代 process.fd_manager.fd_table.lock();
-    //            if dir_fd >= fd_table.len() {
-    //                axlog::warn!("fd index out of range");
-    //                return None;
-    //            }
-    //            match fd_table[dir_fd].as_ref() {
-    //                Some(dir) => {
-    //                    let dir = dir.clone();
-    //                    path = dir.get_path();
-    //                }
-    //                None => {
-    //                    axlog::warn!("fd not exist");
-    //                    return None;
-    //                }
-    //            }
-    //        }
-    //    } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
-    //        // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
-    //        let fd_table = process.fd_manager.fd_table.lock();
-    //        if dir_fd >= fd_table.len() {
-    //            axlog::warn!("fd index out of range");
-    //            return None;
-    //        }
-    //        match fd_table[dir_fd].as_ref() {
-    //            Some(dir) => {
-    //                if dir.get_type() != FileIOType::DirDesc {
-    //                    axlog::warn!("selected fd {} is not a dir", dir_fd);
-    //                    return None;
-    //                }
-    //                let dir = dir.clone();
-    //                // 有没有可能dir的尾部一定是一个/号，所以不用手工添加/
-    //                path = format!("{}{}", dir.get_path(), path);
-    //                axlog::warn!("handled_path: {}", path);
-    //            }
-    //            None => {
-    //                axlog::warn!("fd not exist");
-    //                return None;
-    //            }
-    //        }
-    //    }
-    //    if force_dir && !path.ends_with('/') {
-    //        path = format!("{}/", path);
-    //    }
-    //    if path.ends_with('.') {
-    //        // 如果path以.或..结尾, 则加上/告诉FilePath::new它是一个目录
-    //        path = format!("{}/", path);
-    //    }
-    //    match FilePath::new(path.as_str()) {
-    //        Ok(path) => Some(path),
-    //        Err(err) => {
-    //            axlog::warn!("error when creating FilePath: {:?}", err);
-    //            None
-    //        }
-    //    }
+    // unimplemented!();
+    let mut path = "".to_string();
+
+    if let Some(path_addr) = path_addr {
+        if path_addr.is_null() {
+            axlog::warn!("path address is null");
+            return None;
+        }
+        // 判断某一个虚拟地址是否在内存集中。
+        // 若当前虚拟地址在内存集中，且对应的是`lazy`分配，暂未分配物理页的情况下，
+        // 则为其分配物理页面。
+        //
+        // 若不在内存集中，则返回`None`。
+        //
+        // 若在内存集中，且已经分配了物理页面，则不做处理。
+        // ```
+        // NOTE: 我们暂时默认其是存在的。
+        // if process
+        //     .manual_alloc_for_lazy((path_addr as usize).into())
+        //     .is_ok()
+        // {
+        // 直接访问前需要确保已经被分配
+        path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
+        // } else {
+        //     axlog::warn!("path address is invalid");
+        //     return None;
+        // }
+    }
+    // 处理空路径的情况
+    if path.is_empty() {
+        // If `pathname` is an empty string, in this case, `dirfd` can refer to any type of file,
+        // not just a directory
+        // and the behavior of `fstatat()` is similar to that of `fstat()`
+        // If `dirfd` is AT_FDCWD, the call operates on the current working directory.
+        // If dir_fd == AT_FDCWD && dir_fd as u32 == AT_FDCWD as u32 {
+        if dir_fd == AT_FDCWD && dir_fd as u32 == AT_FDCWD as u32 {
+            path = String::from(".");
+        } else {
+            // 直接获取文件描述符表，我们要自行实现有一个全局的 fd_table
+            let fd_table = FDM.fd_table.lock();
+            if dir_fd >= fd_table.len() {
+                axlog::warn!("fd index out of range");
+                return None;
+            }
+            match fd_table[dir_fd].as_ref() {
+                Some(dir) => {
+                    let dir = dir.clone();
+                    path = dir.get_path();
+                }
+                None => {
+                    axlog::warn!("fd not exist");
+                    return None;
+                }
+            }
+        }
+    } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
+        // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
+        let fd_table = FDM.fd_table.lock();
+        if dir_fd >= fd_table.len() {
+            axlog::warn!("fd index out of range");
+            return None;
+        }
+        match fd_table[dir_fd].as_ref() {
+            Some(dir) => {
+                if dir.get_type() != FileIOType::DirDesc {
+                    axlog::warn!("selected fd {} is not a dir", dir_fd);
+                    return None;
+                }
+                let dir = dir.clone();
+                // 有没有可能dir的尾部一定是一个/号，所以不用手工添加/
+                path = format!("{}{}", dir.get_path(), path);
+                axlog::warn!("handled_path: {}", path);
+            }
+            None => {
+                axlog::warn!("fd not exist");
+                return None;
+            }
+        }
+    }
+    if force_dir && !path.ends_with('/') {
+        path = format!("{}/", path);
+    }
+    if path.ends_with('.') {
+        // 如果path以`.`或`..`结尾, 则加上/告诉FilePath::new它是一个目录
+        path = format!("{}/", path);
+    }
+    match FilePath::new(path.as_str()) {
+        Ok(path) => Some(path),
+        Err(err) => {
+            axlog::warn!("error when creating FilePath: {:?}", err);
+            None
+        }
+    }
 }
 
 /// 用户看到的文件到实际文件的映射

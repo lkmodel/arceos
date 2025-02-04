@@ -8,7 +8,7 @@ use crate::syscall::SyscallResult;
 /// * `flags: usize`, 挂载参数
 /// * `data: *const u8`, 传递给文件系统的字符串参数,可为NULL
 /// 返回值:成功返回0,失败返回-1
-pub fn syscall_mount(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_mount(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -18,6 +18,6 @@ pub fn syscall_mount(args: [usize; 6]) -> SyscallResult {
 /// # Arguments
 /// * `dir: *const u8`, 指定卸载目录
 /// * `flags: usize`, 卸载参数
-pub fn syscall_umount(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_umount(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

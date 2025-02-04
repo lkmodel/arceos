@@ -1,10 +1,10 @@
 #ifndef _INTERNAL_SYSCALL_H
 #define _INTERNAL_SYSCALL_H
 
+#include "syscall_arch.h"
 #include <errno.h>
 #include <features.h>
-// #include <sys/syscall.h>
-#include "syscall_arch.h"
+#include <sys/syscall.h>
 
 #ifndef SYSCALL_RLIM_INFINITY
 #define SYSCALL_RLIM_INFINITY (~0ULL)
@@ -23,9 +23,9 @@
 typedef long syscall_arg_t;
 #endif
 
-// hidden long __syscall_ret(unsigned long),
-//     __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
-//                  syscall_arg_t, syscall_arg_t);
+hidden long __syscall_ret(unsigned long),
+    __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
+                 syscall_arg_t, syscall_arg_t);
 
 #define __syscall1(n, a)             __syscall1(n, __scc(a))
 #define __syscall2(n, a, b)          __syscall2(n, __scc(a), __scc(b))

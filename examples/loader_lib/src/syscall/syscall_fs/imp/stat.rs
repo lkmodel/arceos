@@ -4,7 +4,7 @@ use crate::syscall::SyscallResult;
 /// # Arguments
 /// * `fd - usize`
 /// * `kst - *mut Kstat`
-pub fn syscall_fstat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_fstat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -13,7 +13,7 @@ pub fn syscall_fstat(args: [usize; 6]) -> SyscallResult {
 /// * `dir_fd - usize`
 /// * `path - *const u8`
 /// * `kst - *mut Kstat`
-pub fn syscall_fstatat(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_fstatat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -21,6 +21,6 @@ pub fn syscall_fstatat(args: [usize; 6]) -> SyscallResult {
 /// # Arguments
 /// * `path - *const u8`
 /// * `stat - *mut FsStat`
-pub fn syscall_statfs(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_statfs(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

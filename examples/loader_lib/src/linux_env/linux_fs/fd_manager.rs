@@ -4,15 +4,17 @@ use crate::linux_env::{
     axfs_ext::api::{FileIO, OpenFlags},
     linux_fs::stdio::{Stdin, Stdout},
 };
-use alloc::{string::String, sync::Arc, vec, vec::Vec};
+use alloc::{string::String, sync::Arc, vec::Vec};
+use axerrno::{AxError, AxResult};
+use axlog::debug;
 use axlog::info;
 use axsync::Mutex;
 use core::sync::atomic::{AtomicI32, AtomicU64};
 use lazyinit::LazyInit;
 
-/// 通常情况下，一个 FdManager 足以满足单进程多线程的需求。
-pub static FDMANAGER: LazyInit<Mutex<FdManager>> = LazyInit::new();
-const FD_LIMIT_ORIGIN: usize = 1025;
+pub const FD_LIMIT_ORIGIN: usize = 1025;
+/// 通常情况下，一个`FdManager`足以满足单进程多线程的需求。
+pub static FDM: LazyInit<FdManager> = LazyInit::new();
 
 pub struct FdManager {
     /// 保存文件描述符的数组
@@ -24,15 +26,34 @@ pub struct FdManager {
     pub cwd: Mutex<String>,
 }
 
+pub fn alloc_fd(fd_table: &mut Vec<Option<Arc<dyn FileIO>>>) -> AxResult<usize> {
+    for (i, fd) in fd_table.iter().enumerate() {
+        if fd.is_none() {
+            return Ok(i);
+        }
+    }
+    if fd_table.len() >= FDM.get_limit() as usize {
+        debug!("fd table is full");
+        return Err(AxError::StorageFull);
+    }
+    fd_table.push(None);
+    Ok(fd_table.len() - 1)
+}
+
+/// 获取当前进程的工作目录
+pub fn get_cwd() -> String {
+    FDM.cwd.lock().clone()
+}
+
 impl FdManager {
-    // pub fn new(fd_table: Vec<Option<Arc<dyn FileIO>>>, limit: usize) -> Self {
-    //     Self {
-    //         fd_table: Mutex::new(fd_table),
-    //         limit: AtomicU64::new(limit as u64),
-    //         umask: AtomicI32::new(0o022),
-    //         cwd: Mutex::new(String::from("/")),
-    //     }
-    // }
+    pub fn new(fd_table: Vec<Option<Arc<dyn FileIO>>>, limit: usize) -> Self {
+        Self {
+            fd_table: Mutex::new(fd_table),
+            limit: AtomicU64::new(limit as u64),
+            umask: AtomicI32::new(0o022),
+            cwd: Mutex::new(String::from("/")),
+        }
+    }
 
     pub fn get_limit(&self) -> u64 {
         self.limit.load(core::sync::atomic::Ordering::Acquire)

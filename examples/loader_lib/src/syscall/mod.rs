@@ -1,7 +1,11 @@
+mod api;
+mod ctypes;
 pub mod syscall;
 mod syscall_fs;
 
+pub use api::*;
 use axerrno::{self, LinuxError};
+pub use ctypes::*;
 
 /// Accept the result of a syscall, and return the `isize` to the user
 pub(crate) fn deal_result(result: SyscallResult) -> isize {

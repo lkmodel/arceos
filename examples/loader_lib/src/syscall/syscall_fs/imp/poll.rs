@@ -9,7 +9,7 @@ use crate::syscall::SyscallResult;
 /// * `nfds - usize`
 /// * `timeout - *const TimeSecs`
 /// * `mask - usize`
-pub fn syscall_ppoll(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_ppoll(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }
 
@@ -21,6 +21,6 @@ pub fn syscall_ppoll(args: [usize; 6]) -> SyscallResult {
 /// * `exceptfds - *mut usize`
 /// * `timeout - *const TimeSecs`
 /// * `mask - usize`
-pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_pselect6(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
 }

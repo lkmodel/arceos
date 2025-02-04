@@ -261,26 +261,37 @@ pub trait FileExt: Read + Write + Seek + AsAny + Send + Sync {
     /// Whether the file is executable
     fn executable(&self) -> bool;
 
-    // ```
-    //    /// Read from position without changing cursor.
-    //    fn read_from_seek(&mut self, pos: SeekFrom, buf: &mut [u8]) -> AxResult<usize> {
-    //        // Get old position
-    //        let old_pos = self
-    //            .seek(SeekFrom::Current(0))
-    //            .expect("Error get current pos in file");
-    //
-    //        // Seek to read position
-    //        let _ = self.seek(pos).unwrap();
-    //
-    //        // Read
-    //        let read_len = self.read_full(buf);
-    //        // Seek back to old_pos
-    //        let new_pos = self.seek(SeekFrom::Start(old_pos)).unwrap();
-    //
-    //        assert_eq!(old_pos, new_pos);
-    //
-    //        read_len
-    //    }
+    /// Read from position without changing cursor.
+    fn read_from_seek(&mut self, pos: SeekFrom, mut buf: &mut [u8]) -> AxResult<usize> {
+        // Get old position
+        let old_pos = self
+            .seek(SeekFrom::Current(0))
+            .expect("Error get current pos in file");
+
+        // Seek to read position
+        let _ = self.seek(pos).unwrap();
+
+        // Read
+        let buf_len = buf.len();
+
+        while !buf.is_empty() {
+            match self.read(buf) {
+                // Read to `EOF`
+                Ok(0) => return Ok(buf_len - buf.len()),
+                // Read n bytes
+                Ok(n) => buf = &mut buf[n..],
+                // Error
+                Err(e) => return Err(e),
+            }
+        }
+        let read_len = Ok(buf_len);
+        // Seek back to old_pos
+        let new_pos = self.seek(SeekFrom::Start(old_pos)).unwrap();
+
+        assert_eq!(old_pos, new_pos);
+
+        read_len
+    }
 
     /// Write to position without changing cursor.
     fn write_to_seek(&mut self, pos: SeekFrom, buf: &[u8]) -> AxResult<usize> {

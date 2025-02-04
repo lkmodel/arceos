@@ -35,6 +35,8 @@ LIBSRC += $(wildcard $(SRC_DIR)/__file/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/math/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/complex/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/errno/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/internal/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/fcntl/*.c)
 # LIBSRC += $(wildcard $(SRC_DIR)/network/*.c)
 
 # 根据配置选择 malloc 库实现
