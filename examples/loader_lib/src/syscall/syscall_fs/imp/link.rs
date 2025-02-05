@@ -2,6 +2,7 @@ use crate::{
     linux_env::linux_fs::link::{FilePath, deal_with_path, remove_link},
     syscall::{SyscallError, SyscallResult},
 };
+use axfs::api::remove_dir;
 use axlog::debug;
 
 pub const AT_REMOVEDIR: usize = 0x200; // Remove directory instead of `unlinking` file.
@@ -45,7 +46,7 @@ pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
     }
     // Remove `dir`
     else if flags == AT_REMOVEDIR {
-        if let Err(e) = axfs::api::remove_dir(path.path()) {
+        if let Err(e) = remove_dir(path.path()) {
             debug!("rmdir error: {:?}", e);
             return Err(SyscallError::EINVAL);
         }

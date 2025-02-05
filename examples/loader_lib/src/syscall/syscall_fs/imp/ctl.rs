@@ -1,11 +1,19 @@
 use crate::{
     linux_env::{
         axfs_ext::api::OpenFlags,
-        linux_fs::fd_manager::{FDM, alloc_fd},
+        linux_fs::{
+            fd_manager::{FDM, alloc_fd},
+            link::{FilePath, deal_with_path},
+        },
     },
-    syscall::{SyscallError, SyscallResult, ctypes::Fcntl64Cmd},
+    syscall::{
+        SyscallError, SyscallResult,
+        ctypes::{Fcntl64Cmd, RenameFlags},
+    },
 };
-use axlog::{debug, info};
+use axfs::api::{metadata, remove_dir, remove_file, rename};
+use axio::Error;
+use axlog::{debug, error, info};
 
 /// 功能:获取当前工作目录；
 /// # Arguments
@@ -73,8 +81,119 @@ pub fn syscall_getdents64(_args: [usize; 6]) -> SyscallResult {
 /// * `new_dirfd: usize`, 新文件所在的目录的文件描述符。
 /// * `new_path: *const u8`, 新文件的名称。如果`new_path`是相对路径,则它是相对于`new_dirfd`目录而言的。如果`new_path`是相对路径,且`new_dirfd`的值为`AT_FDCWD`,则它是相对于当前路径而言的。如果`new_path`是绝对路径,则`new_dirfd`被忽略。
 /// * `flags: usize`, 重命名的标志位。目前只支持`RENAME_NOREPLACE`、`RENAME_EXCHANGE`和`RENAME_WHITEOUT`。
-pub fn syscall_renameat2(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
+    let old_dirfd = args[0];
+    let _old_path = args[1] as *const u8;
+    let new_dirfd = args[2];
+    let _new_path = args[3] as *const u8;
+    let flags = args[4];
+    let old_path = deal_with_path(old_dirfd, Some(_old_path), false).unwrap();
+    let new_path = deal_with_path(new_dirfd, Some(_new_path), false).unwrap();
+
+    let proc_path = FilePath::new("/proc").unwrap();
+    if old_path.start_with(&proc_path) || new_path.start_with(&proc_path) {
+        return Err(SyscallError::EPERM);
+    }
+    let flags = if let Some(ans) = RenameFlags::from_bits(flags as u32) {
+        ans
+    } else {
+        return Err(SyscallError::EINVAL);
+    };
+    // 如果重命名后的文件已存在
+    if flags.contains(RenameFlags::NOREPLACE) {
+        if flags.contains(RenameFlags::EXCHANGE) {
+            return Err(SyscallError::EINVAL);
+        }
+        match metadata(new_path.path()) {
+            Ok(_) => {
+                debug!("new_path_ already exist");
+                return Err(SyscallError::EEXIST);
+            }
+            Err(e) => {
+                debug!("{}", e);
+            }
+        }
+    }
+
+    if !flags.contains(RenameFlags::EXCHANGE) {
+        // 此时不是交换，而是移动，那么需要
+        match (metadata(new_path.path()), metadata(old_path.path())) {
+            (Ok(new_metadata), Ok(old_metadata)) => {
+                if old_metadata.is_dir() ^ new_metadata.is_dir() {
+                    debug!("old_path_ and new_path_ is not the same type");
+                    if old_metadata.is_dir() {
+                        return Err(SyscallError::ENOTDIR);
+                    }
+                    return Err(SyscallError::EISDIR);
+                }
+            }
+            (Err(new_err), _) => match new_err {
+                Error::NotFound => {}
+                _ => {
+                    panic!("{}", new_err)
+                }
+            },
+            (Ok(_), Err(_old_err)) => {
+                //`panic!("{}", old_err)
+            }
+        }
+    } else if flags.contains(RenameFlags::WHITEOUT) {
+        return Err(SyscallError::EINVAL);
+    }
+
+    // 做实际重命名操作
+    match metadata(old_path.path()) {
+        Ok(_) => {}
+        Err(e) => match e {
+            Error::NotFound => {
+                return Err(SyscallError::ENOENT);
+            }
+            _ => {
+                panic!("{}", e)
+            }
+        },
+    }
+
+    if old_path.path() == new_path.path() {
+        // 相同文件不用改
+        return Ok(0);
+    }
+    if !flags.contains(RenameFlags::EXCHANGE) {
+        // 此时若存在新文件，默认是没有 NOREPLACE 的
+        match metadata(new_path.path()) {
+            // 当新文件已经存在，先删掉新文件
+            Ok(new_metadata) => {
+                if new_metadata.is_dir() {
+                    if let Err(err) = remove_dir(new_path.path()) {
+                        error!("error: {:?}", err);
+                        return Err(SyscallError::EPERM);
+                    }
+                } else if new_metadata.is_file() {
+                    if let Err(err) = remove_file(new_path.path()) {
+                        error!("error: {:?}", err);
+                        return Err(SyscallError::EPERM);
+                    }
+                }
+            }
+            Err(e) => match e {
+                // 新文件不存在时，直接执行后续操作
+                Error::NotFound => {
+                    debug!("new_path not exist");
+                }
+                _ => panic!("{}", e),
+            },
+        };
+
+        if let Err(err) = rename(old_path.path(), new_path.path()) {
+            error!("error: {:?}", err);
+            return Err(SyscallError::EPERM);
+        }
+    } else {
+        // 当前不支持交换
+        axlog::warn!("renameat2 exchange not implemented");
+        return Err(SyscallError::EPERM);
+    }
+    Ok(0)
 }
 
 /// # Arguments

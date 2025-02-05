@@ -63,6 +63,7 @@ void puts(char *s);
 void hello();
 void putchar(char c);
 int remove(const char *);
+int rename(const char *, const char *);
 
 // TODO:
 

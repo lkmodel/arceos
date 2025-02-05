@@ -144,3 +144,17 @@ numeric_enum_macro::numeric_enum! {
         F_DUPFD_CLOEXEC = 1030,
     }
 }
+
+bitflags! {
+    /// sys_renameat2 用到的选项
+    pub struct RenameFlags: u32 {
+        /// Nothing
+        const NONE = 0;
+        /// 不要替换目标位置的文件，如果预定位置已经有文件，不要删除它
+        const NOREPLACE = 1 << 0;
+        /// 交换原位置和目标位置的文件
+        const EXCHANGE = 1 << 1;
+        /// 替换后在原位置放一个 "whiteout" 类型对象，仅在一些文件系统中有用，这里不考虑
+        const WHITEOUT = 1 << 2;
+    }
+}

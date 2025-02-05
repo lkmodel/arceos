@@ -557,7 +557,7 @@
 // #define SYS_finit_module 273
 // #define SYS_sched_setattr 274
 // #define SYS_sched_getattr 275
-// #define SYS_renameat2 276
+#define SYS_renameat2 276
 // #define SYS_seccomp 277
 // #define SYS_getrandom 278
 // #define SYS_memfd_create 279

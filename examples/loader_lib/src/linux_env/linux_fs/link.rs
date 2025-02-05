@@ -240,7 +240,6 @@ pub fn deal_with_path(
     path_addr: Option<*const u8>,
     force_dir: bool,
 ) -> Option<FilePath> {
-    // unimplemented!();
     let mut path = "".to_string();
 
     if let Some(path_addr) = path_addr {

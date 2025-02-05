@@ -82,7 +82,8 @@ pub fn new_dir(dir_path: String, _flags: OpenFlags) -> AxResult<DirDesc> {
     // FIXME: 这里暂时不做这个检查，因为势必要拓展path_exists的支持，而现有的axfs是不允许的
     //    if !api::path_exists(dir_path.as_str()) {
     // api::create_dir_all(dir_path.as_str())?;
-    create_dir(dir_path.as_str())?;
+    // FIXME: 在这里添加match去处理
+    create_dir(dir_path.as_str()).unwrap();
     //   }
     Ok(DirDesc::new(dir_path))
 }
