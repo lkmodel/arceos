@@ -6,13 +6,29 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
+axalloc = { workspace = true }
+axerrno = "0.1"
+axio = "0.1"
+axfs = { workspace = true }
+axhal = { workspace = true, features = ["paging"] }
 axlog = { workspace = true }
 axstd = { workspace = true }
+axsync = { workspace = true }
 axtask = { workspace = true }
-arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
-elf = { git = "https://github.com/cole14/rust-elf/", commit = "cdc6769", default-features = false, features = ["to_str"] }
-printf-compat = { version = "0.1.0", default-features = false }
-axhal = { workspace = true, features = ["paging"] }
+bitflags = "2.0"
+cfg-if = "1.0"
+elf = { git = "https://github.com/cole14/rust-elf/", rev = "cdc6769", default-features = false, features = ["to_str"] }
+lazy_static = "1.5.0"
+memory_addr = "0.3"
+numeric-enum-macro = { git = "https://github.com/mexus/numeric-enum-macro" }
 page_table_multiarch = { version = "0.5", optional = true }
+printf-compat = { version = "0.1.0", default-features = false }
+riscv = "0.12"
+static_assertions = "1.1.0"
+xmas-elf = "0.9.0"
+elf_parser = { git = "https://github.com/Starry-OS/elf_parser.git" }
+
 
 [features]
+multitask = []

@@ -9,8 +9,17 @@ use abi::abi_entry;
 use axlog::info;
 
 mod abi;
+mod arch;
+mod config;
 mod elf;
+mod futex;
+mod io;
 mod load;
+mod mem;
+mod process;
+mod signal;
+// mod task;
+mod taskctx;
 
 // use heap_allocator::init_heap;
 use load::load_elf;
