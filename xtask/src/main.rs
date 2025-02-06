@@ -493,6 +493,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         insta_set.set_description(gcc_version);
         unsafe {
             env::set_var("INSTA_FORCE_PASS", "1");
+            env::set_var("INSTA_OUTPUT", "minimal");
         }
     }
 
