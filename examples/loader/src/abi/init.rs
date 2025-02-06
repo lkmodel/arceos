@@ -1,4 +1,4 @@
-use axlog::{debug, info};
+use axlog::{debug, error, info};
 use axtask::init_scheduler;
 
 use axstd::{
@@ -36,7 +36,10 @@ pub extern "C" fn abi_libc_start_main(
 	};
 
 	unsafe {
-		main(argc, argv, core::ptr::null_mut());
+        let status = main(argc, argv, core::ptr::null_mut());
+        if status < 0 {
+            error!("[ABI:Main]: main exit code: {}", status);
+        }
 	}
 
 	abi_fini();
@@ -74,6 +77,7 @@ pub unsafe extern "C" fn abi_printf(fat: *const c_char, mut args: ...) -> c_int 
     info!("[ABI:Print] Print a formatted string!");
     // 空指针检查
     if fat.is_null() {
+        error!("[ABI:Print] Print NULL!");
         return -1;
     }
 

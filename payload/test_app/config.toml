@@ -1,0 +1,5 @@
+[dev]
+rename="test"
+ttype="dynamic"
+dynamic_flags=["-Iunity","-DUNITY_OUTPUT_COLOR"]
+snapshot = true

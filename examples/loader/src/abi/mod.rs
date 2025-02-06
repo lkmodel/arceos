@@ -3,10 +3,11 @@ mod init;
 mod thread;
 mod string;
 
+use core::arch::asm;
 use init::{
-    abi_exit, abi_fini, abi_hello, 
-    abi_init, abi_libc_start_main, 
-    abi_printf, abi_putchar, 
+    abi_exit, abi_fini, abi_hello,
+    abi_init, abi_libc_start_main,
+    abi_printf, abi_putchar,
     abi_puts, abi_sleep
 };
 
@@ -65,5 +66,52 @@ register_abi_table! {
     ("free", abi_free),
     ("realloc", abi_realloc),
     ("calloc", abi_calloc),
-    ("strlen", abi_strlen)
+    ("strlen", abi_strlen),
+    ("longjmp",abi_longjmp),
+    ("setjmp", abi_setjmp)
+}
+unsafe extern "C" fn abi_longjmp() {
+    asm!(
+    "
+    ld s0,    0(a0)
+	ld s1,    8(a0)
+	ld s2,    16(a0)
+	ld s3,    24(a0)
+	ld s4,    32(a0)
+	ld s5,    40(a0)
+	ld s6,    48(a0)
+	ld s7,    56(a0)
+	ld s8,    64(a0)
+	ld s9,    72(a0)
+	ld s10,   80(a0)
+	ld s11,   88(a0)
+	ld sp,    96(a0)
+	ld ra,    104(a0)
+
+	seqz a0, a1
+	add a0, a0, a1
+	ret
+	"
+    )
+}
+unsafe extern "C" fn abi_setjmp() {
+    asm!("
+    sd s0,    0(a0)
+	sd s1,    8(a0)
+	sd s2,    16(a0)
+	sd s3,    24(a0)
+	sd s4,    32(a0)
+	sd s5,    40(a0)
+	sd s6,    48(a0)
+	sd s7,    56(a0)
+	sd s8,    64(a0)
+	sd s9,    72(a0)
+	sd s10,   80(a0)
+	sd s11,   88(a0)
+	sd sp,    96(a0)
+	sd ra,    104(a0)
+
+	li a0, 0
+	ret
+	")
 }
