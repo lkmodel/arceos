@@ -20,7 +20,7 @@ void tearDown(void) {
 void test_basic(void){
     TEST_MESSAGE("Begin test");
 
-    TEST_ASSERT_TRUE(1);
+    TEST_ASSERT_TRUE(0);
     TEST_ASSERT_FALSE(0);
     TEST_ASSERT(1);
 
