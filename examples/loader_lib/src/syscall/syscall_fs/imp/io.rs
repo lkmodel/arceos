@@ -1,6 +1,6 @@
 use crate::{
     linux_env::{
-        axfs_ext::api::OpenFlags,
+        axfs_ext::api::{FileIOType, OpenFlags},
         linux_fs::{
             fd_manager::{FDM, alloc_fd},
             link::{create_link, deal_with_path},
@@ -15,8 +15,11 @@ use crate::{
         },
     },
 };
-use alloc::{string::ToString, sync::Arc};
+use alloc::{alloc::alloc, string::ToString, sync::Arc};
+use axerrno::AxError;
 use axlog::{debug, info};
+use core::alloc::Layout;
+use core::slice::from_raw_parts;
 
 /// 功能:打开或创建一个文件；
 /// # Arguments
@@ -141,8 +144,42 @@ pub fn syscall_read(_args: [usize; 6]) -> SyscallResult {
 /// * `buf: *const u8`, 一个缓存区,用于存放要写入的内容。
 /// * `count: usize`, 要写入的字节数。
 /// 返回值:成功执行,返回写入的字节数。错误,则返回-1。
-pub fn syscall_write(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
+    // unimplemented!();
+    let fd = args[0];
+    let buf = args[1] as *const u8;
+    let count = args[2];
+
+    info!("[write()] fd: {}, buf: {buf:?}, len: {count}", fd as i32);
+    if buf.is_null() {
+        return Err(SyscallError::EFAULT);
+    }
+
+    //    let layout = Layout::from_size_align(unsafe { buf.add(count) as usize } - 1, 8).unwrap();
+    //    let buf = unsafe { from_raw_parts(alloc(layout), count) };
+    let buf = unsafe { from_raw_parts(buf, count) };
+
+    let file = match FDM.fd_table.lock().get(fd) {
+        Some(Some(f)) => f.clone(),
+        _ => return Err(SyscallError::EBADF),
+    };
+
+    if file.get_type() == FileIOType::DirDesc {
+        debug!("fd is a dir");
+        return Err(SyscallError::EBADF);
+    }
+    if !file.writable() {
+        return Err(SyscallError::EBADF);
+    }
+
+    match file.write(buf) {
+        Ok(len) => Ok(len as isize),
+        // TODO: Send a `SIGPIPE` signal to the process
+        Err(AxError::ConnectionReset) => Err(SyscallError::EPIPE),
+        Err(AxError::WouldBlock) => Err(SyscallError::EAGAIN),
+        Err(AxError::InvalidInput) => Err(SyscallError::EINVAL),
+        Err(_) => Err(SyscallError::EPERM),
+    }
 }
 
 /// 功能:创建管道；

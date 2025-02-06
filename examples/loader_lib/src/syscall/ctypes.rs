@@ -146,7 +146,7 @@ numeric_enum_macro::numeric_enum! {
 }
 
 bitflags! {
-    /// sys_renameat2 用到的选项
+    /// `sys_renameat2` 用到的选项
     pub struct RenameFlags: u32 {
         /// Nothing
         const NONE = 0;

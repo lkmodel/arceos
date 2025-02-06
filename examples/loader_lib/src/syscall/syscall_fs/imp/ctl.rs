@@ -11,8 +11,8 @@ use crate::{
         ctypes::{Fcntl64Cmd, RenameFlags},
     },
 };
+use axerrno::AxError;
 use axfs::api::{metadata, remove_dir, remove_file, rename};
-use axio::Error;
 use axlog::{debug, error, info};
 
 /// 功能:获取当前工作目录；
@@ -92,21 +92,27 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
 
     let proc_path = FilePath::new("/proc").unwrap();
     if old_path.start_with(&proc_path) || new_path.start_with(&proc_path) {
+        debug!(
+            "EPERM  RENAME_WHITEOUT  was specified in flags, but the caller does not have the CAP_MKNOD capability."
+        );
         return Err(SyscallError::EPERM);
     }
+
     let flags = if let Some(ans) = RenameFlags::from_bits(flags as u32) {
         ans
     } else {
+        debug!("EINVAL An invalid flag was specified in flags.");
         return Err(SyscallError::EINVAL);
     };
-    // 如果重命名后的文件已存在
+
     if flags.contains(RenameFlags::NOREPLACE) {
         if flags.contains(RenameFlags::EXCHANGE) {
+            debug!("EINVAL Both RENAME_NOREPLACE and RENAME_EXCHANGE were specified in flags.");
             return Err(SyscallError::EINVAL);
         }
         match metadata(new_path.path()) {
             Ok(_) => {
-                debug!("new_path_ already exist");
+                debug!("EEXIST flags contains RENAME_NOREPLACE and newpath already exists.");
                 return Err(SyscallError::EEXIST);
             }
             Err(e) => {
@@ -120,32 +126,61 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
         match (metadata(new_path.path()), metadata(old_path.path())) {
             (Ok(new_metadata), Ok(old_metadata)) => {
                 if old_metadata.is_dir() ^ new_metadata.is_dir() {
-                    debug!("old_path_ and new_path_ is not the same type");
                     if old_metadata.is_dir() {
+                        debug!(
+                            "ENOTDIR oldpath is relative and olddirfd is a file descriptor referring to a file other than a directory; or similar for newpath and newdirfd"
+                        );
                         return Err(SyscallError::ENOTDIR);
                     }
+                    debug!(
+                        "EISDIR newpath is an existing directory, but oldpath is not a directory."
+                    );
                     return Err(SyscallError::EISDIR);
                 }
             }
             (Err(new_err), _) => match new_err {
-                Error::NotFound => {}
+                AxError::NotFound => {}
                 _ => {
                     panic!("{}", new_err)
                 }
             },
-            (Ok(_), Err(_old_err)) => {
-                //`panic!("{}", old_err)
-            }
+            (Ok(_), Err(old_err)) => match old_err {
+                AxError::NotFound => {
+                    // FIXME: 检查这里，重构整个函数
+                    // panic!("CHECKME");
+                }
+                _ => {
+                    panic!("{}", old_err);
+                }
+            },
         }
     } else if flags.contains(RenameFlags::WHITEOUT) {
+        debug!("EINVAL Both RENAME_WHITEOUT and RENAME_EXCHANGE were specified in flags.");
         return Err(SyscallError::EINVAL);
+    }
+
+    if flags.contains(RenameFlags::EXCHANGE) {
+        if let Err(e) = metadata(new_path.path()) {
+            match e {
+                AxError::NotFound => {
+                    debug!("ENOENT flags contains RENAME_EXCHANGE and newpath does not exist.");
+                    return Err(SyscallError::ENOENT);
+                }
+                _ => {
+                    panic!("{}", e);
+                }
+            }
+        }
     }
 
     // 做实际重命名操作
     match metadata(old_path.path()) {
         Ok(_) => {}
         Err(e) => match e {
-            Error::NotFound => {
+            AxError::NotFound => {
+                debug!(
+                    "ENOENT The link named by oldpath does not exist; or, a directory component in newpath does not exist; or, oldpath or newpath is an empty string."
+                );
                 return Err(SyscallError::ENOENT);
             }
             _ => {
@@ -177,9 +212,7 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
             }
             Err(e) => match e {
                 // 新文件不存在时，直接执行后续操作
-                Error::NotFound => {
-                    debug!("new_path not exist");
-                }
+                AxError::NotFound => {}
                 _ => panic!("{}", e),
             },
         };

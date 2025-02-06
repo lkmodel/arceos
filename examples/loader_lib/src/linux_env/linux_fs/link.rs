@@ -240,6 +240,7 @@ pub fn deal_with_path(
     path_addr: Option<*const u8>,
     force_dir: bool,
 ) -> Option<FilePath> {
+    // unimplemented!();
     let mut path = "".to_string();
 
     if let Some(path_addr) = path_addr {
@@ -332,6 +333,60 @@ pub fn deal_with_path(
             None
         }
     }
+}
+
+/// To deal with the path and return the `canonicalized` path
+///
+/// * `dir_fd` - The file descriptor of the directory, if it is AT_FDCWD, the call operates on the current working directory
+///
+/// * `path_addr` - The address of the path, if it is null or an empty string, `AxError::InvalidInput` will be returned
+///
+/// * `force_dir` - If true, the path will be treated as a directory
+///
+/// The path will be dealt with links and the path will be `canonicalized`
+pub fn canonicalizing_path(
+    dir_fd: usize,
+    path_addr: Option<*const u8>,
+    force_dir: bool,
+) -> AxResult<FilePath> {
+    unimplemented!();
+    //    let mut path = "".to_string();
+    //    if let Some(path_addr) = path_addr {
+    //        if path_addr.is_null() {
+    //            axlog::warn!("path address is null");
+    //            return Err(AxError::InvalidInput);
+    //        }
+    //        // FIX: 检查指针是否被分配
+    //        path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
+    //    }
+    //
+    //    if path.is_empty() {
+    //        return Err(AxError::InvalidInput);
+    //    } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
+    //        // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
+    //        let fd_table = FDM.fd_table.lock();
+    //        if dir_fd >= fd_table.len() {
+    //            axlog::warn!("fd index out of range");
+    //            return None;
+    //        }
+    //        match fd_table[dir_fd].as_ref() {
+    //            Some(dir) => {
+    //                if dir.get_type() != FileIOType::DirDesc {
+    //                    axlog::warn!("selected fd {} is not a dir", dir_fd);
+    //                    return None;
+    //                }
+    //                let dir = dir.clone();
+    //                // 有没有可能dir的尾部一定是一个/号，所以不用手工添加/
+    //                path = format!("{}{}", dir.get_path(), path);
+    //                axlog::warn!("handled_path: {}", path);
+    //            }
+    //            None => {
+    //                axlog::warn!("fd not exist");
+    //                return None;
+    //            }
+    //        }
+    //    }
+    //    Ok(0)
 }
 
 /// 用户看到的文件到实际文件的映射
