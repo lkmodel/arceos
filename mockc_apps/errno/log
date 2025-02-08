@@ -1,0 +1,138 @@
+
+apps.bin:     file format elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+00000000000005a0 <printf@plt-0x20>:
+ 5a0:	00002397          	auipc	t2,0x2
+ 5a4:	41c30333          	sub	t1,t1,t3
+ 5a8:	a683be03          	ld	t3,-1432(t2) # 2008 <main+0x191a>
+ 5ac:	fd430313          	addi	t1,t1,-44
+ 5b0:	a6838293          	addi	t0,t2,-1432
+ 5b4:	00135313          	srli	t1,t1,0x1
+ 5b8:	0082b283          	ld	t0,8(t0)
+ 5bc:	000e0067          	jr	t3
+
+00000000000005c0 <printf@plt>:
+ 5c0:	00002e17          	auipc	t3,0x2
+ 5c4:	a58e3e03          	ld	t3,-1448(t3) # 2018 <printf>
+ 5c8:	000e0367          	jalr	t1,t3
+ 5cc:	00000013          	nop
+
+00000000000005d0 <__errno_location@plt>:
+ 5d0:	00002e17          	auipc	t3,0x2
+ 5d4:	a50e3e03          	ld	t3,-1456(t3) # 2020 <__errno_location>
+ 5d8:	000e0367          	jalr	t1,t3
+ 5dc:	00000013          	nop
+
+00000000000005e0 <__libc_start_main@plt>:
+ 5e0:	00002e17          	auipc	t3,0x2
+ 5e4:	a48e3e03          	ld	t3,-1464(t3) # 2028 <__libc_start_main>
+ 5e8:	000e0367          	jalr	t1,t3
+ 5ec:	00000013          	nop
+
+Disassembly of section .text:
+
+00000000000005f0 <main-0xfe>:
+ 5f0:	00002197          	auipc	gp,0x2
+ 5f4:	21018193          	addi	gp,gp,528 # 2800 <main+0x2112>
+ 5f8:	850a                	mv	a0,sp
+ 5fa:	00002597          	auipc	a1,0x2
+ 5fe:	84658593          	addi	a1,a1,-1978 # 1e40 <main+0x1752>
+ 602:	ff017113          	andi	sp,sp,-16
+ 606:	a009                	j	608 <__libc_start_main@plt+0x28>
+ 608:	410c                	lw	a1,0(a0)
+ 60a:	00850613          	addi	a2,a0,8
+ 60e:	4781                	li	a5,0
+ 610:	00002717          	auipc	a4,0x2
+ 614:	a5873703          	ld	a4,-1448(a4) # 2068 <main+0x197a>
+ 618:	00002697          	auipc	a3,0x2
+ 61c:	a286b683          	ld	a3,-1496(a3) # 2040 <main+0x1952>
+ 620:	00002517          	auipc	a0,0x2
+ 624:	a4053503          	ld	a0,-1472(a0) # 2060 <main+0x1972>
+ 628:	bf65                	j	5e0 <__libc_start_main@plt>
+ 62a:	00002517          	auipc	a0,0x2
+ 62e:	9de50513          	addi	a0,a0,-1570 # 2008 <main+0x191a>
+ 632:	00002797          	auipc	a5,0x2
+ 636:	9d678793          	addi	a5,a5,-1578 # 2008 <main+0x191a>
+ 63a:	00a78863          	beq	a5,a0,64a <__libc_start_main@plt+0x6a>
+ 63e:	00002797          	auipc	a5,0x2
+ 642:	a1a7b783          	ld	a5,-1510(a5) # 2058 <main+0x196a>
+ 646:	c391                	beqz	a5,64a <__libc_start_main@plt+0x6a>
+ 648:	8782                	jr	a5
+ 64a:	8082                	ret
+ 64c:	00002517          	auipc	a0,0x2
+ 650:	9bc50513          	addi	a0,a0,-1604 # 2008 <main+0x191a>
+ 654:	00002597          	auipc	a1,0x2
+ 658:	9b458593          	addi	a1,a1,-1612 # 2008 <main+0x191a>
+ 65c:	8d89                	sub	a1,a1,a0
+ 65e:	4035d793          	srai	a5,a1,0x3
+ 662:	91fd                	srli	a1,a1,0x3f
+ 664:	95be                	add	a1,a1,a5
+ 666:	8585                	srai	a1,a1,0x1
+ 668:	c599                	beqz	a1,676 <__libc_start_main@plt+0x96>
+ 66a:	00002797          	auipc	a5,0x2
+ 66e:	9e67b783          	ld	a5,-1562(a5) # 2050 <main+0x1962>
+ 672:	c391                	beqz	a5,676 <__libc_start_main@plt+0x96>
+ 674:	8782                	jr	a5
+ 676:	8082                	ret
+ 678:	1141                	addi	sp,sp,-16
+ 67a:	e022                	sd	s0,0(sp)
+ 67c:	00002417          	auipc	s0,0x2
+ 680:	9fc40413          	addi	s0,s0,-1540 # 2078 <main+0x198a>
+ 684:	00044783          	lbu	a5,0(s0)
+ 688:	e406                	sd	ra,8(sp)
+ 68a:	eb95                	bnez	a5,6be <__libc_start_main@plt+0xde>
+ 68c:	00002797          	auipc	a5,0x2
+ 690:	9ac7b783          	ld	a5,-1620(a5) # 2038 <main+0x194a>
+ 694:	c791                	beqz	a5,6a0 <__libc_start_main@plt+0xc0>
+ 696:	00002517          	auipc	a0,0x2
+ 69a:	96a53503          	ld	a0,-1686(a0) # 2000 <main+0x1912>
+ 69e:	9782                	jalr	a5
+ 6a0:	f8bff0ef          	jal	ra,62a <__libc_start_main@plt+0x4a>
+ 6a4:	00002797          	auipc	a5,0x2
+ 6a8:	9a47b783          	ld	a5,-1628(a5) # 2048 <main+0x195a>
+ 6ac:	c791                	beqz	a5,6b8 <__libc_start_main@plt+0xd8>
+ 6ae:	00000517          	auipc	a0,0x0
+ 6b2:	06e50513          	addi	a0,a0,110 # 71c <main+0x2e>
+ 6b6:	9782                	jalr	a5
+ 6b8:	4785                	li	a5,1
+ 6ba:	00f40023          	sb	a5,0(s0)
+ 6be:	60a2                	ld	ra,8(sp)
+ 6c0:	6402                	ld	s0,0(sp)
+ 6c2:	0141                	addi	sp,sp,16
+ 6c4:	8082                	ret
+ 6c6:	00002797          	auipc	a5,0x2
+ 6ca:	9aa7b783          	ld	a5,-1622(a5) # 2070 <main+0x1982>
+ 6ce:	cf99                	beqz	a5,6ec <__libc_start_main@plt+0x10c>
+ 6d0:	1141                	addi	sp,sp,-16
+ 6d2:	e406                	sd	ra,8(sp)
+ 6d4:	00002597          	auipc	a1,0x2
+ 6d8:	9ac58593          	addi	a1,a1,-1620 # 2080 <main+0x1992>
+ 6dc:	00000517          	auipc	a0,0x0
+ 6e0:	04050513          	addi	a0,a0,64 # 71c <main+0x2e>
+ 6e4:	9782                	jalr	a5
+ 6e6:	60a2                	ld	ra,8(sp)
+ 6e8:	0141                	addi	sp,sp,16
+ 6ea:	b78d                	j	64c <__libc_start_main@plt+0x6c>
+ 6ec:	b785                	j	64c <__libc_start_main@plt+0x6c>
+
+00000000000006ee <main>:
+ 6ee:	1141                	addi	sp,sp,-16
+ 6f0:	e406                	sd	ra,8(sp)
+ 6f2:	e022                	sd	s0,0(sp)
+ 6f4:	0800                	addi	s0,sp,16
+ 6f6:	edbff0ef          	jal	ra,5d0 <__errno_location@plt>
+ 6fa:	87aa                	mv	a5,a0
+ 6fc:	439c                	lw	a5,0(a5)
+ 6fe:	85be                	mv	a1,a5
+ 700:	00000517          	auipc	a0,0x0
+ 704:	01850513          	addi	a0,a0,24 # 718 <main+0x2a>
+ 708:	eb9ff0ef          	jal	ra,5c0 <printf@plt>
+ 70c:	4781                	li	a5,0
+ 70e:	853e                	mv	a0,a5
+ 710:	60a2                	ld	ra,8(sp)
+ 712:	6402                	ld	s0,0(sp)
+ 714:	0141                	addi	sp,sp,16
+ 716:	8082                	ret

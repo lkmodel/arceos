@@ -114,13 +114,23 @@ enum {
 #define DTP_OFFSET 0
 #endif
 
-#ifdef TLS_ABOVE_TP
-#define TP_ADJ(p)        ((char *)(p) + sizeof(struct pthread) + TP_OFFSET)
-#define __pthread_self() ((pthread_t)(__get_tp() - sizeof(struct __pthread) - TP_OFFSET))
-#else
-#define TP_ADJ(p)        (p)
-#define __pthread_self() ((pthread_t)__get_tp())
-#endif
+// FIXED: 这里不能使用__pthread_self，而是应该调用`ABI`函数`abi_pthread_self`
+// <<<<<<
+// #ifdef TLS_ABOVE_TP
+// #define TP_ADJ(p)        ((char *)(p) + sizeof(struct pthread) + TP_OFFSET)
+// #define __pthread_self() ((pthread_t)(__get_tp() - sizeof(struct __pthread) - TP_OFFSET))
+// #else
+// #define TP_ADJ(p)        (p)
+// #define __pthread_self() ((pthread_t)__get_tp())
+// #endif
+// >>>>>>
+// FIX LOG: 这里使用函数定义，并在thread/pthread_self.c中实现这个函数。
+// 评价就是，这个BUG太蠢了，人怎么能蠢成这样
+// ======
+// <<<<<<
+pthread_t __pthread_self_impl();
+#define __pthread_self() __pthread_self_impl()
+// >>>>>>
 
 #ifndef tls_mod_off_t
 #define tls_mod_off_t size_t

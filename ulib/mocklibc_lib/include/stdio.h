@@ -52,6 +52,44 @@ extern "C" {
 #define TMP_MAX      10000
 #define L_tmpnam     20
 
+typedef union _G_fpos64_t {
+    char __opaque[16];
+    long long __lldata;
+    double __align;
+} fpos_t;
+
+extern FILE *const stdin;
+extern FILE *const stdout;
+extern FILE *const stderr;
+
+#define stdin  (stdin)
+#define stdout (stdout)
+#define stderr (stderr)
+
+// FILE *fopen(const char *__restrict, const char *__restrict);
+// FILE *freopen(const char *__restrict, const char *__restrict, FILE *__restrict);
+// int fclose(FILE *);
+
+int remove(const char *);
+int rename(const char *, const char *);
+
+// int feof(FILE *);
+// int ferror(FILE *);
+// int fflush(FILE *);
+// void clearerr(FILE *);
+//
+// int fseek(FILE *, long, int);
+// long ftell(FILE *);
+// void rewind(FILE *);
+//
+// int fgetpos(FILE *__restrict, fpos_t *__restrict);
+// int fsetpos(FILE *, const fpos_t *);
+
+// size_t fread(void *__restrict, size_t, size_t, FILE *__restrict);
+// size_t fwrite(const void *__restrict, size_t, size_t, FILE *__restrict);
+
+// --------------------------------------
+
 int printf(const char *__restrict, ...);
 int sprintf(char *__restrict, const char *__restrict, ...);
 int snprintf(char *__restrict, size_t, const char *__restrict, ...);
@@ -62,10 +100,6 @@ int vscanf(const char *__restrict, __isoc_va_list);
 void puts(char *s);
 void hello();
 void putchar(char c);
-int remove(const char *);
-int rename(const char *, const char *);
-
-// TODO:
 
 #ifdef __cplusplus
 }

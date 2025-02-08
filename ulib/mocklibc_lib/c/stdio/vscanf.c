@@ -14,4 +14,4 @@ int vscanf(const char *restrict fmt, va_list ap)
     return ret;
 }
 
-// TODO: weak_alias();
+weak_alias(vscanf, __isoc99_vscanf);

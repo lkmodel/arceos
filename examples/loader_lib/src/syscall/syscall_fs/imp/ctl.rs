@@ -24,8 +24,30 @@ use axlog::{debug, error, info};
 /// 暂时:成功执行,则返回当前工作目录的字符串的指针 `as isize`。失败,返回0。
 ///
 /// TODO: 当前写法存在问题,`cwd`应当是各个进程独立的,而这里修改的是整个`fs`的目录
-pub fn syscall_getcwd(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
+    let buf = args[0] as *mut u8;
+    let len = args[1];
+    debug!("Into syscall_getcwd. buf: {}, len: {}", buf as usize, len);
+    let cwd = axfs::api::current_dir().unwrap();
+
+    // TODO: 如果buf为NULL,则系统分配缓存区
+    // let process = current_process();
+    // let process_inner = process.inner.lock();
+    // if buf.is_null() {
+    //     buf = allocate_buffer(cwd.len());   // 分配缓存区 allocate_buffer
+    // }
+
+    let cwd = cwd.as_bytes();
+
+    if len >= cwd.len() {
+        // FIX: 这里需要判断能不能访问
+        unsafe {
+            core::ptr::copy_nonoverlapping(cwd.as_ptr(), buf, cwd.len());
+        }
+        Ok(buf as isize)
+    } else {
+        Err(SyscallError::ERANGE)
+    }
 }
 
 /// 功能:创建目录；

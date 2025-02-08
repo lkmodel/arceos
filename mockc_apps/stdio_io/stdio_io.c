@@ -42,9 +42,42 @@ void test_write_stdout()
     TEST_RESULT("write partial data to stdout", result == 5);
 }
 
+// 测试函数
+void test_read_stdin()
+{
+    char buffer[128];
+    ssize_t result;
+
+    // 测试用例 1: 从标准输入读取有效数据
+    printf("Please enter some text (will read up to 128 characters):\n");
+    result = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+    buffer[result] = '\0'; // 确保字符串以 null 结尾
+    TEST_RESULT("read valid data from stdin", result >= 0);
+
+    // 测试用例 2: 从标准输入读取零长度数据
+    result = read(STDIN_FILENO, buffer, 0);
+    TEST_RESULT("read zero length data from stdin", result == 0);
+
+    // 测试用例 3: 使用无效的文件描述符（应失败）
+    result = read(-1, buffer, sizeof(buffer));
+    TEST_RESULT("read invalid fd", result < 0);
+
+    // 测试用例 4: 从标准输入读取超过缓冲区大小的数据
+    printf("Please enter more than 128 characters:\n");
+    result = read(STDIN_FILENO, buffer, sizeof(buffer) * 2); // 读取更多数据
+    TEST_RESULT("read large data from stdin", result > sizeof(buffer));
+
+    // 测试用例 5: 读取部分数据
+    printf("Please enter some text (will read 5 characters):\n");
+    result = read(STDIN_FILENO, buffer, 5);
+    buffer[result] = '\0'; // 确保字符串以 null 结尾
+    TEST_RESULT("read partial data from stdin", result == 5);
+}
+
 int main()
 {
     // 执行测试
     test_write_stdout();
+    test_read_stdin();
     return 0;
 }

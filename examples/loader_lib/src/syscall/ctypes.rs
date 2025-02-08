@@ -158,3 +158,12 @@ bitflags! {
         const WHITEOUT = 1 << 2;
     }
 }
+
+/// readv/writev使用的结构体
+#[repr(C)]
+pub struct IoVec {
+    /// base address of the buffer
+    pub base: *mut u8,
+    /// length of the buffer
+    pub len: usize,
+}
