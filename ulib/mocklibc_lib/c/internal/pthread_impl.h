@@ -114,6 +114,7 @@ enum {
 #define DTP_OFFSET 0
 #endif
 
+// XXX: 这里并不是原先的实现
 // FIXED: 这里不能使用__pthread_self，而是应该调用`ABI`函数`abi_pthread_self`
 // <<<<<<
 // #ifdef TLS_ABOVE_TP

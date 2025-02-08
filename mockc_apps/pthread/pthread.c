@@ -68,6 +68,5 @@ void *thread_function(void *arg)
     }
 
     printf("Thread %d finished\n", thread_id);
-    printf("Errno TEST: %d\n", errno);
     pthread_exit(NULL);
 }
