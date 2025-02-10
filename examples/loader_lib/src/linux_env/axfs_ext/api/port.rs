@@ -81,6 +81,8 @@ bitflags! {
         const CLOEXEC = 1 << 19;
         /// 是否是目录
         const DIR = 1 << 21;
+        /// 是否是不命名临时常规文件
+        const TMP_FILE = 1 << 22;
     }
 }
 

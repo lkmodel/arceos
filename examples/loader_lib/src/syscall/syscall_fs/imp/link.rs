@@ -1,9 +1,13 @@
 use crate::{
-    linux_env::linux_fs::link::{FilePath, deal_with_path, remove_link},
+    linux_env::linux_fs::{
+        link::{FilePath, deal_with_path, new_link, remove_link},
+        utils::deal_path_linstyle,
+    },
     syscall::{SyscallError, SyscallResult},
 };
-use axfs::api::remove_dir;
-use axlog::debug;
+use axerrno::AxError;
+use axfs::api::{metadata, remove_dir};
+use axlog::{debug, warn};
 
 pub const AT_REMOVEDIR: usize = 0x200; // Remove directory instead of `unlinking` file.
 /// 功能:创建文件的链接；
@@ -16,8 +20,67 @@ pub const AT_REMOVEDIR: usize = 0x200; // Remove directory instead of `unlinking
 /// # Return
 /// 成功执行,返回0。失败,返回-1。
 #[allow(dead_code)]
-pub fn sys_linkat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn sys_linkat(args: [usize; 6]) -> SyscallResult {
+    let old_dir_fd = args[0];
+    let old_path = args[1] as *const u8;
+    let new_dir_fd = args[2];
+    let new_path = args[3] as *const u8;
+    let _flags = args[4];
+
+    let old_path = match deal_path_linstyle(old_dir_fd, Some(old_path), false) {
+        (None, e) => match e {
+            SyscallError::EINVAL | SyscallError::EFAULT | SyscallError::EBADF => return Err(e),
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+        (Some(path), _) => path,
+    };
+
+    let new_path = match deal_path_linstyle(new_dir_fd, Some(new_path), false) {
+        (None, e) => match e {
+            SyscallError::EINVAL | SyscallError::EFAULT | SyscallError::EBADF => return Err(e),
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+        (Some(path), _) => path,
+    };
+
+    match metadata(old_path.path()) {
+        Ok(_) => {}
+        Err(e) => match e {
+            AxError::NotFound => {
+                debug!(
+                    "ENOENT A directory component in oldpath or newpath does not exist or is a dangling symbolic link."
+                );
+                return Err(SyscallError::ENOENT);
+            }
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+    }
+
+    match metadata(new_path.path()) {
+        Ok(_) => return Err(SyscallError::EEXIST),
+        Err(e) => match e {
+            AxError::NotFound => {
+                if new_link(&new_path, &old_path) {
+                    Ok(0)
+                } else {
+                    Err(SyscallError::EINVAL)
+                }
+            }
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+    }
 }
 
 /// 功能:移除指定文件的链接(可用于删除文件);

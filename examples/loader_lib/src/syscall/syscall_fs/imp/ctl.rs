@@ -115,7 +115,7 @@ pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
     let proc_path = FilePath::new("/proc").unwrap();
     if old_path.start_with(&proc_path) || new_path.start_with(&proc_path) {
         debug!(
-            "EPERM  RENAME_WHITEOUT  was specified in flags, but the caller does not have the CAP_MKNOD capability."
+            "EPERM  RENAME_WHITEOUT was specified in flags, but the caller does not have the CAP_MKNOD capability."
         );
         return Err(SyscallError::EPERM);
     }

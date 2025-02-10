@@ -3,7 +3,7 @@ use alloc::{string::String, sync::Arc};
 use axerrno::AxResult;
 use axfs::api::File;
 use axhal::arch::{flush_tlb, write_page_table_root};
-use axlog::debug;
+use axlog::{debug, warn};
 
 // use axhal::{
 //     arch::{flush_tlb, write_page_table_root},
@@ -20,5 +20,6 @@ pub fn new_file(path: &str, flags: &OpenFlags) -> AxResult<File> {
     file.write(flags.writable());
     file.create(flags.creatable());
     file.create_new(flags.new_creatable());
+    // warn!("file.open({})", path);
     file.open(path)
 }

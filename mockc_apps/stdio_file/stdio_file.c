@@ -1,6 +1,8 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/sendfile.h>
 #include <sys/uio.h>
 #include <unistd.h>
 
@@ -12,6 +14,17 @@
         } else {                                       \
             printf("\033[31m%s: BAD\033[0m\n", func);  \
         }                                              \
+    } while (0)
+
+// 测试结果输出宏
+#define TEST_RESULT_ERRNO(func, condition, expected_errno)                           \
+    do {                                                                             \
+        if (condition && errno == expected_errno) {                                  \
+            printf("\033[32m%s: PASS\033[0m\n", func);                               \
+        } else {                                                                     \
+            printf("\033[31m%s: BAD\033[0m\n", func);                                \
+            printf("Expected errno: %d, Actual errno: %d\n", expected_errno, errno); \
+        }                                                                            \
     } while (0)
 
 // 测试 remove 函数
@@ -233,6 +246,283 @@ void test_pread_pwrite()
     close(fd); // 清理
 }
 
+// 测试函数
+void test_dup()
+{
+    int fd1, fd2;
+
+    // 测试用例 1: 正常情况下复制一个有效的文件描述符
+    errno = 0; // 重置 errno
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    TEST_RESULT_ERRNO("dup valid fd", (fd2 = dup(fd1)) >= 0, 0);
+    if (fd1 >= 0)
+        close(fd1);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 2: 测试重复调用 dup
+    errno = 0; // 重置 errno
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    dup(fd1); // 第一次成功
+    TEST_RESULT_ERRNO("dup valid fd twice", (fd2 = dup(fd1)) >= 0, 0);
+    if (fd1 >= 0)
+        close(fd1);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 3: 测试复制一个无效的文件描述符（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup invalid fd", (fd2 = dup(-1)) < 0, EBADF);
+
+    // 测试用例 4: 测试复制一个已关闭的文件描述符（应失败）
+    errno = 0; // 重置 errno
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    close(fd1); // 关闭 fd1
+    TEST_RESULT_ERRNO("dup closed fd", (fd2 = dup(fd1)) < 0, EBADF);
+
+    // 测试用例 5: 边界测试：复制标准输入（fd = 0）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup stdin", (fd2 = dup(0)) >= 0, 0);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 6: 边界测试：复制标准输出（fd = 1）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup stdout", (fd2 = dup(1)) >= 0, 0);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 7: 边界测试：复制标准错误（fd = 2）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup stderr", (fd2 = dup(2)) >= 0, 0);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    remove("testfile.txt");
+}
+
+// 测试函数
+void test_dup3()
+{
+    int fd1, fd2;
+
+    // 测试用例 1: 正常情况下复制一个有效的文件描述符
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 valid fd", (fd2 = dup3(fd1, 100, 0)) >= 0, 0);
+    if (fd1 >= 0)
+        close(fd1);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 2: 测试重复调用 dup3
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 valid fd twice", (fd2 = dup3(fd1, 101, 0)) >= 0, 0);
+    if (fd1 >= 0)
+        close(fd1);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 3: 测试复制一个无效的文件描述符（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 invalid fd", (fd2 = dup3(-1, 102, 0)) < 0, EBADF);
+
+    // 测试用例 4: 测试复制一个已关闭的文件描述符（应失败）
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    close(fd1); // 关闭 fd1
+    errno = 0;  // 重置 errno
+    TEST_RESULT_ERRNO("dup3 closed fd", (fd2 = dup3(fd1, 103, 0)) < 0, EBADF);
+
+    // 测试用例 5: 测试使用无效的目标文件描述符（应失败）
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 invalid target fd", (fd2 = dup3(fd1, -1, 0)) < 0, EBADF);
+    close(fd1); // 清理
+
+    // 测试用例 6: 边界测试：复制标准输入（fd = 0）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 stdin", (fd2 = dup3(0, 104, 0)) >= 0, 0);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 7: 边界测试：复制标准输出（fd = 1）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 stdout", (fd2 = dup3(1, 105, 0)) >= 0, 0);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 8: 边界测试：复制标准错误（fd = 2）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 stderr", (fd2 = dup3(2, 106, 0)) >= 0, 0);
+    if (fd2 >= 0)
+        close(fd2); // 清理
+
+    // 测试用例 9: 测试 oldfd 与 newfd 相同（应失败）
+    fd1 = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("dup3 same fd", (fd2 = dup3(fd1, fd1, 0)) < 0, EINVAL);
+    close(fd1); // 清理
+
+    remove("testfile.txt");
+}
+
+// 测试函数
+void test_lseek()
+{
+    int fd;
+    off_t result;
+
+    // 测试用例 1: 正常情况下从文件开头向后移动偏移量
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    result = lseek(fd, 10, SEEK_SET);
+    TEST_RESULT_ERRNO("lseek valid fd SEEK_SET", result == 10, 0);
+    close(fd);
+
+    // 测试用例 2: 正常情况下从当前位置向后移动偏移量
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0;              // 重置 errno
+    lseek(fd, 5, SEEK_SET); // 移动到5
+    result = lseek(fd, 5, SEEK_CUR);
+    TEST_RESULT_ERRNO("lseek valid fd SEEK_CUR", result == 10, 0);
+    close(fd);
+
+    // 测试用例 3: 正常情况下从文件末尾向前移动偏移量
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    result = lseek(fd, 0, SEEK_END);
+    TEST_RESULT_ERRNO("lseek valid fd SEEK_END", result == 0, 0);
+    close(fd);
+
+    // 测试用例 4: 测试无效的文件描述符（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("lseek invalid fd", lseek(-1, 0, SEEK_SET) == (off_t)-1, EBADF);
+
+    // 测试用例 5: 测试无效的 whence 值（应失败）
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("lseek invalid whence", lseek(fd, 0, 999) == (off_t)-1, EINVAL);
+    close(fd);
+
+    // 测试用例 6: 测试负偏移量（应失败）
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("lseek negative offset", lseek(fd, -5, SEEK_SET) == (off_t)-1, EINVAL);
+    close(fd);
+
+    // 测试用例 7: 测试超出文件末尾（应返回负偏移量）
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    lseek(fd, 100, SEEK_SET); // 移动到100
+    errno = 0;                // 重置 errno
+    result = lseek(fd, 0, SEEK_CUR);
+    TEST_RESULT_ERRNO("lseek out of bounds", result == 100, 0);
+    close(fd);
+
+    remove("testfile.txt");
+}
+
+// 测试函数
+void test_sendfile()
+{
+    int fd_source, fd_dest;
+    off_t offset = 0;
+    ssize_t bytes_sent;
+
+    // 创建一个测试文件
+    fd_source = open("source.txt", O_CREAT | O_RDWR | O_TRUNC, 0644);
+    write(fd_source, "Hello, World!", 13); // 写入一些数据
+    fd_dest = open("dest.txt", O_CREAT | O_RDWR | O_TRUNC, 0644);
+
+    // 测试用例 1: 正常情况下从文件发送数据到套接字
+    errno = 0; // 重置 errno
+    bytes_sent = sendfile(fd_dest, fd_source, &offset, 13);
+    TEST_RESULT_ERRNO("sendfile valid fd", bytes_sent == 13, 0);
+    close(fd_source);
+    close(fd_dest);
+
+    // 重新打开文件以测试
+    fd_source = open("source.txt", O_RDONLY);
+    fd_dest = open("dest.txt", O_RDWR);
+
+    // 测试用例 2: 测试无效的源文件描述符（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("sendfile invalid source fd", sendfile(fd_dest, -1, &offset, 13) == -1,
+                      EBADF);
+
+    // 测试用例 3: 测试无效的目标文件描述符（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("sendfile invalid dest fd", sendfile(-1, fd_source, &offset, 13) == -1,
+                      EBADF);
+
+    // 测试用例 4: 测试超出文件大小（应成功）
+    fd_source = open("source.txt", O_RDONLY);
+    offset = 100; // 超出文件大小
+    errno = 0;    // 重置 errno
+    TEST_RESULT_ERRNO("sendfile out of bounds", sendfile(fd_dest, fd_source, &offset, 13) == 0, 0);
+
+    // 清理
+    close(fd_source);
+    close(fd_dest);
+    remove("source.txt");
+    remove("dest.txt");
+}
+
+// 测试函数
+void test_linkat()
+{
+    int olddirfd, newdirfd;
+    const char *oldpath = "source.txt";
+    const char *newpath = "newlink.txt";
+    const char *newpath2 = "newlink2.txt";
+
+    // 创建一个测试文件
+    olddirfd = open(".", O_RDONLY);
+    int fd = open(oldpath, O_CREAT | O_RDWR, 0644);
+    write(fd, "Hello, World!", 13);
+    close(fd);
+
+    // 测试用例 1: 正常情况下创建一个硬链接
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("linkat valid paths", linkat(olddirfd, oldpath, AT_FDCWD, newpath, 0) == 0,
+                      0);
+
+    // 测试用例 2: 测试新路径已存在（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("linkat new path exists",
+                      linkat(olddirfd, oldpath, AT_FDCWD, newpath, 0) == -1, EEXIST);
+
+    // 测试用例 3: 测试无效的旧路径（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("linkat invalid old path",
+                      linkat(olddirfd, "invalid.txt", AT_FDCWD, newpath, 0) == -1, ENOENT);
+
+    // 测试用例 4: 测试无效的新路径（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("linkat invalid new path", linkat(olddirfd, oldpath, AT_FDCWD, NULL, 0) == -1,
+                      EFAULT);
+
+    // 测试用例 5: 测试相对路径和绝对路径链接（应成功）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("linkat relative and absolute paths",
+                      linkat(olddirfd, oldpath, AT_FDCWD, newpath2, 0) == 0, 0);
+
+    // 测试用例 6: 测试在不同文件系统（应失败）
+    // 创建一个新的目录来测试 EXDEV 错误
+    int dir_fd = open("testdir", O_CREAT | O_RDONLY, 0755);
+    newdirfd = dir_fd; // 新目录文件描述符
+    errno = 0;         // 重置 errno
+    TEST_RESULT_ERRNO("linkat across filesystems",
+                      linkat(olddirfd, oldpath, newdirfd, newpath, 0) == -1, EXDEV);
+
+    // 清理
+    close(newdirfd);
+    remove(oldpath);
+    remove(newpath);
+    remove(newpath2);
+    remove("testdir");
+}
+
 int main()
 {
     // 执行测试
@@ -246,5 +536,15 @@ int main()
     test_readv_writev();
     printf("test_pread_pwrite\n");
     test_pread_pwrite();
+    printf("test_dup\n");
+    test_dup();
+    printf("test_dup3\n");
+    test_dup3();
+    printf("test_lseek\n");
+    test_lseek();
+    printf("test_sendfile\n");
+    test_sendfile();
+    printf("test_linkat\n");
+    test_linkat();
     return 0;
 }

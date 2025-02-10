@@ -7,15 +7,15 @@ use crate::{
         },
     },
     syscall::{
-        IoVec, SyscallError, SyscallResult,
+        IoVec, O_CLOEXEC, SyscallError, SyscallResult,
         syscall_fs::ctype::{
-            dir::new_dir,
+            dir::{get_dir_desc, new_dir},
             epoll::{EpollCtl, EpollEvent, EpollEventType, EpollFile},
             file::{new_fd, new_inode},
         },
     },
 };
-use alloc::{string::ToString, sync::Arc};
+use alloc::{string::ToString, sync::Arc, vec};
 use axerrno::AxError;
 use axlog::{debug, info};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
@@ -35,16 +35,27 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let flags = args[2];
     let _mode = args[3] as u8;
+    let flags = if let Some(ans) = OpenFlags::from_bits(flags as u32) {
+        ans
+    } else {
+        debug!("Err: EINVAL Invalid value in flags.");
+        return Err(SyscallError::EINVAL);
+    };
+
     let force_dir = OpenFlags::from(flags).is_dir();
     let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
         path
     } else {
+        debug!("Err: TODO: 暂时不确定应该是什么报错");
         return Err(SyscallError::EINVAL);
     };
     let mut fd_table = FDM.fd_table.lock();
     let fd_num: usize = if let Ok(fd) = alloc_fd(&mut fd_table) {
         fd
     } else {
+        debug!(
+            "Err: EMFILE The per-process limit on the number of open file descriptors has been reached."
+        );
         return Err(SyscallError::EMFILE);
     };
     debug!("allocated fd_num: {}", fd_num);
@@ -54,13 +65,51 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     info!("path: {:?}", path.path());
     if path.is_dir() {
         debug!("open dir");
-        if let Ok(dir) = new_dir(path.path().to_string(), flags.into()) {
-            debug!("new dir_desc successfully allocated: {}", path.path());
-            fd_table[fd_num] = Some(Arc::new(dir));
-            Ok(fd_num as isize)
-        } else {
-            debug!("open dir failed");
-            Err(SyscallError::ENOENT)
+        if flags.contains(OpenFlags::WRONLY) || flags.contains(OpenFlags::RDWR) {
+            debug!(
+                "Err: EISDIR pathname  refers  to  a  directory and the access requested involved writing (that is, O_WRONLY or O_RDWR is set)."
+            );
+            return Err(SyscallError::EISDIR);
+        }
+        match new_dir(path.path().to_string(), flags.into()) {
+            Ok(dir) => {
+                if flags.contains(OpenFlags::TMP_FILE)
+                    && (flags.contains(OpenFlags::WRONLY) || flags.contains(OpenFlags::RDWR))
+                {
+                    debug!(
+                        "Err: ENOENT pathname refers to a nonexistent directory, O_TMPFILE and one of O_WRONLY or O_RDWR were specified in flags, but this kernel version does not provide the O_TMPFILE functionality."
+                    );
+                    Err(SyscallError::ENOENT)
+                } else {
+                    debug!("new dir_desc successfully allocated: {}", path.path());
+                    fd_table[fd_num] = Some(Arc::new(dir));
+                    Ok(fd_num as isize)
+                }
+            }
+            Err(e) => match e {
+                AxError::AlreadyExists => {
+                    if flags.contains(OpenFlags::CREATE) && flags.contains(OpenFlags::EXCL) {
+                        debug!(
+                            "Err: EEXIST pathname already exists and O_CREAT and O_EXCL were used."
+                        );
+                        Err(SyscallError::EEXIST)
+                    } else if flags.contains(OpenFlags::TMP_FILE)
+                        && (flags.contains(OpenFlags::WRONLY) || flags.contains(OpenFlags::RDWR))
+                    {
+                        debug!(
+                            "Err: EISDIR pathname refers to an existing directory, O_TMPFILE and one of O_WRONLY or O_RDWR  were  specified in flags, but this kernel version does not provide the O_TMPFILE functionality."
+                        );
+                        Err(SyscallError::EISDIR)
+                    } else {
+                        // TODO: 获取原来的Fd num
+                        fd_table[fd_num] = Some(Arc::new(get_dir_desc(path.path().to_string())));
+                        Ok(fd_num as isize)
+                    }
+                }
+                _ => panic!("{}", e),
+                //  debug!("open dir failed");
+                //  Err(SyscallError::ENOENT)
+            },
         }
     }
     // 如果是FILE,注意若创建了新文件,需要添加链接
@@ -222,8 +271,27 @@ pub fn syscall_pipe2(_args: [usize; 6]) -> SyscallResult {
 /// # Arguments
 /// * `fd: usize`, 被复制的文件描述符。
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
-pub fn syscall_dup(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let mut fd_table = FDM.fd_table.lock();
+    if fd >= fd_table.len() {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EBADF);
+    }
+    if fd_table[fd].is_none() {
+        debug!("fd {} is a closed fd", fd);
+        return Err(SyscallError::EBADF);
+    }
+
+    let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+        fd
+    } else {
+        // 文件描述符达到上限了
+        return Err(SyscallError::EMFILE);
+    };
+    fd_table[new_fd] = fd_table[fd].clone();
+
+    Ok(new_fd as isize)
 }
 
 /// 功能:复制文件描述符,并指定了新的文件描述符；
@@ -232,8 +300,38 @@ pub fn syscall_dup(_args: [usize; 6]) -> SyscallResult {
 /// * `new_fd: usize`, 新的文件描述符
 /// * `flags: usize`, 文件描述符标志
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
-pub fn syscall_dup3(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let new_fd = args[1];
+    let flags = args[2];
+    let mut fd_table = FDM.fd_table.lock();
+    if fd >= fd_table.len() {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EBADF);
+    }
+    if fd_table[fd].is_none() {
+        debug!("fd {} is not opened", fd);
+        return Err(SyscallError::EBADF);
+    }
+    if fd == new_fd {
+        debug!("oldfd is equal to newfd");
+        return Err(SyscallError::EINVAL);
+    }
+    if new_fd >= fd_table.len() {
+        if new_fd >= (FDM.get_limit() as usize) {
+            // 超出了资源限制
+            return Err(SyscallError::EBADF);
+        }
+        for _i in fd_table.len()..new_fd + 1 {
+            fd_table.push(None);
+        }
+    }
+    info!("dup3 fd {} to new fd {} with flags {}", fd, new_fd, flags);
+    fd_table[new_fd] = fd_table[fd].clone();
+    if flags as u32 & O_CLOEXEC != 0 {
+        fd_table[new_fd].as_mut().unwrap().set_close_on_exec(true);
+    }
+    Ok(new_fd as isize)
 }
 
 /// 从同一个文件描述符读取多个字符串
@@ -294,8 +392,45 @@ pub fn syscall_writev(args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`
 /// * `offset: isize`
 /// * `whence: usize`
-pub fn syscall_lseek(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_lseek(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let offset = args[1] as isize;
+    let whence = args[2];
+    info!("fd: {} offset: {} whence: {}", fd, offset, whence);
+    if fd >= FDM.fd_table.lock().len() || fd < 3 {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EBADF);
+    }
+    if offset < 0 {
+        return Err(SyscallError::EINVAL);
+    }
+    let fd_table = FDM.fd_table.lock();
+    if let Some(file) = fd_table[fd].as_ref() {
+        if file.get_type() == FileIOType::DirDesc {
+            debug!("fd is a dir");
+            return Err(SyscallError::EISDIR);
+        }
+        let ans = if whence == 0 {
+            // 即SEEK_SET
+            file.seek(SeekFrom::Start(offset as u64))
+        } else if whence == 1 {
+            // 即SEEK_CUR
+            file.seek(SeekFrom::Current(offset as i64))
+        } else if whence == 2 {
+            // 即SEEK_END
+            file.seek(SeekFrom::End(offset as i64))
+        } else {
+            return Err(SyscallError::EINVAL);
+        };
+        if let Ok(now_offset) = ans {
+            Ok(now_offset as isize)
+        } else {
+            Err(SyscallError::EINVAL)
+        }
+    } else {
+        debug!("fd {} is none", fd);
+        Err(SyscallError::EBADF)
+    }
 }
 
 /// 67
@@ -384,8 +519,44 @@ pub fn syscall_pwrite64(args: [usize; 6]) -> SyscallResult {
 /// * `in_fd: usize`
 /// * `offset: *mut usize`
 /// * `count: usize`
-pub fn syscall_sendfile64(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
+    let out_fd = args[0];
+    let in_fd = args[1];
+    let offset = args[2] as *mut usize;
+    let count = args[3];
+    info!("send from {} to {}, count: {}", in_fd, out_fd, count);
+    if (out_fd as isize) < 0 || (in_fd as isize) < 0 {
+        return Err(SyscallError::EBADF);
+    }
+    let out_file = FDM.fd_table.lock()[out_fd].clone().unwrap();
+    let in_file = FDM.fd_table.lock()[in_fd].clone().unwrap();
+    let old_in_offset = in_file.seek(SeekFrom::Current(0)).unwrap();
+
+    let mut buf = vec![0u8; count];
+    if !offset.is_null() {
+        // 如果offset不为NULL,则从offset指定的位置开始读取
+        // FIX: 检查地址是否合法
+        info!("offset {:?}", offset);
+        let in_offset = unsafe { *offset };
+        if (in_offset as isize) < 0 {
+            return Err(SyscallError::EINVAL);
+        }
+        info!("====================");
+        in_file.seek(SeekFrom::Start(in_offset as u64)).unwrap();
+        let ret = in_file.read(buf.as_mut_slice());
+        unsafe { *offset = in_offset + ret.unwrap() };
+        in_file.seek(SeekFrom::Start(old_in_offset)).unwrap();
+        let buf = buf[..ret.unwrap()].to_vec();
+        Ok(out_file.write(buf.as_slice()).unwrap() as isize)
+    } else {
+        // 如果offset为NULL,则从当前读写指针开始读取
+        let ret = in_file.read(buf.as_mut_slice());
+        info!("in fd: {}, count: {}", in_fd, count);
+        let buf = buf[..ret.unwrap()].to_vec();
+        info!("read len: {}", buf.len());
+        info!("write len: {}", buf.as_slice().len());
+        Ok(out_file.write(buf.as_slice()).unwrap() as isize)
+    }
 }
 
 /// # Arguments

@@ -4,7 +4,7 @@ use crate::linux_env::axfs_ext::api::{self, FileIO, FileIOType, Kstat, OpenFlags
 use alloc::string::{String, ToString};
 use axerrno::{AxError, AxResult};
 // use axfs::api::{self, FileIO, FileIOType, Kstat, OpenFlags, SeekFrom};
-use axfs::api::create_dir;
+use axfs::api::{create_dir, metadata};
 use axlog::debug;
 
 /// 目录描述符
@@ -78,12 +78,19 @@ impl FileIO for DirDesc {
 
 pub fn new_dir(dir_path: String, _flags: OpenFlags) -> AxResult<DirDesc> {
     debug!("Into function new_dir, dir_path: {}", dir_path);
-    // ```
-    // FIXME: 这里暂时不做这个检查，因为势必要拓展path_exists的支持，而现有的axfs是不允许的
-    //    if !api::path_exists(dir_path.as_str()) {
-    // api::create_dir_all(dir_path.as_str())?;
-    // FIXME: 在这里添加match去处理
-    create_dir(dir_path.as_str()).unwrap();
-    //   }
-    Ok(DirDesc::new(dir_path))
+    match metadata(dir_path.as_str()) {
+        // 这里在存在的情况下就返回报错，如果需要的话，可以使用get_dir_desc来获取`dir`
+        Ok(_) => return Err(AxError::AlreadyExists),
+        Err(e) => match e {
+            AxError::NotFound => {
+                create_dir(dir_path.as_str())?;
+                Ok(DirDesc::new(dir_path))
+            }
+            _ => Err(e),
+        },
+    }
+}
+
+pub fn get_dir_desc(dir_path: String) -> DirDesc {
+    DirDesc::new(dir_path)
 }

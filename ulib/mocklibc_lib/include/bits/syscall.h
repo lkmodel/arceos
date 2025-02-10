@@ -320,8 +320,8 @@
 // #define SYS_epoll_create1 20
 // #define SYS_epoll_ctl 21
 // #define SYS_epoll_pwait 22
-// #define SYS_dup 23
-// #define SYS_dup3 24
+#define SYS_dup   23
+#define SYS_dup3  24
 #define SYS_fcntl 25
 // #define SYS_inotify_init1 26
 // #define SYS_inotify_add_watch 27
@@ -334,7 +334,7 @@
 // #define SYS_mkdirat 34
 #define SYS_unlinkat 35
 // #define SYS_symlinkat 36
-// #define SYS_linkat 37
+#define SYS_linkat 37
 // #define SYS_umount2 39
 // #define SYS_mount 40
 // #define SYS_pivot_root 41
@@ -358,7 +358,7 @@
 // #define SYS_pipe2 59
 // #define SYS_quotactl 60
 // #define SYS_getdents64 61
-// #define SYS_lseek 62
+#define SYS_lseek    62
 #define SYS_read     63
 #define SYS_write    64
 #define SYS_readv    65
@@ -367,7 +367,7 @@
 #define SYS_pwrite64 68
 // #define SYS_preadv 69
 // #define SYS_pwritev 70
-// #define SYS_sendfile 71
+#define SYS_sendfile 71
 // #define SYS_pselect6 72
 // #define SYS_ppoll 73
 // #define SYS_signalfd4 74

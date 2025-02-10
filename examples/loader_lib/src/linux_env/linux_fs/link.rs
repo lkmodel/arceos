@@ -5,8 +5,8 @@ use alloc::{
     string::{String, ToString},
 };
 use axerrno::{AxError, AxResult};
-use axfs::api::{canonicalize, remove_file};
-use axlog::{debug, info, trace};
+use axfs::api::{canonicalize, metadata, remove_file};
+use axlog::{debug, info, trace, warn};
 use axsync::Mutex;
 
 pub const AT_FDCWD: usize = -100isize as usize;
@@ -15,10 +15,18 @@ pub const AT_FDCWD: usize = -100isize as usize;
 ///
 /// 返回是否创建成功(已存在的链接也会返回 true)
 /// 创建新文件时注意调用该函数创建链接
+// FIX: 在这里存在一些问题
 pub fn create_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
     info!("create_link: {} -> {}", src_path.path(), dest_path.path());
-    // assert!(src_path.is_file() && dest_path.is_file(), "link only support file");
-    // assert_ne!(src_path.path(), dest_path.path(), "link src and dest should not be the same");  // 否则在第一步删除旧链接时可能会删除源文件
+    assert!(
+        src_path.is_file() && dest_path.is_file(),
+        "link only support file"
+    );
+    //    assert_ne!(
+    //        src_path.path(),
+    //        dest_path.path(),
+    //        "link src and dest should not be the same"
+    //    ); // 否则在第一步删除旧链接时可能会删除源文件
     // 检查是否是文件
     if !src_path.is_file() || !dest_path.is_file() {
         debug!("link only support file");
@@ -29,6 +37,72 @@ pub fn create_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
     //        debug!("link dest file not exists");
     //        return false;
     //    }
+
+    // 一次性锁定LINK_PATH_MAP，避免重复加锁解锁
+    let mut map = LINK_PATH_MAP.lock();
+
+    // 检查链接是否已存在，并处理旧链接
+    if let Some(old_dest_path) = map.get(&src_path.path().to_string()) {
+        if old_dest_path != &dest_path.path().to_string() {
+            // 旧链接存在且与新链接不同，移除旧链接
+            drop(map); // 释放锁，因为remove_link可能需要锁
+            remove_link(src_path);
+            map = LINK_PATH_MAP.lock(); // 重新获取锁
+        } else {
+            // 链接已存在且相同，无需进一步操作
+            debug!("link already exists");
+            return true;
+        }
+    }
+
+    // 创建新链接
+    map.insert(
+        src_path.path().to_string(),
+        dest_path.path().to_string().clone(),
+    );
+
+    // 更新链接计数
+    let mut count_map = LINK_COUNT_MAP.lock();
+    let count = count_map.entry(dest_path.path().to_string()).or_insert(0);
+    *count += 1;
+    true
+}
+
+/// 创建一个链接
+///
+/// 返回是否创建成功(已存在的链接也会返回 true)
+/// 创建新文件时注意调用该函数创建链接
+// FIX: 在这里存在一些问题
+pub fn new_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
+    info!("create_link: {} -> {}", src_path.path(), dest_path.path());
+    assert!(
+        src_path.is_file() && dest_path.is_file(),
+        "link only support file"
+    );
+    //    assert_ne!(
+    //        src_path.path(),
+    //        dest_path.path(),
+    //        "link src and dest should not be the same"
+    //    ); // 否则在第一步删除旧链接时可能会删除源文件
+    // 检查是否是文件
+    if !src_path.is_file() || !dest_path.is_file() {
+        debug!("link only support file");
+        return false;
+    }
+    // 检查被链接到的文件是否存在
+    match metadata(dest_path.path()) {
+        Ok(_) => {}
+        Err(e) => match e {
+            AxError::NotFound => {
+                debug!("link src file not exists");
+                return false;
+            }
+            _ => {
+                warn!("unexpect error catched");
+                return false;
+            }
+        },
+    }
 
     // 一次性锁定LINK_PATH_MAP，避免重复加锁解锁
     let mut map = LINK_PATH_MAP.lock();
@@ -224,8 +298,6 @@ pub unsafe fn raw_ptr_to_ref_str(start: *const u8) -> &'static str {
     }
 }
 
-/// 将现有的`deal_with_path`函数迁移到`Unikernel`环境中，首先需要剥离与`Process`相关的机制。
-/// 这意味着我们需要移除对当前进程状态的依赖，并直接处理路径和文件描述符。
 /// To deal with the path and return the `canonicalized` path
 ///
 /// * `dir_fd` - The file descriptor of the directory, if it is AT_FDCWD, the call operates on the current working directory
@@ -240,7 +312,6 @@ pub fn deal_with_path(
     path_addr: Option<*const u8>,
     force_dir: bool,
 ) -> Option<FilePath> {
-    // unimplemented!();
     let mut path = "".to_string();
 
     if let Some(path_addr) = path_addr {
@@ -248,25 +319,8 @@ pub fn deal_with_path(
             axlog::warn!("path address is null");
             return None;
         }
-        // 判断某一个虚拟地址是否在内存集中。
-        // 若当前虚拟地址在内存集中，且对应的是`lazy`分配，暂未分配物理页的情况下，
-        // 则为其分配物理页面。
-        //
-        // 若不在内存集中，则返回`None`。
-        //
-        // 若在内存集中，且已经分配了物理页面，则不做处理。
-        // ```
-        // NOTE: 我们暂时默认其是存在的。
-        // if process
-        //     .manual_alloc_for_lazy((path_addr as usize).into())
-        //     .is_ok()
-        // {
-        // 直接访问前需要确保已经被分配
+        // FIX: 直接访问前需要确保已经被分配
         path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
-        // } else {
-        //     axlog::warn!("path address is invalid");
-        //     return None;
-        // }
     }
     // 处理空路径的情况
     if path.is_empty() {
@@ -333,60 +387,6 @@ pub fn deal_with_path(
             None
         }
     }
-}
-
-/// To deal with the path and return the `canonicalized` path
-///
-/// * `dir_fd` - The file descriptor of the directory, if it is AT_FDCWD, the call operates on the current working directory
-///
-/// * `path_addr` - The address of the path, if it is null or an empty string, `AxError::InvalidInput` will be returned
-///
-/// * `force_dir` - If true, the path will be treated as a directory
-///
-/// The path will be dealt with links and the path will be `canonicalized`
-pub fn canonicalizing_path(
-    dir_fd: usize,
-    path_addr: Option<*const u8>,
-    force_dir: bool,
-) -> AxResult<FilePath> {
-    unimplemented!();
-    //    let mut path = "".to_string();
-    //    if let Some(path_addr) = path_addr {
-    //        if path_addr.is_null() {
-    //            axlog::warn!("path address is null");
-    //            return Err(AxError::InvalidInput);
-    //        }
-    //        // FIX: 检查指针是否被分配
-    //        path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
-    //    }
-    //
-    //    if path.is_empty() {
-    //        return Err(AxError::InvalidInput);
-    //    } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
-    //        // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
-    //        let fd_table = FDM.fd_table.lock();
-    //        if dir_fd >= fd_table.len() {
-    //            axlog::warn!("fd index out of range");
-    //            return None;
-    //        }
-    //        match fd_table[dir_fd].as_ref() {
-    //            Some(dir) => {
-    //                if dir.get_type() != FileIOType::DirDesc {
-    //                    axlog::warn!("selected fd {} is not a dir", dir_fd);
-    //                    return None;
-    //                }
-    //                let dir = dir.clone();
-    //                // 有没有可能dir的尾部一定是一个/号，所以不用手工添加/
-    //                path = format!("{}{}", dir.get_path(), path);
-    //                axlog::warn!("handled_path: {}", path);
-    //            }
-    //            None => {
-    //                axlog::warn!("fd not exist");
-    //                return None;
-    //            }
-    //        }
-    //    }
-    //    Ok(0)
 }
 
 /// 用户看到的文件到实际文件的映射

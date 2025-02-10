@@ -40,10 +40,10 @@ extern "C" {
 // int pipe2(int[2], int);
 int close(int);
 // int posix_close(int, int);
-// int dup(int);
+int dup(int);
 // int dup2(int, int);
-// int dup3(int, int, int);
-// off_t lseek(int, off_t, int);
+int dup3(int, int, int);
+off_t lseek(int, off_t, int);
 // int fsync(int);
 // int fdatasync(int);
 
@@ -58,13 +58,13 @@ ssize_t pwrite(int, const void *, size_t, off_t);
 // int fchownat(int, const char *, uid_t, gid_t, int);
 //
 // int link(const char *, const char *);
-// int linkat(int, const char *, int, const char *, int);
+int linkat(int, const char *, int, const char *, int);
 // int symlink(const char *, const char *);
 // int symlinkat(const char *, int, const char *);
 // ssize_t readlink(const char *__restrict, char *__restrict, size_t);
 // ssize_t readlinkat(int, const char *__restrict, char *__restrict, size_t);
 // int unlink(const char *);
-// int unlinkat(int, const char *, int);
+int unlinkat(int, const char *, int);
 // int rmdir(const char *);
 // int truncate(const char *, off_t);
 // int ftruncate(int, off_t);
