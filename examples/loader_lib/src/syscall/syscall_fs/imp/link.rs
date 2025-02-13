@@ -1,15 +1,16 @@
+use std::string::ToString;
+
 use crate::{
     linux_env::linux_fs::{
-        link::{FilePath, deal_with_path, new_link, remove_link},
-        utils::deal_path_linstyle,
+        link::{FilePath, new_link, remove_link},
+        utils::{UtilsError, deal_path, deal_path_linstyle},
     },
-    syscall::{SyscallError, SyscallResult},
+    syscall::{SyscallError, SyscallResult, UnlinkatFlags},
 };
 use axerrno::AxError;
-use axfs::api::{metadata, remove_dir};
+use axfs::api::{FileType, current_dir, metadata, remove_dir};
 use axlog::{debug, warn};
 
-pub const AT_REMOVEDIR: usize = 0x200; // Remove directory instead of `unlinking` file.
 /// 功能:创建文件的链接；
 /// # Arguments
 /// * `old_dir_fd: usize`, 原来的文件所在目录的文件描述符。
@@ -94,23 +95,70 @@ pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let flags = args[2];
-    let path = deal_with_path(dir_fd, Some(path), false).unwrap();
+    let path = match deal_path(dir_fd, Some(path), false) {
+        Ok(t) => t,
+        Err(e) => match e {
+            UtilsError::NULL | UtilsError::CannotAcce => return Err(SyscallError::EFAULT),
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::InvalidArg => return Err(SyscallError::ENOTDIR),
+            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
+            UtilsError::PanicMe => {
+                panic!("{:?}", e);
+            }
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    };
 
+    let flags = if let Some(ans) = UnlinkatFlags::from_bits(flags as u32) {
+        ans
+    } else {
+        debug!("Err: EINVAL An invalid flag was specified in flags.");
+        return Err(SyscallError::EINVAL);
+    };
+
+    // FIX: 这里可能出错
     if path.start_with(&FilePath::new("/proc").unwrap()) {
         return Ok(-1);
     }
 
+    let metadata = match metadata(path.path()) {
+        Ok(t) => t,
+        Err(e) => match e {
+            AxError::NotFound => {
+                debug!("A component in pathname does not exist or is a dangling symbolic link");
+                return Err(SyscallError::ENOENT);
+            }
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+    };
+
+    let cwd = current_dir().unwrap();
+    if cwd == path.path().to_string() {
+        return Err(SyscallError::EPERM);
+    }
+
     // `Unlink` file
-    if flags == 0 {
+    if flags.is_empty() {
+        if metadata.is_dir() {
+            debug!(
+                "Err: EISDIR pathname refers to a directory, and AT_REMOVEDIR was not specified in flags."
+            );
+            return Err(SyscallError::EISDIR);
+        }
         if remove_link(&path).is_none() {
-            debug!("unlink file error");
+            warn!("unlink file error");
             return Err(SyscallError::EINVAL);
         }
     }
     // Remove `dir`
-    else if flags == AT_REMOVEDIR {
+    else if flags.contains(UnlinkatFlags::AT_REMOVEDIR) {
         if let Err(e) = remove_dir(path.path()) {
-            debug!("rmdir error: {:?}", e);
+            warn!("rmdir error: {:?}", e);
             return Err(SyscallError::EINVAL);
         }
     }

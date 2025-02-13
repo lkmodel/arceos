@@ -4,6 +4,7 @@ use crate::{
         linux_fs::{
             fd_manager::{FDM, alloc_fd},
             link::{FilePath, deal_with_path},
+            utils::deal_path_linstyle,
         },
     },
     syscall::{
@@ -12,8 +13,8 @@ use crate::{
     },
 };
 use axerrno::AxError;
-use axfs::api::{metadata, remove_dir, remove_file, rename};
-use axlog::{debug, error, info};
+use axfs::api::{create_dir, metadata, remove_dir, remove_file, rename};
+use axlog::{debug, error, info, warn};
 
 /// 功能:获取当前工作目录；
 /// # Arguments
@@ -56,8 +57,74 @@ pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`, 要创建的目录的名称。如果`path`是相对路径,则它是相对于`dirfd`目录而言的。如果`path`是相对路径,且`dirfd`的值为`AT_FDCWD`,则它是相对于当前路径而言的。如果`path`是绝对路径,则`dirfd`被忽略。
 /// * `mode: u32`, 文件的所有权描述。详见`man 7 inode`。
 /// 返回值:成功执行,返回0。失败,返回-1。
-pub fn syscall_mkdirat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+// FIX: 不建议对一个目录使用判断是否存在的方法。
+// 在对目录进行查找的时候，会报错: `[  1.266962 0:2 fatfs::dir:139] Is a directory`
+// 这个查找之后似乎不对`ArceOS`代码和`fatfs`的代码进行修改是没有办法解决的。
+// 需要找到新的方法用来判断目录的存在与否。
+// 这里可以通过直接判断create_dir的返回值进行判断。
+// 同时也可以对已经存在的情况进行判断。
+// 当一个目录被lookup函数使用时，就会发生报错。
+// 我们没有办法排除在已经有了对应目录的情况下再次创建目录导致的报错。
+// 本质上是只要使用到lookup就会出现问题
+pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let mode = args[2] as u32;
+
+    let path = match deal_path_linstyle(dir_fd, Some(path), true) {
+        (None, e) => match e {
+            SyscallError::ENAMETOOLONG | SyscallError::EBADF | SyscallError::ENOTDIR => {
+                return Err(e);
+            }
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+        (Some(path), _) => path,
+    };
+
+    debug!(
+        "Into syscall_mkdirat. dirfd: {}, path: {:?}, mode: {}",
+        dir_fd,
+        path.path(),
+        mode
+    );
+
+    match metadata(path.path()) {
+        Ok(t) => {
+            debug!("Err: EEXIST pathname already exists (not necessarily as a directory).");
+            return Err(SyscallError::EEXIST);
+        }
+        Err(e) => match e {
+            AxError::NotFound => {}
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+    }
+
+    // 只要文件夹存在就返回0
+    match create_dir(path.path()) {
+        Ok(_) => Ok(0),
+        Err(e) => match e {
+            AxError::AlreadyExists => {
+                debug!("Err: EEXIST pathname already exists (not necessarily as a directory).");
+                Err(SyscallError::EEXIST)
+            }
+            AxError::NotFound => {
+                debug!(
+                    "Err: ENOENT A directory component in pathname does not exist or is a dangling symbolic link."
+                );
+                Err(SyscallError::ENOENT)
+            }
+            _ => {
+                warn!("Unexpect errno catched {:?}", e);
+                Err(SyscallError::EPERM)
+            }
+        },
+    }
 }
 
 /// 功能:切换工作目录；

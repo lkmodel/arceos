@@ -331,7 +331,7 @@
 // #define SYS_ioprio_get 31
 // #define SYS_flock 32
 // #define SYS_mknodat 33
-// #define SYS_mkdirat 34
+#define SYS_mkdirat  34
 #define SYS_unlinkat 35
 // #define SYS_symlinkat 36
 #define SYS_linkat 37

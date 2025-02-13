@@ -3,7 +3,8 @@ use crate::{
         axfs_ext::api::{FileIOType, OpenFlags, SeekFrom},
         linux_fs::{
             fd_manager::{FDM, alloc_fd},
-            link::{create_link, deal_with_path},
+            link::create_link,
+            utils::{UtilsError, deal_path, has_permission},
         },
     },
     syscall::{
@@ -17,7 +18,8 @@ use crate::{
 };
 use alloc::{string::ToString, sync::Arc, vec};
 use axerrno::AxError;
-use axlog::{debug, info};
+use axfs::api::{Permissions, metadata};
+use axlog::{debug, error, info, warn};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 /// 功能:打开或创建一个文件；
@@ -34,23 +36,53 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let path = args[1] as *const u8;
     let flags = args[2];
-    let _mode = args[3] as u8;
+    let mode = args[3] as u8;
+
+    // 这些东西是常见的操作
     let flags = if let Some(ans) = OpenFlags::from_bits(flags as u32) {
         ans
     } else {
-        debug!("Err: EINVAL Invalid value in flags.");
+        debug!("Err: EINVAL An invalid flag was specified in flags.");
         return Err(SyscallError::EINVAL);
     };
 
-    let force_dir = OpenFlags::from(flags).is_dir();
-    let path = if let Some(path) = deal_with_path(fd, Some(path), force_dir) {
-        path
+    if flags.contains(OpenFlags::TMP_FILE)
+        && (!flags.contains(OpenFlags::WRONLY) && !flags.contains(OpenFlags::RDWR))
+    {
+        debug!(
+            "Err: EINVAL O_TMPFILE was specified in flags, but neither O_WRONLY nor O_RDWR was specified."
+        );
+        return Err(SyscallError::EINVAL);
+    }
+
+    let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
+        ans
     } else {
-        debug!("Err: TODO: 暂时不确定应该是什么报错");
+        warn!("Err: An invalid flag was specified in mode");
         return Err(SyscallError::EINVAL);
     };
+
+    let path = match deal_path(fd, Some(path), flags.is_dir()) {
+        Ok(path) => path,
+        Err(e) => match e {
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
+            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
+            UtilsError::PanicMe => {
+                error!("panic me {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+            _ => {
+                error!("{:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+    };
+
     let mut fd_table = FDM.fd_table.lock();
     let fd_num: usize = if let Ok(fd) = alloc_fd(&mut fd_table) {
+        debug!("allocated fd_num: {}", fd);
         fd
     } else {
         debug!(
@@ -58,7 +90,41 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
         );
         return Err(SyscallError::EMFILE);
     };
-    debug!("allocated fd_num: {}", fd_num);
+
+    let _metadata = match metadata(path.path()) {
+        Ok(metadata) => {
+            if flags.contains(OpenFlags::CREATE) && flags.contains(OpenFlags::EXCLUSIVE) {
+                debug!("Err: EEXIST pathname already exists and O_CREAT and O_EXCL were used.");
+                return Err(SyscallError::EEXIST);
+            }
+            let perm = metadata.permissions();
+            if !has_permission(mode, perm) {
+                return Err(SyscallError::EACCES);
+            }
+            Some(metadata)
+        }
+        Err(e) => match e {
+            AxError::NotFound => {
+                if !flags.contains(OpenFlags::CREATE) {
+                    debug!("ENOENT O_CREAT is not set and the named file does not exist.");
+                    return Err(SyscallError::ENOENT);
+                }
+                if !mode.contains(Permissions::OWNER_WRITE)
+                    && !mode.contains(Permissions::GROUP_WRITE)
+                    && !mode.contains(Permissions::OTHER_WRITE)
+                {
+                    return Err(SyscallError::EACCES);
+                }
+                debug!("not found");
+                None
+            }
+            _ => {
+                error!("{:?}", e);
+                None
+            }
+        },
+    };
+
     // 分配`inode`
     new_inode(path.path().to_string()).unwrap();
     // 如果是`DIR`
@@ -67,7 +133,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
         debug!("open dir");
         if flags.contains(OpenFlags::WRONLY) || flags.contains(OpenFlags::RDWR) {
             debug!(
-                "Err: EISDIR pathname  refers  to  a  directory and the access requested involved writing (that is, O_WRONLY or O_RDWR is set)."
+                "Err: EISDIR pathname refers to a directory and the access requested involved writing(that is, O_WRONLY or O_RDWR is set)."
             );
             return Err(SyscallError::EISDIR);
         }
@@ -88,12 +154,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
             }
             Err(e) => match e {
                 AxError::AlreadyExists => {
-                    if flags.contains(OpenFlags::CREATE) && flags.contains(OpenFlags::EXCL) {
-                        debug!(
-                            "Err: EEXIST pathname already exists and O_CREAT and O_EXCL were used."
-                        );
-                        Err(SyscallError::EEXIST)
-                    } else if flags.contains(OpenFlags::TMP_FILE)
+                    if flags.contains(OpenFlags::TMP_FILE)
                         && (flags.contains(OpenFlags::WRONLY) || flags.contains(OpenFlags::RDWR))
                     {
                         debug!(
@@ -101,28 +162,34 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
                         );
                         Err(SyscallError::EISDIR)
                     } else {
-                        // TODO: 获取原来的Fd num
                         fd_table[fd_num] = Some(Arc::new(get_dir_desc(path.path().to_string())));
                         Ok(fd_num as isize)
                     }
                 }
-                _ => panic!("{}", e),
-                //  debug!("open dir failed");
-                //  Err(SyscallError::ENOENT)
+                _ => {
+                    error!("{}", e);
+                    Err(SyscallError::ENOENT)
+                }
             },
         }
     }
     // 如果是FILE,注意若创建了新文件,需要添加链接
     else {
         debug!("open file");
-        if let Ok(file) = new_fd(path.path().to_string(), flags.into()) {
-            debug!("new file_desc successfully allocated");
-            fd_table[fd_num] = Some(Arc::new(file));
-            let _ = create_link(&path, &path); // 不需要检查是否成功,因为如果成功,说明是新建的文件,如果失败,说明已经存在了
-            Ok(fd_num as isize)
-        } else {
-            debug!("open file failed");
-            Err(SyscallError::ENOENT)
+        match new_fd(path.path().to_string(), flags.into()) {
+            Ok(file) => {
+                debug!("new file_desc successfully allocated");
+                fd_table[fd_num] = Some(Arc::new(file));
+                let _ = create_link(&path, &path);
+                Ok(fd_num as isize)
+            }
+            Err(e) => match e {
+                //                AxError::InvalidInput => Err(SyscallError::EEXIST),
+                _ => {
+                    warn!("open file failed, {}", e);
+                    Err(SyscallError::ENOENT)
+                }
+            },
         }
     }
 }
@@ -541,7 +608,6 @@ pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
         if (in_offset as isize) < 0 {
             return Err(SyscallError::EINVAL);
         }
-        info!("====================");
         in_file.seek(SeekFrom::Start(in_offset as u64)).unwrap();
         let ret = in_file.read(buf.as_mut_slice());
         unsafe { *offset = in_offset + ret.unwrap() };

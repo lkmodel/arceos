@@ -159,6 +159,16 @@ bitflags! {
     }
 }
 
+bitflags! {
+    /// `unlinkat`用到的选项
+    pub struct UnlinkatFlags: u32 {
+        /// Nothing
+        const NONE = 0;
+        /// 在路径名上与`rmdir`等效
+        const AT_REMOVEDIR = 1 << 9;
+    }
+}
+
 /// readv/writev使用的结构体
 #[repr(C)]
 pub struct IoVec {

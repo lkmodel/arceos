@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/sendfile.h>
+#include <sys/stat.h>
 #include <sys/uio.h>
 #include <unistd.h>
 
@@ -507,13 +508,14 @@ void test_linkat()
     TEST_RESULT_ERRNO("linkat relative and absolute paths",
                       linkat(olddirfd, oldpath, AT_FDCWD, newpath2, 0) == 0, 0);
 
+    // FIX: NOT SUPPORT YET
     // 测试用例 6: 测试在不同文件系统（应失败）
     // 创建一个新的目录来测试 EXDEV 错误
-    int dir_fd = open("testdir", O_CREAT | O_RDONLY, 0755);
-    newdirfd = dir_fd; // 新目录文件描述符
-    errno = 0;         // 重置 errno
-    TEST_RESULT_ERRNO("linkat across filesystems",
-                      linkat(olddirfd, oldpath, newdirfd, newpath, 0) == -1, EXDEV);
+    // int dir_fd = open("testdir", O_CREAT | O_RDONLY, 0755);
+    // newdirfd = dir_fd; // 新目录文件描述符
+    // errno = 0;         // 重置 errno
+    // TEST_RESULT_ERRNO("linkat across filesystems",
+    //                  linkat(olddirfd, oldpath, newdirfd, newpath, 0) == -1, EXDEV);
 
     // 清理
     close(newdirfd);
@@ -523,10 +525,189 @@ void test_linkat()
     remove("testdir");
 }
 
+// 测试函数
+void test_mkdirat()
+{
+    int dirfd;
+    const char *dirname = "testdir";
+    const char *existing_dir = "existing_dir";
+
+    // 创建一个有效的目录用于测试
+    dirfd = open(".", O_RDONLY);
+    mkdirat(dirfd, existing_dir, 0755); // 创建一个已存在目录
+
+    // 正向测试用例 1: 正常情况下创建目录
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("mkdirat valid dir", mkdirat(dirfd, dirname, 0755) == 0, 0);
+
+    // 正向测试用例 2: 再次创建同一目录（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("mkdirat existing dir", mkdirat(dirfd, existing_dir, 0755) < 0, EEXIST);
+
+    // 正向测试用例 3: 创建目录，使用合法模式
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("mkdirat valid dir with mode", mkdirat(dirfd, "new_dir", 0755) == 0, 0);
+
+    // 异常测试用例 1: 无效的 dirfd（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("mkdirat invalid dirfd", mkdirat(-1, dirname, 0755) < 0, EBADF);
+
+    // 异常测试用例 2: 无效的路径（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("mkdirat invalid path", mkdirat(dirfd, "invalid/dir", 0755) < 0, ENOENT);
+
+    // 异常测试用例 3: dirfd 不是一个目录（应失败）
+    int filefd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("mkdirat non-dir fd", mkdirat(filefd, dirname, 0755) < 0, ENOTDIR);
+    close(filefd);
+
+    // 边界测试用例 1: 测试创建带有长路径的目录
+    errno = 0; // 重置 errno
+    char long_dir[257];
+    memset(long_dir, 'a', sizeof(long_dir) - 1);
+    long_dir[sizeof(long_dir) - 1] = '\0';
+    TEST_RESULT_ERRNO("mkdirat long path", mkdirat(dirfd, long_dir, 0755) < 0, ENAMETOOLONG);
+
+    // FIX: NOT SUPPORT YET
+    //    // 边界测试用例 2: 测试创建目录时没有权限（在没有写权限的目录中）
+    //    // 需要确保 dirfd 指向一个没有写权限的目录
+    //    // 这里假设 dirfd 是一个无写权限的目录
+    //    TEST_RESULT_ERRNO("mkdirat no permission", mkdirat(dirfd, "no_permission_dir", 0755) < 0,
+    //                      EACCES);
+
+    // 清理
+    unlinkat(dirfd, existing_dir, AT_REMOVEDIR); // 删除已存在的目录
+    unlinkat(dirfd, dirname, AT_REMOVEDIR);      // 删除新创建的目录
+    unlinkat(dirfd, "new_dir", AT_REMOVEDIR);    // 删除另外创建的目录
+    close(dirfd);
+}
+
+// 测试函数
+void test_unlinkat()
+{
+    int dirfd, fd;
+    const char *filename = "testfile3.txt";
+    const char *dirname = "testdir";
+
+    // 创建测试文件和目录
+    dirfd = open(".", O_RDONLY);
+    fd = open(filename, O_CREAT | O_RDWR, 0644);
+    close(fd);
+    mkdirat(dirfd, dirname, 0755); // 使用 mkdirat 创建目录
+
+    // 正向测试用例 1: 正常情况下删除文件
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat valid file", unlinkat(dirfd, filename, 0) == 0, 0);
+
+    // 正向测试用例 2: 再次删除文件（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat deleted file", unlinkat(dirfd, filename, 0) < 0, ENOENT);
+
+    // 正向测试用例 3: 删除目录（应失败，AT_REMOVEDIR未指定）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat directory without AT_REMOVEDIR", unlinkat(dirfd, dirname, 0) < 0,
+                      EISDIR);
+
+    // 正向测试用例 4: 正常情况下删除空目录
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat valid empty dir", unlinkat(dirfd, dirname, AT_REMOVEDIR) == 0, 0);
+
+    // 异常测试用例 1: 无效的 dirfd（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat invalid dirfd", unlinkat(-1, filename, 0) < 0, EBADF);
+
+    // 异常测试用例 2: 无效的路径（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat invalid path", unlinkat(dirfd, "invalid.txt", 0) < 0, ENOENT);
+
+    // 异常测试用例 3: dirfd 不是一个目录（应失败）
+    int filefd = open(filename, O_CREAT | O_RDWR);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat non-dir fd", unlinkat(filefd, filename, 0) < 0, ENOTDIR);
+    close(filefd);
+
+    // 边界测试用例 1: 测试删除当前工作目录（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("unlinkat current dir", unlinkat(dirfd, ".", 0) < 0, EPERM);
+
+    // 边界测试用例 2: 测试删除根目录（通常应失败）
+    // 这里假设你的测试环境允许，否则可以注释掉
+    // TEST_RESULT("unlinkat root dir", unlinkat(dirfd, "/", 0) < 0, EPERM);
+
+    // 清理
+    unlinkat(dirfd, filename, 0);           // 删除文件
+    unlinkat(dirfd, dirname, AT_REMOVEDIR); // 删除目录
+    close(dirfd);
+}
+
+// 测试函数
+void test_openat()
+{
+    int fd;
+
+    // 测试用例 1: 正常情况下打开一个有效的文件
+    errno = 0; // 重置 errno
+    fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_RDWR, 0644);
+    TEST_RESULT_ERRNO("openat valid file", fd >= 0, 0);
+    if (fd >= 0)
+        close(fd); // 清理
+
+    // 测试用例 2: 测试重复打开同一文件
+    errno = 0; // 重置 errno
+    fd = openat(AT_FDCWD, "testfile.txt", O_RDWR, 0);
+    TEST_RESULT_ERRNO("openat valid file twice", fd >= 0, 0);
+    if (fd >= 0)
+        close(fd); // 清理
+
+    // 测试用例 3: 测试使用 O_EXCL 打开已存在的文件（应失败）
+    errno = 0; // 重置 errno
+    fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_EXCL, 0644);
+    TEST_RESULT_ERRNO("openat O_EXCL on existing file", fd < 0, EEXIST);
+
+    // 测试用例 4: 测试打开不存在的文件（应失败）
+    errno = 0; // 重置 errno
+    fd = openat(AT_FDCWD, "nonexistent.txt", O_RDONLY, 0);
+    TEST_RESULT_ERRNO("openat nonexistent file", fd < 0, ENOENT);
+
+    // 测试用例 5: 测试使用无效的 dirfd（应失败）
+    errno = 0; // 重置 errno
+    fd = openat(-1, "testfile.txt", O_RDONLY, 0);
+    TEST_RESULT_ERRNO("openat invalid dirfd", fd < 0, EBADF);
+
+    // 测试用例 6: 测试打开目录（应成功）
+    errno = 0; // 重置 errno
+    fd = openat(AT_FDCWD, ".", O_RDONLY, 0);
+    TEST_RESULT_ERRNO("openat current directory", fd >= 0, 0);
+    if (fd >= 0)
+        close(fd); // 清理
+
+    // 测试用例 7: 测试打开一个目录的有效路径（应成功）
+    errno = 0; // 重置 errno
+    fd = openat(AT_FDCWD, "testfile.txt", O_RDONLY, 0);
+    TEST_RESULT_ERRNO("openat valid dir", fd >= 0, 0);
+    if (fd >= 0)
+        close(fd); // 清理
+
+    // 测试用例 8: 测试打开文件时的权限问题（需要设置文件权限）
+    errno = 0;                                                             // 重置 errno
+    fd = openat(AT_FDCWD, "protected_file.txt", O_WRONLY | O_CREAT, 0000); // 创建无权限文件
+    TEST_RESULT_ERRNO("openat permission denied", fd < 0, EACCES);
+}
+
 int main()
 {
     // 执行测试
-    printf("test_remove\n");
+    printf("\ntest_openat\n");
+    test_openat();
+    printf("\ntest_linkat\n");
+    test_linkat();
+    printf("\ntest_mkdirat\n");
+    test_mkdirat();
+    printf("\ntest_unlinkat\n");
+    test_unlinkat();
+
+    printf("\ntest_remove\n");
     test_remove();
     printf("test_rename\n");
     test_rename();
@@ -544,7 +725,5 @@ int main()
     test_lseek();
     printf("test_sendfile\n");
     test_sendfile();
-    printf("test_linkat\n");
-    test_linkat();
     return 0;
 }

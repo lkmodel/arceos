@@ -20,6 +20,5 @@ pub fn new_file(path: &str, flags: &OpenFlags) -> AxResult<File> {
     file.write(flags.writable());
     file.create(flags.creatable());
     file.create_new(flags.new_creatable());
-    // warn!("file.open({})", path);
     file.open(path)
 }
