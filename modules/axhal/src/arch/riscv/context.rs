@@ -51,6 +51,13 @@ pub struct TrapFrame {
     pub sstatus: usize,
 }
 
+impl TrapFrame {
+    /// Sets the return code.
+    pub fn set_ret_code(&mut self, ret_value: usize) {
+        self.regs.a0 = ret_value;
+    }
+}
+
 /// Saved hardware states of a task.
 ///
 /// The context usually includes:
@@ -64,7 +71,7 @@ pub struct TrapFrame {
 /// and the next task restores its context from memory to CPU.
 #[allow(missing_docs)]
 #[repr(C)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct TaskContext {
     pub ra: usize, // return address (x1)
     pub sp: usize, // stack pointer (x2)
@@ -85,12 +92,20 @@ pub struct TaskContext {
 
     pub tp: usize,
     // TODO: FP states
+
+    pub satp: memory_addr::PhysAddr,
 }
 
 impl TaskContext {
     /// Creates a new default context for a new task.
-    pub const fn new() -> Self {
-        unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
+    // pub const fn new() -> Self {
+    //     unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
+    // }
+    pub fn new() -> Self {
+        Self {
+            satp: crate::paging::kernel_page_table_root(),
+            ..Default::default()
+        }
     }
 
     /// Initializes the context for a new task, with the given entry point and
@@ -112,9 +127,17 @@ impl TaskContext {
             unsafe { super::write_thread_pointer(next_ctx.tp) };
         }
         unsafe {
+            if self.satp != next_ctx.satp {
+                super::write_page_table_root(next_ctx.satp);
+            }
+
             // TODO: switch FP states
             context_switch(self, next_ctx)
         }
+    }
+
+    pub fn set_page_table_root(&mut self, satp: memory_addr::PhysAddr) {
+        self.satp = satp;
     }
 }
 

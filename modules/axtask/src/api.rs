@@ -101,9 +101,7 @@ pub fn on_timer_tick() {
 
 /// Adds the given task to the run queue, returns the task reference.
 pub fn spawn_task(task: TaskInner) -> AxTaskRef {
-    
     let task_ref = task.into_arc();
-    // 问题
     select_run_queue::<NoPreemptIrqSave>(&task_ref).add_task(task_ref.clone());
     task_ref
 }
@@ -217,3 +215,4 @@ pub fn run_idle() -> ! {
         axhal::arch::wait_for_irqs();
     }
 }
+

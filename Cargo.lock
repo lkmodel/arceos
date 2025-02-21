@@ -123,25 +123,24 @@ version = "0.1.0"
 dependencies = [
  "arceos_posix_api",
  "axalloc",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axconfig",
+ "axerrno",
  "axfs",
  "axhal",
  "axio",
  "axlog",
+ "axmm",
+ "axruntime",
  "axstd",
  "axsync",
  "axtask",
  "bitflags 2.6.0",
  "cfg-if",
- "elf",
- "elf_parser",
- "lazy_static",
- "memory_addr 0.3.1",
- "numeric-enum-macro",
+ "kernel-elf-parser",
+ "memory_addr",
  "page_table_multiarch",
  "printf-compat",
  "riscv 0.12.1",
- "static_assertions",
  "xmas-elf",
 ]
 
@@ -164,7 +163,7 @@ dependencies = [
  "axdisplay",
  "axdma",
  "axdriver",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axfeat",
  "axfs",
  "axhal",
@@ -183,7 +182,7 @@ version = "0.1.0"
 dependencies = [
  "axalloc",
  "axconfig",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axfeat",
  "axfs",
  "axhal",
@@ -247,11 +246,11 @@ name = "axalloc"
 version = "0.1.0"
 dependencies = [
  "allocator",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "cfg-if",
  "kspin",
  "log",
- "memory_addr 0.3.1",
+ "memory_addr",
 ]
 
 [[package]]
@@ -301,12 +300,12 @@ dependencies = [
  "allocator",
  "axalloc",
  "axconfig",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axhal",
  "axmm",
  "kspin",
  "log",
- "memory_addr 0.3.1",
+ "memory_addr",
 ]
 
 [[package]]
@@ -391,14 +390,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axerrno"
-version = "0.1.0"
-source = "git+https://github.com/Starry-OS/axerrno.git#3e2372cde388aec5a666afd3456d59e8b77bf3bf"
-dependencies = [
- "log",
-]
-
-[[package]]
 name = "axfeat"
 version = "0.1.0"
 dependencies = [
@@ -421,14 +412,13 @@ version = "0.1.0"
 dependencies = [
  "axdriver",
  "axdriver_block",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axfs_devfs",
  "axfs_ramfs",
  "axfs_vfs",
  "axio",
  "axsync",
  "axtask",
- "bitflags 2.6.0",
  "cap_access",
  "cfg-if",
  "crate_interface",
@@ -465,7 +455,7 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2314ebe07a2fef7b1c1a7d15ab817941cd306ace651bb50024b5a8b3e8485359"
 dependencies = [
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "bitflags 2.6.0",
  "log",
 ]
@@ -491,7 +481,7 @@ dependencies = [
  "lazyinit",
  "linkme",
  "log",
- "memory_addr 0.3.1",
+ "memory_addr",
  "page_table_entry 0.5.0",
  "page_table_multiarch",
  "percpu",
@@ -513,7 +503,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8ca9c10ea4cd42bda87a2abde281fb481c76a0b05976fd03697385ea65d5122"
 dependencies = [
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
 ]
 
 [[package]]
@@ -521,7 +511,7 @@ name = "axlibc"
 version = "0.1.0"
 dependencies = [
  "arceos_posix_api",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axfeat",
  "axio",
  "bindgen",
@@ -543,13 +533,15 @@ dependencies = [
 name = "axmm"
 version = "0.1.0"
 dependencies = [
+ "axalloc",
  "axconfig",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axhal",
  "kspin",
  "lazyinit",
  "log",
- "memory_addr 0.3.1",
+ "memory_addr",
+ "memory_set",
 ]
 
 [[package]]
@@ -558,7 +550,7 @@ version = "0.1.0"
 dependencies = [
  "axdriver",
  "axdriver_net",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axhal",
  "axio",
  "axsync",
@@ -595,7 +587,7 @@ name = "axstd"
 version = "0.1.0"
 dependencies = [
  "arceos_api",
- "axerrno 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axerrno",
  "axfeat",
  "axio",
  "kspin",
@@ -625,7 +617,7 @@ dependencies = [
  "kspin",
  "lazyinit",
  "log",
- "memory_addr 0.3.1",
+ "memory_addr",
  "percpu",
  "rand",
  "scheduler",
@@ -953,24 +945,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 
 [[package]]
-name = "elf"
-version = "0.8.0-dev"
-source = "git+https://github.com/cole14/rust-elf/?rev=cdc6769#cdc67691a79a18995e74ce7b65682db4c59c260c"
-
-[[package]]
-name = "elf_parser"
-version = "0.1.0"
-source = "git+https://github.com/Starry-OS/elf_parser.git#061cec5c6fdcab5deeca938fc2f6966e07c9aa37"
-dependencies = [
- "axerrno 0.1.0 (git+https://github.com/Starry-OS/axerrno.git)",
- "cfg-if",
- "log",
- "memory_addr 0.1.0",
- "page_table_entry 0.1.0",
- "xmas-elf",
-]
-
-[[package]]
 name = "embedded-hal"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1166,6 +1140,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kernel-elf-parser"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76cc10ff0bb922f6a2dd1d859ecda9a811970ce83eb8c9be19698e7c8ea13628"
+dependencies = [
+ "axerrno",
+ "cfg-if",
+ "log",
+ "memory_addr",
+ "page_table_entry 0.4.1",
+ "xmas-elf",
+]
+
+[[package]]
 name = "kernel_guard"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1283,14 +1271,18 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "memory_addr"
-version = "0.1.0"
-source = "git+https://github.com/Starry-OS/memory_addr.git#a5be547a3109f114994d005b893f9b19c2616709"
-
-[[package]]
-name = "memory_addr"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f769efcf10b9dfb4c913bebb409cda77b1a3f072b249bf5465e250bcb30eb49"
+
+[[package]]
+name = "memory_set"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "335675b7ab07460f532d3b2b557313be73037fdf81b65464d8c0d8bd90d2fbf9"
+dependencies = [
+ "memory_addr",
+]
 
 [[package]]
 name = "minimal-lexical"
@@ -1322,11 +1314,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "numeric-enum-macro"
-version = "0.2.0"
-source = "git+https://github.com/mexus/numeric-enum-macro#20aef288b2ecd2381ab6627c2a6c9e0436d8c8ff"
-
-[[package]]
 name = "once_cell"
 version = "1.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1334,12 +1321,13 @@ checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
 name = "page_table_entry"
-version = "0.1.0"
-source = "git+https://github.com/Starry-OS/page_table_entry.git#8a871b43e07dd3b6da5512528566686e6bc949a9"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6db6393e4382afb7063e4859f39a7db998c4ba9b842a59b05c138c6a6f524fac"
 dependencies = [
  "aarch64-cpu",
  "bitflags 2.6.0",
- "memory_addr 0.1.0",
+ "memory_addr",
  "x86_64 0.15.2",
 ]
 
@@ -1351,7 +1339,7 @@ checksum = "069d6f06c815a18754ddf47c44a3b70ece3ce62ac092e078024cfcc0c12185f4"
 dependencies = [
  "aarch64-cpu",
  "bitflags 2.6.0",
- "memory_addr 0.3.1",
+ "memory_addr",
  "x86_64 0.15.2",
 ]
 
@@ -1362,7 +1350,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c738806353b61519d78f1d8813b06360b5c5ee1d3daca9b12597cf1b7cb568b"
 dependencies = [
  "log",
- "memory_addr 0.3.1",
+ "memory_addr",
  "page_table_entry 0.5.0",
  "riscv 0.11.1",
  "x86",

@@ -1,11 +1,12 @@
 use alloc::collections::VecDeque;
 use alloc::sync::Arc;
 use core::mem::MaybeUninit;
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 #[cfg(feature = "smp")]
 use alloc::sync::Weak;
 
-use kernel_guard::BaseGuard;
+use kernel_guard::{BaseGuard, NoPreemptIrqSave};
 use kspin::SpinRaw;
 use lazyinit::LazyInit;
 use scheduler::BaseScheduler;
@@ -14,7 +15,7 @@ use axhal::cpu::this_cpu_id;
 
 use crate::task::{CurrentTask, TaskState};
 use crate::wait_queue::WaitQueueGuard;
-use crate::{AxCpuMask, AxTaskRef, Scheduler, TaskInner, WaitQueue};
+use crate::{AxCpuMask, AxTaskRef, Scheduler, TaskExtMut, TaskInner, WaitQueue};
 
 macro_rules! percpu_static {
     ($(
@@ -528,6 +529,9 @@ impl AxRunQueue {
             !axhal::arch::irqs_enabled(),
             "IRQs must be disabled during scheduling"
         );
+
+        // info!("prev_task: {:x?}, next_task: {:x?}", prev_task.ctx(), next_task.ctx());
+
         trace!(
             "context switch: {} -> {}",
             prev_task.id_name(),
@@ -576,6 +580,7 @@ fn gc_entry() {
     loop {
         // Drop all exited tasks and recycle resources.
         let n = EXITED_TASKS.with_current(|exited_tasks| exited_tasks.len());
+
         for _ in 0..n {
             // Do not do the slow drops in the critical section.
             let task = EXITED_TASKS.with_current(|exited_tasks| exited_tasks.pop_front());

@@ -39,6 +39,11 @@ impl TrapFrame {
     pub const fn is_user(&self) -> bool {
         self.cs & 0b11 == 3
     }
+
+    /// set the return code
+    pub fn set_ret_code(&mut self, ret_value: usize) {
+        self.rax = ret_value as _;
+    }
 }
 
 #[repr(C)]
@@ -59,7 +64,7 @@ struct ContextSwitchFrame {
 /// See <https://www.felixcloutier.com/x86/fxsave> for more details.
 #[allow(missing_docs)]
 #[repr(C, align(16))]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FxsaveArea {
     pub fcw: u16,
     pub fsw: u16,
@@ -77,6 +82,8 @@ pub struct FxsaveArea {
 static_assertions::const_assert_eq!(core::mem::size_of::<FxsaveArea>(), 512);
 
 /// Extended state of a task, such as FP/SIMD states.
+/// 
+#[derive(Clone)]
 pub struct ExtendedState {
     /// Memory region for the FXSAVE/FXRSTOR instruction.
     pub fxsave_area: FxsaveArea,
@@ -130,7 +137,7 @@ impl fmt::Debug for ExtendedState {
 ///
 /// [`rsp`]: TaskContext::rsp
 /// [`kstack_top`]: TaskContext::kstack_top
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TaskContext {
     /// The kernel stack top of the task.
     pub kstack_top: VirtAddr,

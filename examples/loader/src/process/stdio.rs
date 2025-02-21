@@ -1,8 +1,4 @@
 use axerrno::{AxError, AxResult};
-use axfs::api::{
-    ConsoleWinSize, FileExt, FileIO, FileIOType, OpenFlags, FIOCLEX, TCGETS, TIOCGPGRP, TIOCGWINSZ,
-    TIOCSPGRP,
-};
 use axhal::console::{read_bytes, write_bytes};
 use axio::{Read, Seek, SeekFrom, Write};
 use axlog::warn;
@@ -11,6 +7,12 @@ use axtask::yield_now;
 
 extern crate alloc;
 use alloc::string::String;
+
+use crate::fs::{
+    ConsoleWinSize, FileExt, FileIO, FileIOType, OpenFlags, FIOCLEX, TCGETS, TIOCGPGRP, TIOCGWINSZ,
+    TIOCSPGRP,
+};
+
 /// stdin file for getting chars from console
 pub struct Stdin {
     pub flags: Mutex<OpenFlags>,

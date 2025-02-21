@@ -42,7 +42,6 @@ int main() {
     printf("Floating point:\n");
     float d = -123;
     // 在访问浮点数前打印地址
-    printf("xxxxxxxxxx\n");
     printf("  %%f:    |%f|\n", d);        // 固定点
     printf("  %%.2f:  |%.2f|\n", d);      // 精度控制
     printf("  %%e:    |%e|\n", d);        // 科学计数(小写)

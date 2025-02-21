@@ -1,4 +1,4 @@
 [dev]
-rename="printf"
+rename="fork"
 ttype="dynamic"
 snapshot = true

@@ -1,17 +1,17 @@
 use axlog::{debug, info};
-use axtask::init_scheduler;
-
 use axstd::{
     print, println, process::exit, thread::sleep
 };
 
 use core::{
-    ffi::{c_char, c_int}, mem, slice, str, time::Duration
+    ffi::{c_char, c_int}, mem, slice, str, sync::atomic::Ordering, time::Duration
 };
 
 use printf_compat::{format, output};
 
 use alloc::string::String;
+
+use crate::{process::current_process, save_gp, switch_to_gp, APP_GP, FORK_WAIT, KERNEL_GP, MAIN_WAIT_QUEUE};
 
 type MainFn = unsafe extern "C" fn(argc: i32, argv: *mut *mut i8, envp: *mut *mut i8) -> i32;
 
@@ -20,26 +20,35 @@ type MainFn = unsafe extern "C" fn(argc: i32, argv: *mut *mut i8, envp: *mut *mu
 /// `__libc_start_main()` is not in the source standard; it is only in the binary standard. 
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_libc_start_main(
-	main: MainFn,
-	argc: i32,
+    main: MainFn,
+    argc: i32,
     argv: *mut *mut i8,
     _init: usize,
     _fini: usize,
 ) {
-	info!("[ABI:Init]: abi_libc_start_main");
-	info!("main: {:?}, argc: {}, argv: {:?}, _init: 0x{:x}, _fini: 0x{:x}", main, argc, argv, _init, _fini);
+    unsafe { 
+        save_gp(&APP_GP);
+        switch_to_gp(&KERNEL_GP);
+    }
 
-	init_scheduler();
+    info!("App GP: 0x{:x}", APP_GP.load(Ordering::SeqCst));
+
+    let current_process = current_process();
+    info!("Current process: {:?}", current_process.pid());
+    
+    info!("[ABI:Init]: abi_libc_start_main");
+    info!("main: {:?}, argc: 0x{:x}, argv: {:x?}, _init: 0x{:x}, _fini: 0x{:x}", 
+           main, argc, argv, _init, _fini);
 
     let main = unsafe {
-		mem::transmute::<usize, MainFn>( main as usize)
-	};
+        mem::transmute::<usize, MainFn>( main as usize)
+    };
 
-	unsafe {
-		main(argc, argv, core::ptr::null_mut());
-	}
+    unsafe {
+        main(argc, argv, core::ptr::null_mut());
+    }
 
-	abi_fini();
+    abi_fini();
 }
 
 #[unsafe(no_mangle)]
@@ -50,11 +59,14 @@ pub extern "C" fn abi_init() {
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_fini() {
 	info!("[ABI:Init]: abi_fini");
+    // 通知等待的 main 进程
+    MAIN_WAIT_QUEUE.notify_one(false);
+    // FORK_WAIT.notify_one(false);
 }
 
 #[unsafe(no_mangle)]
 pub fn abi_putchar(c: char) {
-    // info!("[ABI:Print] {c}");
+    info!("[ABI:Print] {c}");
     print!("{}", c);
 }
 

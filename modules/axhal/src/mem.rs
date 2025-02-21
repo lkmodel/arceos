@@ -124,6 +124,36 @@ pub(crate) fn default_mmio_regions() -> impl Iterator<Item = MemRegion> {
     })
 }
 
+// # PFLASH regions with format (`base_paddr`, `size`).
+// pflash-regions = [
+//     [0x2200_0000, 0x200_0000],      # Flash 0: 32MB
+// ]                                   # [(uint, uint)]
+/// Returns the default pflash memory regions
+#[allow(dead_code)]
+pub(crate) fn default_pflash_regions() -> impl Iterator<Item = MemRegion> {
+    core::iter::once(MemRegion {
+        paddr: 0x2200_0000.into(),
+        size: 0x200_0000,
+        flags: MemRegionFlags::RESERVED 
+            | MemRegionFlags::DEVICE
+            | MemRegionFlags::READ
+            | MemRegionFlags::WRITE,
+        name: "pflash",
+    })
+}
+
+
+#[allow(dead_code)]
+pub(crate) fn default_uspace_regions() -> impl Iterator<Item = MemRegion> {
+    core::iter::once(MemRegion {
+        paddr: 0x81000000.into(),
+        size: 0x100_0000,
+        flags: MemRegionFlags::READ
+            | MemRegionFlags::WRITE,
+        name: "uspace",
+    })
+}
+
 /// Returns the default free memory regions (kernel image end to physical memory end).
 #[allow(dead_code)]
 pub(crate) fn default_free_regions() -> impl Iterator<Item = MemRegion> {

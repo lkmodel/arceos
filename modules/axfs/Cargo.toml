@@ -23,7 +23,6 @@ default = ["devfs", "ramfs", "fatfs", "procfs", "sysfs"]
 [dependencies]
 log = "=0.4.21"
 cfg-if = "1.0"
-bitflags = "2.6"
 lazyinit = "0.2"
 cap_access = "0.1"
 axio = { version = "0.1", features = ["alloc"] }
