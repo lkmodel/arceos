@@ -1,17 +1,17 @@
 use core::{
-    slice::{from_raw_parts, from_raw_parts_mut},
     cmp::min,
+    slice::{from_raw_parts, from_raw_parts_mut},
 };
 
 use axlog::debug;
 
+use crate::{abi::lookup_abi_call, elf::{verify_elf_header, LoadError}};
+use axstd::println;
 use elf::{
     abi::PT_LOAD,
-	endian::LittleEndian,
+    endian::LittleEndian,
     ElfBytes,
 };
-
-use crate::{abi::lookup_abi_call, elf::{verify_elf_header, LoadError}};
 
 pub const PLASH_START: usize = 0xffff_ffc0_2200_0000;
 pub const EXEC_ZONE_START: usize = 0xffff_ffc0_8010_0000;

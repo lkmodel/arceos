@@ -9,10 +9,13 @@ edition.workspace = true
 axlog = { workspace = true }
 axstd = { workspace = true }
 axtask = { workspace = true }
+axconfig = { workspace = true }
 arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
 elf = { git = "https://github.com/cole14/rust-elf/", commit = "cdc6769", default-features = false, features = ["to_str"] }
 printf-compat = { version = "0.1.0", default-features = false }
 axhal = { workspace = true, features = ["paging"] }
 page_table_multiarch = { version = "0.5", optional = true }
+abi_macro = { workspace = true }
+linkme = "0.3.31"
 
 [features]

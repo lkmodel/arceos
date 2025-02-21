@@ -1,12 +1,12 @@
-use core::{ffi::c_void, ptr};
-
+use crate::{AbiEntry, ABI_TABLE};
 use arceos_posix_api::ctypes;
+use core::{ffi::c_void, ptr};
 
 use axlog::info;
 
+use abi_macro::abi;
 use alloc::alloc::{alloc, dealloc};
 use core::alloc::Layout;
-
 
 struct MemoryControlBlock {
     size: usize,
@@ -17,6 +17,7 @@ const CTRL_BLK_SIZE: usize = core::mem::size_of::<MemoryControlBlock>();
 /// Allocate memory and return the memory address.
 ///
 /// Returns 0 on failure (the current implementation does not trigger an exception)
+#[abi(malloc)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_malloc(size: ctypes::size_t) -> *mut c_void {
     info!("[ABI:Mem] malloc");
@@ -37,6 +38,7 @@ pub unsafe extern "C" fn abi_malloc(size: ctypes::size_t) -> *mut c_void {
 /// (WARNING) If the address to be released does not match the allocated address, an error should
 /// occur, but it will NOT be checked out. This is due to the global allocator `Buddy_system`
 /// (currently used) does not check the validity of address to be released.
+#[abi(free)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_free(ptr: *mut c_void) {
     info!("ABI:Mem] free");
@@ -58,6 +60,7 @@ pub unsafe extern "C" fn abi_free(ptr: *mut c_void) {
 /// If ptr is null, this is equivalent to malloc(size)
 /// If size is 0 and ptr is not null, this is equivalent to free(ptr)
 /// Otherwise, try to resize the memory block and copy data
+#[abi(realloc)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_realloc(ptr: *mut c_void, size: ctypes::size_t) -> *mut c_void {
     info!("[ABI:Mem] realloc");
@@ -103,6 +106,7 @@ pub unsafe extern "C" fn abi_realloc(ptr: *mut c_void, size: ctypes::size_t) -> 
 ///
 /// Allocates memory for an array of nmemb elements of size bytes and returns a pointer
 /// to the allocated memory. The memory is set to zero.
+#[abi(calloc)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_calloc(nmemb: ctypes::size_t, size: ctypes::size_t) -> *mut c_void {
     info!("[ABI:Mem] calloc");

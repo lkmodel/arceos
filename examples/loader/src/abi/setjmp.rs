@@ -1,5 +1,8 @@
+use crate::{AbiEntry, ABI_TABLE};
+use abi_macro::abi;
 use core::arch::asm;
 
+#[abi(longjmp)]
 pub unsafe extern "C" fn abi_longjmp() {
     asm!(
     "
@@ -39,6 +42,7 @@ pub unsafe extern "C" fn abi_longjmp() {
 	"
     )
 }
+#[abi(setjmp)]
 pub unsafe extern "C" fn abi_setjmp() {
     asm!("
     sd s0,    0(a0)

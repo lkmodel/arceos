@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::str::from_utf8;
 use std::sync::OnceLock;
 use std::{env, fs, io};
@@ -259,7 +259,7 @@ fn install_musl_riscv64() -> bool {
 
 
     println!("Musl RISC-V64 toolchain installation complete");
-    std::fs::remove_file(cur_dir.join("riscv64-linux-musl-cross.tgz")).expect("Failed to remove musl-cross-make.tgz");
+    fs::remove_file(cur_dir.join("riscv64-linux-musl-cross.tgz")).expect("Failed to remove musl-cross-make.tgz");
 
     true
 }
@@ -345,7 +345,7 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
         return Err(String::from("make defconfig failed"));
     }
 
-    let output = Command::new("make")
+    let mut process = Command::new("make")
         .args([
             "A=examples/loader",
             &format!("ARCH={}", args.arch),
@@ -354,12 +354,23 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
             "run",
         ])
         .current_dir(&current_dir)
-        .output()
+        .stdout(Stdio::piped())
+        .spawn()
         .expect("Failed to run make");
 
-    io::stdout().write_all(&output.stdout).unwrap();
+    let mut stdout = process.stdout.take().unwrap();
+    let mut buffer = Vec::new();
+    let mut chunk = [0u8; 512];
 
-    if let Some(e) = test_judge(&output.stdout) {
+    loop {
+        let n = stdout.read(&mut chunk).unwrap();
+        if n == 0 { break; }
+
+        buffer.extend_from_slice(&chunk[..n]);
+        io::stdout().write_all(&chunk[..n]).unwrap();
+    }
+
+    if let Some(e) = test_judge(&buffer) {
         return Err(e);
     }
     Ok(())
@@ -422,10 +433,6 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     let c_file = format!("{}.c", rename); // C source file
     input_c.push(String::from("-v"));
     input_c.push(c_file);
-    if elf_path.join("unity").join("unity.c").exists() {
-        let unity = String::from("unity/unity.c");
-        input_c.push(unity);
-    };
     let elf_output = format!("{}", rename); // Output ELF file
 
     // Determine the flags based on the config

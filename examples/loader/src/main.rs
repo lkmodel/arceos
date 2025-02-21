@@ -12,9 +12,19 @@ mod abi;
 mod elf;
 mod load;
 
+use linkme::distributed_slice;
 // use heap_allocator::init_heap;
 use load::load_elf;
 
+#[distributed_slice]
+pub static ABI_TABLE: [AbiEntry] = [..];
+
+#[repr(C)]
+pub struct AbiEntry {
+    pub name: &'static str,
+    addr: *const (),
+}
+unsafe impl Sync for AbiEntry {}
 #[unsafe(no_mangle)]
 fn main() {
     let entry = load_elf();
