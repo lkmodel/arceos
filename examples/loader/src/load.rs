@@ -6,7 +6,6 @@ use core::{
 use axlog::debug;
 
 use crate::{abi::lookup_abi_call, elf::{verify_elf_header, LoadError}};
-use axstd::println;
 use elf::{
     abi::PT_LOAD,
     endian::LittleEndian,
