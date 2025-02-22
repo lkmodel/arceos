@@ -64,7 +64,6 @@ impl FdManager {
             .store(new_limit, core::sync::atomic::Ordering::Release)
     }
 
-    #[allow(unused)]
     pub fn get_mask(&self) -> i32 {
         self.umask.load(core::sync::atomic::Ordering::Acquire)
     }

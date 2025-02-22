@@ -3,8 +3,8 @@ use crate::{
         axfs_ext::api::OpenFlags,
         linux_fs::{
             fd_manager::{FDM, alloc_fd},
-            link::{FilePath, deal_with_path},
-            utils::deal_path_linstyle,
+            link::{AT_FDCWD, FilePath, deal_with_path},
+            utils::{UtilsError, deal_path},
         },
     },
     syscall::{
@@ -13,7 +13,9 @@ use crate::{
     },
 };
 use axerrno::AxError;
-use axfs::api::{create_dir, metadata, remove_dir, remove_file, rename};
+use axfs::api::{
+    Permissions, create_dir, metadata, remove_dir, remove_file, rename, set_current_dir,
+};
 use axlog::{debug, error, info, warn};
 
 /// 功能:获取当前工作目录；
@@ -71,17 +73,20 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let mode = args[2] as u32;
 
-    let path = match deal_path_linstyle(dir_fd, Some(path), true) {
-        (None, e) => match e {
-            SyscallError::ENAMETOOLONG | SyscallError::EBADF | SyscallError::ENOTDIR => {
-                return Err(e);
+    let path = match deal_path(dir_fd, Some(path), true) {
+        Ok(ans) => ans,
+        Err(e) => match e {
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
+            UtilsError::InvalidArg => return Err(SyscallError::ENOTDIR),
+            UtilsError::PanicMe => {
+                panic!("{:?}", e);
             }
             _ => {
-                warn!("Unexpect errno catched {:?}", e);
-                return Err(SyscallError::EPERM);
+                panic!("{:?}", e);
             }
         },
-        (Some(path), _) => path,
     };
 
     debug!(
@@ -92,7 +97,7 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
     );
 
     match metadata(path.path()) {
-        Ok(t) => {
+        Ok(_) => {
             debug!("Err: EEXIST pathname already exists (not necessarily as a directory).");
             return Err(SyscallError::EEXIST);
         }
@@ -132,8 +137,45 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`, 需要切换到的目录。
 /// # Return
 /// 成功执行:返回0。失败, 返回-1。
-pub fn syscall_chdir(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
+    let path = args[0] as *const u8;
+    // 从path中读取字符串
+    let path = match deal_path(AT_FDCWD, Some(path), true) {
+        Ok(path) => path,
+        Err(e) => match e {
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
+            UtilsError::PanicMe => {
+                panic!("{:?}", e);
+            }
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    };
+
+    debug!("Into syscall_chdir. path: {:?}", path.path());
+    match metadata(path.path()) {
+        Ok(metadata) => {
+            let perm = metadata.permissions();
+            if !perm.contains(Permissions::OWNER_READ) {
+                return Err(SyscallError::EACCES);
+            }
+            if !metadata.is_dir() {
+                return Err(SyscallError::ENOTDIR);
+            }
+            set_current_dir(path.path()).unwrap();
+            Ok(0)
+        }
+        Err(e) => match e {
+            AxError::NotFound => Err(SyscallError::ENOENT),
+            AxError::NotADirectory => Err(SyscallError::ENOTDIR),
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    }
 }
 
 /// To get the `dirent` structures from the directory referred to by the open file descriptor `fd` into the buffer
@@ -391,6 +433,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     }
 }
 
+// FIXME: fatfs文件系统不支持设置权限，会直接当作0o755返回。
 /// 53
 /// 修改文件权限
 /// mode: 0o777, 3位八进制数字
@@ -403,8 +446,59 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
 /// * `dir_fd: usize`, 目录的文件描述符
 /// * `path: *const u8`, 文件的路径
 /// * `mode: usize`, 文件的权限
-pub fn syscall_fchmodat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let mode = args[2];
+
+    let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
+        ans
+    } else {
+        return Err(SyscallError::EINVAL);
+    };
+
+    let file_path = match deal_path(dir_fd, Some(path), false) {
+        Ok(path) => path,
+        Err(e) => match e {
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
+            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
+            UtilsError::PanicMe => {
+                panic!("{:?}", e);
+            }
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    };
+
+    //```
+    // FIXME: 这里是有问题的，因为现有的文件系统尚不支持设置权限，在这里实验了一下
+    //    let file_io = match FDM.fd_table.lock().get(dir_fd) {
+    //        Some(Some(f)) => f.clone(),
+    //        _ => return Err(SyscallError::EBADF),
+    //    };
+    //    if let Some(file_desc) = file_io.as_any().downcast_ref::<FileDesc>() {
+    //        warn!("Get perm, before {:?}", file_desc.get_perm());
+    //        file_desc.set_perm(mode);
+    //        warn!("Get perm, after  {:?}", file_desc.get_perm());
+    //    } else {
+    //        warn!("fdsaf");
+    //    }
+
+    match metadata(file_path.path()) {
+        Ok(mut meta) => {
+            meta.set_permissions(mode);
+            Ok(0)
+        }
+        Err(e) => match e {
+            AxError::NotFound => return Err(SyscallError::ENOENT),
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    }
 }
 
 /// 48
@@ -421,8 +515,61 @@ pub fn syscall_fchmodat(_args: [usize; 6]) -> SyscallResult {
 /// * `dir_fd: usize`, 目录的文件描述符
 /// * `path: *const u8`, 文件的路径
 /// * `mode: usize`, 文件的权限
-pub fn syscall_faccessat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let mode = args[2];
+    // `todo`: 有问题,实际上需要考虑当前进程对应的用户`UID`和文件拥有者之间的关系
+    // 现在一律当作root用户处理
+    let file_path = match deal_path(dir_fd, Some(path), false) {
+        Ok(path) => path,
+        Err(e) => match e {
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
+            UtilsError::PanicMe => {
+                panic!("panic {:?}", e);
+            }
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    };
+
+    let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
+        ans
+    } else {
+        debug!("Err: An invalid flag was specified in mode");
+        return Err(SyscallError::EINVAL);
+    };
+
+    match metadata(file_path.path()) {
+        Ok(metadata) => {
+            if mode.is_empty() {
+                // F_OK
+                Ok(0)
+            } else {
+                let perm = metadata.permissions();
+                // 逐位对比
+                if (mode.contains(Permissions::OWNER_EXEC)
+                    && !perm.contains(Permissions::OWNER_EXEC))
+                    || (mode.contains(Permissions::OWNER_WRITE)
+                        && !perm.contains(Permissions::OWNER_WRITE))
+                    || (mode.contains(Permissions::OWNER_READ)
+                        && !perm.contains(Permissions::OWNER_READ))
+                {
+                    return Err(SyscallError::EACCES);
+                }
+                Ok(0)
+            }
+        }
+        Err(e) => match e {
+            AxError::NotFound => return Err(SyscallError::ENOENT),
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    }
 }
 
 /// 29
@@ -432,8 +579,29 @@ pub fn syscall_faccessat(_args: [usize; 6]) -> SyscallResult {
 /// * `fd: usize`, 文件描述符
 /// * `request: usize`, 控制命令
 /// * `argp: *mut usize`, 参数
-pub fn syscall_ioctl(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let request = args[1];
+    let argp = args[2];
+    let fd_table = FDM.fd_table.lock();
+    warn!("fd: {}, request: {}, argp: {}", fd, request, argp);
+    if fd >= fd_table.len() {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EBADF);
+    }
+    if fd_table[fd].is_none() {
+        debug!("fd {} is none", fd);
+        return Err(SyscallError::EBADF);
+    }
+    //    if process.manual_alloc_for_lazy(argp.into()).is_err() {
+    //        return Err(SyscallError::EFAULT); // 地址不合法
+    //    }
+
+    let file = fd_table[fd].clone().unwrap();
+    match file.ioctl(request, argp) {
+        Ok(ret) => Ok(ret),
+        Err(_) => Ok(0),
+    }
 }
 
 /// 88

@@ -52,7 +52,7 @@ char *strtok(char *__restrict, const char *__restrict);
 
 size_t strlen(const char *);
 
-// char *strerror(int);
+char *strerror(int);
 
 #if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
 #include <strings.h>
@@ -92,6 +92,9 @@ char *strchrnul(const char *, int);
 // char *strcasestr(const char *, const char *);
 void *memrchr(const void *, int, size_t);
 // void *mempcpy(void *, const void *, size_t);
+#ifndef __cplusplus
+char *basename();
+#endif
 #endif
 
 #ifdef __cplusplus

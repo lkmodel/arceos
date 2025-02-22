@@ -84,7 +84,7 @@ extern "C" {
 // int fstatat(int, const char *__restrict, struct stat *__restrict, int);
 // int chmod(const char *, mode_t);
 // int fchmod(int, mode_t);
-// int fchmodat(int, const char *, mode_t, int);
+int fchmodat(int, const char *, mode_t, int);
 // mode_t umask(mode_t);
 // int mkdir(const char *, mode_t);
 // int mkfifo(const char *, mode_t);

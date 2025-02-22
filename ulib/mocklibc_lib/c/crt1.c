@@ -8,10 +8,6 @@ __attribute__((visibility("hidden"))) void _start(long *p)
     __asm__ volatile("mv %0, a7" : "=r"(abi_entry));
     int argc = p[0];
     char **argv = (void *)(p + 1);
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
 
     main(argc, argv);
 
@@ -22,12 +18,6 @@ __attribute__((visibility("hidden"))) void _start(long *p)
 void __libc_start_main(long *p)
 {
     __asm__ volatile("mv %0, a7" : "=r"(abi_entry));
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
     int argc = p[0];
     char **argv = (void *)(p + 1);
 

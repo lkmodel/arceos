@@ -1,3 +1,8 @@
+# BUG记录
+
+openat/open函数在建立的时候默认参数755,没有办法改变创建的权限。
+chmod也并不真正的修改权限
+
 # `openat`
 
 ## `open()`,`openat()`, and `creat()` can fail with the following errors
@@ -178,7 +183,7 @@
        The  same  errors  that  occur  for  unlink()  and rmdir(2) can also occur for unlinkat().  The following
        additional errors can occur for unlinkat():
 
-       EBADF  dirfd is not a valid file descriptor.
+- [x] `EBADF` `dirfd` is not a valid file descriptor.
 
        EINVAL An invalid flag value was specified in flags.
 
@@ -186,3 +191,127 @@
 
        ENOTDIR
               pathname is relative and dirfd is a file descriptor referring to a file other than a directory.
+
+# chdir
+
+[ENOTDIR]          A component of the path prefix is not a directory.
+
+- [x] `[ENAMETOOLONG]` A component of a `pathname` exceeded 255 characters,
+   or an entire path name exceeded 1023 characters.
+
+- [x] `[ENOENT]` The named directory does not exist.
+
+     [ELOOP]            Too many symbolic links were encountered in translating the pathname.
+
+- [x] `[EACCES]` Search permission is denied for any component of the path name.
+
+- [x] `[EFAULT]` The path argument points outside the process's
+   allocated address space.
+
+     [EIO]              An I/O error occurred while reading from or writing to the file system.
+
+     [EINTEGRITY]       Corrupted data was detected while reading from the file system.
+
+     The fchdir() system call will fail and the current working directory will be unchanged if
+     one or more of the following are true:
+
+     [EACCES]           Search permission is denied for the directory referenced by the file
+                        descriptor.
+
+     [ENOTDIR]          The file descriptor does not reference a directory.
+
+- [x] `[EBADF]` The argument `fd` is not a valid file descriptor.
+
+# chmod
+
+## Depending on the filesystem, errors other than those listed below can be returned
+
+The more general errors for chmod() are listed below:
+
+- [ ] `EACCES` Search permission is denied on a component of the path prefix.
+   (See also path_resolution(7).)
+
+- [x] `EFAULT` `pathname` points outside your accessible address space.
+
+- [ ] `EIO` An I/O error occurred.
+
+- [ ] `ELOOP` Too many symbolic links were encountered in resolving `pathname`.
+
+- [x] `ENAMETOOLONG` `pathname` is too long.
+
+- [x] `ENOENT` The file does not exist.
+
+- [ ] `ENOMEM` Insufficient kernel memory was available.
+
+- [ ] `ENOTDIR` A component of the path prefix is not a directory.
+
+- [ ] `EPERM` The effective `UID` does not match the owner of the file,
+   and the process is not privileged (Linux: it does not have
+   the `CAP_FOWNER` capability).
+
+- [ ] `EPERM` The file is marked immutable or append-only. (See `ioctl_iflags(2)`.)
+
+- [ ] `EROFS` The named file resides on a read-only `filesystem`.
+
+The general errors for `fchmod()` are listed below:
+
+- [x] `EBADF` The file descriptor `fd` is not valid.
+
+- [ ] `EIO` See above.
+
+- [ ] `EPERM` See above.
+
+- [ ] `EROFS` See above.
+
+The same errors that occur for `chmod()` can also occur for `fchmodat()`.
+The following additional errors can occur for `fchmodat()`:
+
+- [x] `EBADF` `dirfd` is not a valid file descriptor.
+
+- [x] `EINVAL` Invalid flag specified in flags.
+
+- [ ] `ENOTDIR` `pathname` is relative and `dirfd` is a file descriptor
+   referring to a file other than a directory.
+
+- [ ] `ENOTSUP` flags specified `AT_SYMLINK_NOFOLLOW`, which is not supported.
+
+# `faccessat`
+
+## `access()` and `faccessat()` shall fail if
+
+EACCES The requested access would be denied to the file, or search permission is denied for  one  of  the
+       directories in the path prefix of pathname.  (See also path_resolution(7).)
+
+ELOOP  Too many symbolic links were encountered in resolving pathname.
+
+- [x] `ENAMETOOLONG` `pathname` is too long.
+
+- [x] `ENOENT` A component of `pathname` does not exist or is a dangling
+   symbolic link.
+
+ENOTDIR
+       A component used as a directory in pathname is not, in fact, a directory.
+
+EROFS  Write permission was requested for a file on a read-only filesystem.
+
+## `access()` and `faccessat()` may fail if
+
+- [x] `EFAULT` `pathname` points outside your accessible address space.
+
+- [x] `EINVAL` mode was incorrectly specified.
+
+EIO    An I/O error occurred.
+
+ENOMEM Insufficient kernel memory was available.
+
+ETXTBSY
+       Write access was requested to an executable which is being executed.
+
+## The following additional errors can occur for `faccessat()`
+
+- [x] `EBADF` `dirfd` is not a valid file descriptor.
+
+- [x] `EINVAL` Invalid flag specified in flags.
+
+ENOTDIR
+       pathname is relative and dirfd is a file descriptor referring to a file other than a directory.

@@ -8,14 +8,14 @@ grep -Fxf project_calls std_functions > used_std_functions
 
 ---
 
-- [ ] a64l
+- [x] a64l
 - [ ] abort
-- [ ] abs
+- [x] abs
 - [ ] access
 - [ ] acct
-- [ ] acos
+- [x] acos
 - [ ] acosf
-- [ ] acosh
+- [x] acosh
 - [ ] acoshf
 - [ ] acoshl
 - [ ] acosl
@@ -25,19 +25,19 @@ grep -Fxf project_calls std_functions > used_std_functions
 - [ ] alloca
 - [ ] asctime
 - [ ] asctime_r
-- [ ] asin
+- [x] asin
 - [ ] asinf
-- [ ] asinh
+- [x] asinh
 - [ ] asinhf
 - [ ] asinhl
 - [ ] asinl
 - [ ] asprintf
-- [ ] atan
-- [ ] atan2
+- [x] atan
+- [x] atan2
 - [ ] atan2f
 - [ ] atan2l
 - [ ] atanf
-- [ ] atanh
+- [x] atanh
 - [ ] atanhf
 - [ ] atanhl
 - [ ] atanl
@@ -47,21 +47,21 @@ grep -Fxf project_calls std_functions > used_std_functions
 - [ ] atol
 - [ ] atoll
 - [ ] at_quick_exit
-- [ ] basename
+- [x] basename
 - [ ] bcmp
 - [ ] bcopy
 - [ ] brk
 - [ ] bsearch
 - [ ] bzero
 - [ ] calloc
-- [ ] cbrt
+- [x] cbrt
 - [ ] cbrtf
 - [ ] cbrtl
-- [ ] ceil
+- [x] ceil
 - [ ] ceilf
 - [ ] ceill
 - [ ] changes
-- [ ] chdir
+- [x] chdir
 - [ ] chmod
 - [ ] chown
 - [ ] chroot
@@ -83,12 +83,12 @@ grep -Fxf project_calls std_functions > used_std_functions
 - [ ] cookie_seek_function_t
 - [ ] cookie_write_function_t
 - [ ] copy_file_range
-- [ ] copysign
+- [x] copysign
 - [ ] copysignf
 - [ ] copysignl
-- [ ] cos
+- [x] cos
 - [ ] cosf
-- [ ] cosh
+- [x] cosh
 - [ ] coshf
 - [ ] coshl
 - [ ] cosl
@@ -112,15 +112,15 @@ grep -Fxf project_calls std_functions > used_std_functions
 - [ ] drand48
 - [ ] drem
 - [ ] dremf
-- [ ] dup
+- [x] dup
 - [ ] dup2
-- [ ] dup3
+- [x] dup3
 - [ ] eaccess
 - [ ] ecvt
 - [ ] endusershell
 - [ ] erand48
-- [ ] erf
-- [ ] erfc
+- [x] erf
+- [x] erfc
 - [ ] erfcf
 - [ ] erfcl
 - [ ] erff
@@ -134,17 +134,17 @@ grep -Fxf project_calls std_functions > used_std_functions
 - [ ] execvp
 - [ ] execvpe
 - [ ] exit
-- [ ] exp
+- [x] exp
 - [ ] exp10
 - [ ] exp10f
 - [ ] exp10l
-- [ ] exp2
+- [x] exp2
 - [ ] exp2f
 - [ ] exp2l
 - [ ] expf
 - [ ] expl
 - [ ] explicit_bzero
-- [ ] expm1
+- [x] expm1
 - [ ] expm1f
 - [ ] expm1l
 - [ ] fabs

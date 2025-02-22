@@ -1,4 +1,7 @@
-use super::syscall_fs::{FsSyscallId, fs_syscall};
+use super::{
+    syscall_fs::{FsSyscallId, fs_syscall},
+    syscall_task::{TaskSyscallId, task_syscall},
+};
 use axlog::info;
 
 use super::{SyscallResult, deal_result};
@@ -15,6 +18,15 @@ pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
         );
         #[allow(unused_assignments)]
         ans = Some(fs_syscall(fs_syscall_id, args));
+    }
+
+    if let Ok(task_syscall_id) = TaskSyscallId::try_from(syscall_id) {
+        info!(
+            "[syscall] id = {:#?}, args = {:?}, entry",
+            task_syscall_id, args
+        );
+        #[allow(unused_assignments)]
+        ans = Some(task_syscall(task_syscall_id, args));
     }
 
     if ans.is_none() {

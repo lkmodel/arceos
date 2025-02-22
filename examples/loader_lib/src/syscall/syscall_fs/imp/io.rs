@@ -58,7 +58,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
         ans
     } else {
-        warn!("Err: An invalid flag was specified in mode");
+        debug!("Err: An invalid flag was specified in mode");
         return Err(SyscallError::EINVAL);
     };
 

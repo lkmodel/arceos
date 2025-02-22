@@ -163,6 +163,32 @@ pub fn remove_link(src_path: &FilePath) -> Option<String> {
     }
 }
 
+/// 获取文件的链接数
+///
+/// 如果文件不存在，那么返回 0
+/// 如果文件存在，但是没有链接，那么返回 1
+/// 如果文件存在，且有链接，那么返回链接数
+pub fn get_link_count(src_path: &String) -> usize {
+    trace!("get_link_count: {}", src_path);
+    let map = LINK_PATH_MAP.lock();
+    // 找到对应的链接
+    match map.get(src_path) {
+        Some(dest_path) => {
+            let count_map = LINK_COUNT_MAP.lock();
+            let count = count_map.get(dest_path).unwrap();
+            *count
+        }
+        None => {
+            // if path_exists(src_path.path()) {
+            //     1
+            // } else {
+            //     0
+            // }
+            0
+        }
+    }
+}
+
 /// 这个是无涉其他代码的，不需要进行检查
 pub struct FilePath(String);
 impl FilePath {

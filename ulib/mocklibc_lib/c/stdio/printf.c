@@ -5,18 +5,30 @@
 // NOTE: C Std done.
 int printf(const char *restrict fmt, ...)
 {
+    // TODO: 使用这个而非print-compat
+    // <<<<<<
     int ret;
     va_list ap;
     va_start(ap, fmt);
-
-    typedef int (*FnABI)(const char *, va_list);
-    long *abi_ptr = (long *)(abi_entry + 8 * ABI_VFPRINTF);
-    FnABI func = (FnABI)(*abi_ptr);
-    va_list *ap_ptr = &ap;
-    ret = func(fmt, ap);
-
+    ret = vfprintf(stdout, fmt, ap);
     va_end(ap);
     return ret;
+    // >>>>>>
+    // ======
+    // <<<<<<
+    // int ret;
+    // va_list ap;
+    // va_start(ap, fmt);
+
+    // typedef int (*FnABI)(const char *, va_list);
+    // long *abi_ptr = (long *)(abi_entry + 8 * ABI_VFPRINTF);
+    // FnABI func = (FnABI)(*abi_ptr);
+    // va_list *ap_ptr = &ap;
+    // ret = func(fmt, ap);
+
+    // va_end(ap);
+    // return ret;
+    // >>>>>>
 }
 
 // #include "stdio_impl.h"

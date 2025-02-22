@@ -1,7 +1,11 @@
-use crate::linux_env::axfs_ext::api::{FileExt, FileIO, FileIOType, OpenFlags};
+use crate::linux_env::axfs_ext::api::{
+    ConsoleWinSize, FIOCLEX, FileExt, FileIO, FileIOType, OpenFlags, TCGETS, TIOCGPGRP, TIOCGWINSZ,
+    TIOCSPGRP,
+};
 use axerrno::{AxError, AxResult};
 use axhal::console::{read_bytes, write_bytes};
 use axio::{Read, Seek, SeekFrom, Write};
+use axlog::warn;
 use axsync::Mutex;
 /// `stdin` file for getting chars from console
 pub struct Stdin {
@@ -112,33 +116,30 @@ impl FileIO for Stdin {
         false
     }
 
-    fn ioctl(&self, _request: usize, _data: usize) -> AxResult<isize> {
-        unimplemented!();
-        // ```
-        // match request {
-        //     TIOCGWINSZ => {
-        //         let winsize = data as *mut ConsoleWinSize;
-        //         unsafe {
-        //             *winsize = ConsoleWinSize::default();
-        //         }
-        //         Ok(0)
-        //     }
-        //     TCGETS | TIOCSPGRP => {
-        //         warn!("stdin TCGETS | TIOCSPGRP, pretend to be tty.");
-        //         // pretend to be tty
-        //         Ok(0)
-        //     }
-        //
-        //     TIOCGPGRP => {
-        //         warn!("stdin TIOCGPGRP, pretend to be have a tty process group.");
-        //         unsafe {
-        //             *(data as *mut u32) = 0;
-        //         }
-        //         Ok(0)
-        //     }
-        //     FIOCLEX => Ok(0),
-        //     _ => Err(AxError::Unsupported),
-        // }
+    fn ioctl(&self, request: usize, data: usize) -> AxResult<isize> {
+        match request {
+            TIOCGWINSZ => {
+                let winsize = data as *mut ConsoleWinSize;
+                unsafe {
+                    *winsize = ConsoleWinSize::default();
+                }
+                Ok(0)
+            }
+            TCGETS | TIOCSPGRP => {
+                warn!("stdin TCGETS | TIOCSPGRP, pretend to be tty.");
+                // pretend to be tty
+                Ok(0)
+            }
+            TIOCGPGRP => {
+                warn!("stdin TIOCGPGRP, pretend to be have a tty process group.");
+                unsafe {
+                    *(data as *mut u32) = 0;
+                }
+                Ok(0)
+            }
+            FIOCLEX => Ok(0),
+            _ => Err(AxError::Unsupported),
+        }
     }
 
     fn set_status(&self, flags: OpenFlags) -> bool {
@@ -256,33 +257,30 @@ impl FileIO for Stdout {
         true
     }
 
-    fn ioctl(&self, _request: usize, _data: usize) -> AxResult<isize> {
-        unimplemented!();
-        // ```
-        // match request {
-        //     TIOCGWINSZ => {
-        //         let winsize = data as *mut ConsoleWinSize;
-        //         unsafe {
-        //             *winsize = ConsoleWinSize::default();
-        //         }
-        //         Ok(0)
-        //     }
-        //     TCGETS | TIOCSPGRP => {
-        //         warn!("stdout TCGETS | TIOCSPGRP, pretend to be tty.");
-        //         // pretend to be tty
-        //         Ok(0)
-        //     }
-        //
-        //     TIOCGPGRP => {
-        //         warn!("stdout TIOCGPGRP, pretend to be have a tty process group.");
-        //         unsafe {
-        //             *(data as *mut u32) = 0;
-        //         }
-        //         Ok(0)
-        //     }
-        //     FIOCLEX => Ok(0),
-        //     _ => Err(AxError::Unsupported),
-        // }
+    fn ioctl(&self, request: usize, data: usize) -> AxResult<isize> {
+        match request {
+            TIOCGWINSZ => {
+                let winsize = data as *mut ConsoleWinSize;
+                unsafe {
+                    *winsize = ConsoleWinSize::default();
+                }
+                Ok(0)
+            }
+            TCGETS | TIOCSPGRP => {
+                warn!("stdout TCGETS | TIOCSPGRP, pretend to be tty.");
+                // pretend to be tty
+                Ok(0)
+            }
+            TIOCGPGRP => {
+                warn!("stdout TIOCGPGRP, pretend to be have a tty process group.");
+                unsafe {
+                    *(data as *mut u32) = 0;
+                }
+                Ok(0)
+            }
+            FIOCLEX => Ok(0),
+            _ => Err(AxError::Unsupported),
+        }
     }
 }
 
@@ -357,32 +355,30 @@ impl FileIO for Stderr {
         true
     }
 
-    fn ioctl(&self, _request: usize, _data: usize) -> AxResult<isize> {
-        unimplemented!();
-        // ```
-        // match request {
-        //     TIOCGWINSZ => {
-        //         let winsize = data as *mut ConsoleWinSize;
-        //         unsafe {
-        //             *winsize = ConsoleWinSize::default();
-        //         }
-        //         Ok(0)
-        //     }
-        //     TCGETS | TIOCSPGRP => {
-        //         warn!("stderr TCGETS | TIOCSPGRP, pretend to be tty.");
-        //         // pretend to be tty
-        //         Ok(0)
-        //     }
-        //
-        //     TIOCGPGRP => {
-        //         warn!("stderr TIOCGPGRP, pretend to be have a tty process group.");
-        //         unsafe {
-        //             *(data as *mut u32) = 0;
-        //         }
-        //         Ok(0)
-        //     }
-        //     FIOCLEX => Ok(0),
-        //     _ => Err(AxError::Unsupported),
-        // }
+    fn ioctl(&self, request: usize, data: usize) -> AxResult<isize> {
+        match request {
+            TIOCGWINSZ => {
+                let winsize = data as *mut ConsoleWinSize;
+                unsafe {
+                    *winsize = ConsoleWinSize::default();
+                }
+                Ok(0)
+            }
+            TCGETS | TIOCSPGRP => {
+                warn!("stderr TCGETS | TIOCSPGRP, pretend to be tty.");
+                // pretend to be tty
+                Ok(0)
+            }
+
+            TIOCGPGRP => {
+                warn!("stderr TIOCGPGRP, pretend to be have a tty process group.");
+                unsafe {
+                    *(data as *mut u32) = 0;
+                }
+                Ok(0)
+            }
+            FIOCLEX => Ok(0),
+            _ => Err(AxError::Unsupported),
+        }
     }
 }

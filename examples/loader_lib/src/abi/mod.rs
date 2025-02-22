@@ -175,11 +175,12 @@ fn abi_timespec(ts: *mut TimeSpec) {
 /// `SYS_VFPRINTF: 5`
 #[unsafe(no_mangle)]
 unsafe extern "C" fn vfprintf(str: *const c_char, args: VaList) -> c_int {
-    unsafe {
-        let format = display(str, args);
-        print!("{}", format);
-        format.bytes_written()
-    }
+    unimplemented!();
+    //    unsafe {
+    //        let format = display(str, args);
+    //        print!("{}", format);
+    //        format.bytes_written()
+    //    }
 }
 
 /// `SYS_VSNPRINTF: 6`

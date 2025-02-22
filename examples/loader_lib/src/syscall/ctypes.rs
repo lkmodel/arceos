@@ -177,3 +177,70 @@ pub struct IoVec {
     /// length of the buffer
     pub len: usize,
 }
+
+bitflags! {
+    /// 指定 st_mode 的选项
+    pub struct StMode: u32 {
+        /// regular file
+        const S_IFREG = 1 << 15;
+        /// directory
+        const S_IFDIR = 1 << 14;
+        /// character device
+        const S_IFCHR = 1 << 13;
+        /// 是否设置 uid/gid/sticky
+        //const S_ISUID = 1 << 14;
+        //const S_ISGID = 1 << 13;
+        //const S_ISVTX = 1 << 12;
+        /// user-read permission
+        const S_IRUSR = 1 << 8;
+        /// user-write permission
+        const S_IWUSR = 1 << 7;
+        /// user-execute permission
+        const S_IXUSR = 1 << 6;
+        /// group-read permission
+        const S_IRGRP = 1 << 5;
+        /// group-write permission
+        const S_IWGRP = 1 << 4;
+        /// group-execute permission
+        const S_IXGRP = 1 << 3;
+        /// other-read permission
+        const S_IROTH = 1 << 2;
+        /// other-write permission
+        const S_IWOTH = 1 << 1;
+        /// other-execute permission
+        const S_IXOTH = 1 << 0;
+        /// exited-user-process status
+        const WIMTRACED = 1 << 1;
+        /// continued-process status
+        const WCONTINUED = 1 << 3;
+    }
+}
+/// 文件类型，输入 IFCHR / IFDIR / IFREG 等具体类型，
+/// 输出这些类型加上普遍的文件属性后得到的 mode 参数
+pub fn normal_file_mode(file_type: StMode) -> StMode {
+    file_type | StMode::S_IWUSR | StMode::S_IRUSR | StMode::S_IRGRP | StMode::S_IROTH
+}
+
+/// 对 futex 的操作
+pub enum FutexFlags {
+    /// 检查用户地址 uaddr 处的值。如果不是要求的值则等待 wake
+    Wait,
+    /// 唤醒最多 val 个在等待 uaddr 位置的线程。
+    Wake,
+    /// 将等待 uaddr 的线程移动到 uaddr2
+    Requeue,
+    /// 不支持的操作
+    Unsupported,
+}
+
+impl FutexFlags {
+    /// Create a FutexFlags from a i32 value
+    pub fn new(val: i32) -> Self {
+        match val & 0x7f {
+            0 => FutexFlags::Wait,
+            1 => FutexFlags::Wake,
+            3 => FutexFlags::Requeue,
+            _ => FutexFlags::Unsupported,
+        }
+    }
+}

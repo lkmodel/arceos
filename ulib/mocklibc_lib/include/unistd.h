@@ -74,10 +74,10 @@ int unlinkat(int, const char *, int);
 #define W_OK 2
 #define X_OK 1
 
-// int access(const char *, int);
+int access(const char *, int);
 // int faccessat(int, const char *, int, int);
 //
-// int chdir(const char *);
+int chdir(const char *);
 // int fchdir(int);
 // char *getcwd(char *, size_t);
 //
@@ -177,7 +177,7 @@ unsigned sleep(unsigned);
 // void endusershell(void);
 // char *getusershell(void);
 // int acct(const char *);
-// long syscall(long, ...);
+long syscall(long, ...);
 // int execvpe(const char *, char *const[], char *const[]);
 // int issetugid(void);
 // int getentropy(void *, size_t);

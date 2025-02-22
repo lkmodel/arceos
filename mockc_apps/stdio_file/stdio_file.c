@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/sendfile.h>
@@ -649,6 +650,7 @@ void test_openat()
     // 测试用例 1: 正常情况下打开一个有效的文件
     errno = 0; // 重置 errno
     fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_RDWR, 0644);
+    printf("CHECKPOINT");
     TEST_RESULT_ERRNO("openat valid file", fd >= 0, 0);
     if (fd >= 0)
         close(fd); // 清理
@@ -695,9 +697,190 @@ void test_openat()
     TEST_RESULT_ERRNO("openat permission denied", fd < 0, EACCES);
 }
 
+// // 测试函数
+// void test_faccessat()
+// {
+//     int fd;
+//     const char *testfile = "testfile_faccessat.txt";
+//
+//     // 测试用例 1: 正常情况下检查文件可访问性
+//     fd = open(testfile, O_CREAT | O_RDWR, 0644);
+//     TEST_RESULT_ERRNO("faccessat valid file", faccessat(AT_FDCWD, testfile, R_OK, 0) == 0, 0);
+//     close(fd);
+//
+//     // 测试用例 2: 检查文件的写权限
+//     TEST_RESULT_ERRNO("faccessat write permission", faccessat(AT_FDCWD, testfile, W_OK, 0) == 0,
+//     0);
+//
+//     // 测试用例 3: 检查文件的执行权限
+//     TEST_RESULT_ERRNO("faccessat execute permission", faccessat(AT_FDCWD, testfile, X_OK, 0) ==
+//     0,
+//                       0);
+//
+//     // 测试用例 4: 测试无效路径（应失败）
+//     errno = 0; // 重置 errno
+//     TEST_RESULT_ERRNO("faccessat invalid path",
+//                       faccessat(AT_FDCWD, "invalid_file.txt", R_OK, 0) < 0, ENOENT);
+//
+//     //  // 测试用例 5: 测试在只读文件系统上的写入（应失败）
+//     //  // 这里假设测试在只读文件系统上，需手动设置
+//     //  errno = 0; // 重置 errno
+//     //  TEST_RESULT("faccessat read-only filesystem",
+//     //              faccessat(AT_FDCWD, testfile, W_OK, 0) < 0, EROFS);
+//
+//     // 测试用例 6: 测试无效的 dirfd（应失败）
+//     errno = 0; // 重置 errno
+//     TEST_RESULT_ERRNO("faccessat invalid dirfd", faccessat(-1, testfile, R_OK, 0) < 0, EBADF);
+//
+//     // 测试用例 7: 测试无效的 flag（应失败）
+//     errno = 0; // 重置 errno
+//     TEST_RESULT_ERRNO("faccessat invalid flag", faccessat(AT_FDCWD, testfile, R_OK, -1) < 0,
+//                       EINVAL);
+//
+//     // 测试用例 8: 边界测试 - 检查长路径名（应失败）
+//     char long_path[PATH_MAX + 1];
+//     memset(long_path, 'a', sizeof(long_path) - 1);
+//     long_path[PATH_MAX] = '\0'; // 确保是一个超长路径
+//     errno = 0;                  // 重置 errno
+//     TEST_RESULT_ERRNO("faccessat long pathname", faccessat(AT_FDCWD, long_path, R_OK, 0) < 0,
+//                       ENAMETOOLONG);
+// }
+
+void test_chdir()
+{
+    // 测试用例 1: 正常情况下更改到有效目录
+    int dirfd;
+    dirfd = open(".", O_RDONLY);
+    mkdirat(dirfd, "testdir", 0755); // 创建测试目录
+    TEST_RESULT_ERRNO("chdir valid dir", chdir("testdir") == 0, 0);
+
+    // 测试用例 2: 测试再次更改到有效目录
+    TEST_RESULT_ERRNO("chdir valid dir again", chdir("../") == 0, 0);
+
+    // 测试用例 3: 测试无效目录（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("chdir invalid dir", chdir("invalid_dir") < 0, ENOENT);
+
+    // 测试用例 4: 测试非目录路径（应失败）
+    int fd = open("testfile.txt", O_CREAT | O_RDWR, 0644);
+    TEST_RESULT_ERRNO("chdir non-dir path", chdir("testfile.txt") < 0, ENOTDIR);
+    close(fd); // 清理
+
+    // 测试用例 5: 测试长路径名（应失败）
+    char long_path[PATH_MAX + 1];
+    memset(long_path, 'a', sizeof(long_path) - 1);
+    long_path[PATH_MAX] = '\0'; // 确保是一个超长路径
+    errno = 0;                  // 重置 errno
+    TEST_RESULT_ERRNO("chdir long pathname", chdir(long_path) < 0, ENAMETOOLONG);
+
+    // 测试用例 6: 测试符号链接循环（应失败）
+    // 此处需手动创建符号链接以测试循环（示例不包括创建符号链接的代码）
+    // errno = 0; // 重置 errno
+    // TEST_RESULT("chdir too many symlinks", chdir("symlink_to_self") < 0,
+    // ELOOP);
+
+    // 测试用例 7: 测试权限不足（应失败）
+    // 创建一个没有权限的目录并尝试更改到该目录
+    // FIXME: 出于某种原因，mkdirat创建出来的权限全是755
+    //    mkdirat(dirfd, "restricted_dir", 0000); // 创建无权限目录
+    //    errno = 0;                              // 重置 errno
+    //    TEST_RESULT_ERRNO("chdir restricted dir", chdir("restricted_dir") < 0, EACCES);
+
+    // 清理：删除测试目录
+    unlinkat(dirfd, "testdir", AT_REMOVEDIR);        // 删除新创建的目录
+    unlinkat(dirfd, "restricted_dir", AT_REMOVEDIR); // 删除新创建的目录
+    close(dirfd);
+}
+
+// 测试函数
+void test_chmod()
+{
+    const char *test_file = "testfile_chmod.txt";
+    mode_t new_mode = 0777;
+
+    // 测试用例 1: 正常情况下修改文件权限
+    int fd = openat(AT_FDCWD, test_file, O_CREAT | O_RDWR, 0755);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("chmod valid file", chmod(test_file, new_mode) == 0, 0);
+    close(fd);
+
+    // 测试用例 2: 重复调用 chmod
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("chmod valid file twice", chmod(test_file, new_mode) == 0, 0);
+
+    // 测试用例 3: 测试修改不存在的文件（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("chmod non-existent file", chmod("nonexistent.txt", new_mode) < 0, ENOENT);
+
+    // 测试用例 4: 测试无效的路径（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("chmod invalid path", chmod(NULL, new_mode) < 0, EFAULT);
+
+    // 测试用例 5: 测试只读文件系统（应失败）
+    // 这里需要在只读文件系统上测试，通常需要特定的环境
+    // TEST_RESULT("chmod read-only filesystem", chmod(test_file, new_mode) < 0,
+    // EROFS);
+
+    // 测试用例 6: 修改权限为只读（边界测试）
+    errno = 0;                                                               // 重置 errno
+    TEST_RESULT_ERRNO("chmod to read-only", chmod(test_file, 0444) == 0, 0); // 期望成功
+
+    //  // 测试用例 7: 修改权限为无效值（边界测试）
+    //  errno = 0; // 重置 errno
+    //  TEST_RESULT("chmod invalid mode", chmod(test_file, 07777777) < 0,
+    //              EINVAL); // 假设这里返回 EINVAL
+
+    // 清理：删除测试文件
+    unlinkat(fd, test_file, AT_REMOVEDIR); // 删除新创建的目录
+}
+
+// 测试函数
+void test_access()
+{
+    const char *test_file = "testfile_access.txt";
+    const char *nonexistent_file = "nonexistent_access.txt";
+    // FIX: 出于某种原因，open/openat似乎不能打开非755权限的文件。
+
+    // 测试用例 1: 正常情况下检查可读权限
+    int fd = openat(AT_FDCWD, test_file, O_CREAT | O_RDWR, 0777);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("access valid file read", access(test_file, R_OK) == 0, 0);
+    close(fd); // 清理
+
+    // 测试用例 2: 正常情况下检查写权限
+    fd = openat(AT_FDCWD, test_file, O_CREAT | O_RDWR, 0777);
+    chmod(test_file, 0111);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("access valid file write", access(test_file, W_OK) == 0, 0);
+    close(fd); // 清理
+
+    // 测试用例 3: 正常情况下检查执行权限
+    fd = openat(AT_FDCWD, test_file, O_CREAT | O_RDWR, 0777);
+    //  chmod(test_file, 0644);
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("access valid file execute", access(test_file, X_OK) < 0, EACCES);
+    close(fd); // 清理
+
+    // 测试用例 4: 测试不存在的文件（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("access non-existent file", access(nonexistent_file, R_OK) < 0, ENOENT);
+
+    // 测试用例 5: 测试对目录的可访问性
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("access directory", access(".", R_OK) == 0, 0);
+
+    // 测试用例 6: 测试无效的模式（应失败）
+    errno = 0; // 重置 errno
+    TEST_RESULT_ERRNO("access invalid mode", access(test_file, 0xFF) < 0, EINVAL);
+
+    // 清理测试文件
+    unlinkat(fd, test_file, AT_REMOVEDIR); // 删除新创建的目录
+}
+
 int main()
 {
     // 执行测试
+    printf("\ntest_openat\n");
     printf("\ntest_openat\n");
     test_openat();
     printf("\ntest_linkat\n");
@@ -719,11 +902,19 @@ int main()
     test_pread_pwrite();
     printf("test_dup\n");
     test_dup();
-    printf("test_dup3\n");
+    printf("\ntest_dup3\n");
     test_dup3();
-    printf("test_lseek\n");
+    printf("\ntest_lseek\n");
     test_lseek();
-    printf("test_sendfile\n");
+    printf("\ntest_sendfile\n");
     test_sendfile();
+    printf("\ntest_chdir\n");
+    test_chdir();
+    // FIX: 目前使用的fs系统尚不支持更改权限。
+    printf("\ntest_chmod; BUG\n");
+    test_chmod();
+    // FIX: 目前使用的fs系统尚不支持更改权限。
+    printf("\ntest_access BUG\n");
+    test_access();
     return 0;
 }

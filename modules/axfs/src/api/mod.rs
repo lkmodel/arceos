@@ -7,8 +7,6 @@ pub use self::dir::{DirBuilder, DirEntry, ReadDir};
 pub use self::file::{File, FileType, Metadata, OpenOptions, Permissions};
 
 use alloc::{string::String, vec::Vec};
-use axerrno::AxResult;
-use axfs_vfs::VfsNodeRef;
 use axio::{self as io, prelude::*};
 
 /// Returns an iterator over the entries within a directory.
@@ -88,14 +86,4 @@ pub fn remove_file(path: &str) -> io::Result<()> {
 /// This only works then the new path is in the same mounted fs.
 pub fn rename(old: &str, new: &str) -> io::Result<()> {
     crate::root::rename(old, new)
-}
-
-/// Check if a path exists.
-pub fn path_exists(path: &str) -> bool {
-    crate::root::lookup(None, path).is_ok()
-}
-
-/// Look up a file by a given path.
-pub fn lookup(path: &str) -> AxResult<VfsNodeRef> {
-    crate::root::lookup(None, path)
 }

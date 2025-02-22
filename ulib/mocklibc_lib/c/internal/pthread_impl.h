@@ -2,9 +2,9 @@
 #define _PTHREAD_IMPL_H
 
 #include "atomic.h"
-// #include "futex.h"
+#include "futex.h"
 /// #include "libc.h"
-// #include "syscall.h"
+#include "syscall.h"
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
@@ -174,23 +174,23 @@ pthread_t __pthread_self_impl();
 // hidden int __timedwait(volatile int *, int, clockid_t, const struct timespec *, int);
 // hidden int __timedwait_cp(volatile int *, int, clockid_t, const struct timespec *, int);
 // hidden void __wait(volatile int *, volatile int *, int, int);
-// static inline void __wake(volatile void *addr, int cnt, int priv)
-// {
-//     if (priv)
-//         priv = FUTEX_PRIVATE;
-//     if (cnt < 0)
-//         cnt = INT_MAX;
-//     __syscall(SYS_futex, addr, FUTEX_WAKE | priv, cnt) != -ENOSYS ||
-//         __syscall(SYS_futex, addr, FUTEX_WAKE, cnt);
-// }
-// static inline void __futexwait(volatile void *addr, int val, int priv)
-// {
-//     if (priv)
-//         priv = FUTEX_PRIVATE;
-//     __syscall(SYS_futex, addr, FUTEX_WAIT | priv, val, 0) != -ENOSYS ||
-//         __syscall(SYS_futex, addr, FUTEX_WAIT, val, 0);
-// }
-//
+static inline void __wake(volatile void *addr, int cnt, int priv)
+{
+    if (priv)
+        priv = FUTEX_PRIVATE;
+    if (cnt < 0)
+        cnt = INT_MAX;
+    __syscall(SYS_futex, addr, FUTEX_WAKE | priv, cnt) != -ENOSYS ||
+        __syscall(SYS_futex, addr, FUTEX_WAKE, cnt);
+}
+static inline void __futexwait(volatile void *addr, int val, int priv)
+{
+    if (priv)
+        priv = FUTEX_PRIVATE;
+    __syscall(SYS_futex, addr, FUTEX_WAIT | priv, val, 0) != -ENOSYS ||
+        __syscall(SYS_futex, addr, FUTEX_WAIT, val, 0);
+}
+
 // hidden void __acquire_ptc(void);
 // hidden void __release_ptc(void);
 // hidden void __inhibit_ptc(void);

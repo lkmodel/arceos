@@ -27,4 +27,7 @@ _Complex double __muldc3(double, double, double, double);
 _Complex float __mulsc3(float, float, float, float);
 _Complex long double __multc3(long double, long double, long double, long double);
 
+long double __floatunsitf(unsigned int i);
+unsigned int __fixunstfsi(long double a);
+
 #endif // !__HIDDEN_H

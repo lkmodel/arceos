@@ -361,3 +361,26 @@ impl From<usize> for OpenFlags {
         Self::from_bits_truncate(val as u32)
     }
 }
+
+/// IOCTL系统调用支持
+#[allow(missing_docs)]
+pub const TCGETS: usize = 0x5401;
+#[allow(missing_docs)]
+pub const TIOCGPGRP: usize = 0x540F;
+#[allow(missing_docs)]
+pub const TIOCSPGRP: usize = 0x5410;
+#[allow(missing_docs)]
+pub const TIOCGWINSZ: usize = 0x5413;
+#[allow(missing_docs)]
+pub const FIONBIO: usize = 0x5421;
+#[allow(missing_docs)]
+pub const FIOCLEX: usize = 0x5451;
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+/// the size of the console window
+pub struct ConsoleWinSize {
+    ws_row: u16,
+    ws_col: u16,
+    ws_xpixel: u16,
+    ws_ypixel: u16,
+}

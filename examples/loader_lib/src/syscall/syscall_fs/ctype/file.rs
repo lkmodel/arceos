@@ -1,7 +1,9 @@
 use crate::{
-    linux_env::axfs_ext::api::{FileIO, FileIOType, Kstat, OpenFlags, Read, Seek, SeekFrom, Write},
-    syscall::TimeSecs,
-    syscall::new_file,
+    linux_env::{
+        axfs_ext::api::{FileIO, FileIOType, Kstat, OpenFlags, Read, Seek, SeekFrom, Write},
+        linux_fs::link::get_link_count,
+    },
+    syscall::{StMode, TimeSecs, ctypes::normal_file_mode, new_file},
 };
 use alloc::{
     collections::BTreeMap,
@@ -11,12 +13,9 @@ use alloc::{
     vec::Vec,
 };
 use axerrno::AxResult;
-use axfs::api::File;
+use axfs::{BLOCK_SIZE, api::File};
 use axlog::debug;
 use axsync::Mutex;
-
-// use crate::{StMode, TimeSecs, normal_file_mode};
-// use axprocess::link::get_link_count;
 
 pub static INODE_NAME_MAP: Mutex<BTreeMap<String, u64>> = Mutex::new(BTreeMap::new());
 
@@ -32,8 +31,8 @@ pub struct FileDesc {
     pub stat: Mutex<FileMetaData>,
 }
 
-/// 文件在os中运行时的可变信息
-/// TODO: 暂时全部记为usize
+/// 文件在OS中运行时的可变信息
+/// TODO: 暂时全部记为`usize`
 pub struct FileMetaData {
     /// 最后一次访问时间
     pub atime: TimeSecs,
@@ -80,8 +79,7 @@ impl FileIO for FileDesc {
         self.flags.lock().writable()
     }
     fn executable(&self) -> bool {
-        unimplemented!();
-        // self.file.lock().executable()
+        self.file.lock().executable()
     }
 
     fn get_type(&self) -> FileIOType {
@@ -92,50 +90,49 @@ impl FileIO for FileDesc {
     }
 
     fn truncate(&self, len: usize) -> AxResult<()> {
-        unimplemented!();
-        // self.file.lock().truncate(len)
+        self.file.lock().truncate(len)
     }
 
     fn get_stat(&self) -> AxResult<Kstat> {
-        unimplemented!();
-        // let file = self.file.lock();
-        // let attr = file.get_attr()?;
-        // let stat = self.stat.lock();
-        // let inode_map = INODE_NAME_MAP.lock();
-        // let inode_number = if let Some(inode_number) = inode_map.get(&self.path) {
-        //     *inode_number
-        // } else {
-        //     // return Err(axerrno::AxError::NotFound);
-        //     // Now the file exists but it wasn't opened
-        //     drop(inode_map);
-        //     new_inode(self.path.clone())?;
-        //     let inode_map = INODE_NAME_MAP.lock();
-        //     assert!(inode_map.contains_key(&self.path));
-        //     let number = *(inode_map.get(&self.path).unwrap());
-        //     drop(inode_map);
-        //     number
-        // };
-        // let kstat = Kstat {
-        //     st_dev: 1,
-        //     st_ino: inode_number,
-        //     st_mode: normal_file_mode(StMode::S_IFREG).bits() | 0o644,
-        //     st_nlink: get_link_count(&(self.path.as_str().to_string())) as _,
-        //     st_uid: 0,
-        //     st_gid: 0,
-        //     st_rdev: 0,
-        //     _pad0: 0,
-        //     st_size: attr.size(),
-        //     st_blksize: axfs::BLOCK_SIZE as u32,
-        //     _pad1: 0,
-        //     st_blocks: attr.blocks(),
-        //     st_atime_sec: stat.atime.tv_sec as isize,
-        //     st_atime_nsec: stat.atime.tv_nsec as isize,
-        //     st_mtime_sec: stat.mtime.tv_sec as isize,
-        //     st_mtime_nsec: stat.mtime.tv_nsec as isize,
-        //     st_ctime_sec: stat.ctime.tv_sec as isize,
-        //     st_ctime_nsec: stat.ctime.tv_nsec as isize,
-        // };
-        // Ok(kstat)
+        let file = self.file.lock();
+        let attr = file.get_attr()?;
+        let stat = self.stat.lock();
+        let inode_map = INODE_NAME_MAP.lock();
+        let inode_number = if let Some(inode_number) = inode_map.get(&self.path) {
+            *inode_number
+        } else {
+            // ```
+            // return Err(axerrno::AxError::NotFound);
+            // Now the file exists but it wasn't opened
+            drop(inode_map);
+            new_inode(self.path.clone())?;
+            let inode_map = INODE_NAME_MAP.lock();
+            assert!(inode_map.contains_key(&self.path));
+            let number = *(inode_map.get(&self.path).unwrap());
+            drop(inode_map);
+            number
+        };
+        let kstat = Kstat {
+            st_dev: 1,
+            st_ino: inode_number,
+            st_mode: normal_file_mode(StMode::S_IFREG).bits() | 0o644,
+            st_nlink: get_link_count(&(self.path.as_str().to_string())) as _,
+            st_uid: 0,
+            st_gid: 0,
+            st_rdev: 0,
+            _pad0: 0,
+            st_size: attr.size(),
+            st_blksize: BLOCK_SIZE as u32,
+            _pad1: 0,
+            st_blocks: attr.blocks(),
+            st_atime_sec: stat.atime.tv_sec as isize,
+            st_atime_nsec: stat.atime.tv_nsec as isize,
+            st_mtime_sec: stat.mtime.tv_sec as isize,
+            st_mtime_nsec: stat.mtime.tv_nsec as isize,
+            st_ctime_sec: stat.ctime.tv_sec as isize,
+            st_ctime_nsec: stat.ctime.tv_nsec as isize,
+        };
+        Ok(kstat)
     }
 
     fn set_status(&self, flags: OpenFlags) -> bool {
@@ -207,6 +204,7 @@ pub fn new_fd(path: String, flags: OpenFlags) -> AxResult<FileDesc> {
     debug!("Into function new_fd, path: {}", path);
     let file = new_file(path.as_str(), &flags)?;
     debug!("Get new file!");
+    // ```
     // let file_size = file.metadata()?.len();
 
     let fd = FileDesc::new(path.as_str(), Arc::new(Mutex::new(file)), flags);

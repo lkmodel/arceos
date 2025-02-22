@@ -77,7 +77,7 @@ lldiv_t lldiv(long long, long long);
 
 // int mblen(const char *, size_t);
 // int mbtowc(wchar_t *__restrict, const char *__restrict, size_t);
-// int wctomb(char *, wchar_t);
+int wctomb(char *, wchar_t);
 // size_t mbstowcs(wchar_t *__restrict, const char *__restrict, size_t);
 // size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
 
@@ -125,7 +125,7 @@ lldiv_t lldiv(long long, long long);
 // int unlockpt(int);
 // char *ptsname(int);
 // char *l64a(long);
-// long a64l(const char *);
+long a64l(const char *);
 // void setkey(const char *);
 // double drand48(void);
 // double erand48(unsigned short[3]);

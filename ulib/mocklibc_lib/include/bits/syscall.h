@@ -326,7 +326,8 @@
 // #define SYS_inotify_init1 26
 // #define SYS_inotify_add_watch 27
 // #define SYS_inotify_rm_watch 28
-// #define SYS_ioctl 29
+// FIX: 未支持
+#define SYS_ioctl 29
 // #define SYS_ioprio_set 30
 // #define SYS_ioprio_get 31
 // #define SYS_flock 32
@@ -344,12 +345,12 @@
 // #define SYS_truncate 45
 // #define SYS_ftruncate 46
 // #define SYS_fallocate 47
-// #define SYS_faccessat 48
-// #define SYS_chdir 49
+#define SYS_faccessat 48
+#define SYS_chdir     49
 // #define SYS_fchdir 50
 // #define SYS_chroot 51
 // #define SYS_fchmod 52
-// #define SYS_fchmodat 53
+#define SYS_fchmodat 53
 // #define SYS_fchownat 54
 // #define SYS_fchown 55
 #define SYS_openat 56
@@ -394,7 +395,7 @@
 // #define SYS_waitid 95
 // #define SYS_set_tid_address 96
 // #define SYS_unshare 97
-// #define SYS_futex 98
+#define SYS_futex 98
 // #define SYS_set_robust_list 99
 // #define SYS_get_robust_list 100
 // #define SYS_nanosleep 101

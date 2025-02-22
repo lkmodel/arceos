@@ -7,7 +7,11 @@ use axstd::println;
 
 use axlog::debug;
 
-use elf::{ElfBytes, abi::PT_LOAD, endian::LittleEndian};
+use elf::{
+    ElfBytes,
+    abi::{PT_LOAD, STB_GLOBAL, STB_WEAK, STT_FUNC, STT_OBJECT, STT_TLS},
+    endian::LittleEndian,
+};
 
 use crate::elf::{LoadError, verify_elf_header};
 
@@ -78,7 +82,7 @@ pub fn load_elf() -> u64 {
             debug!("Load app to mem space");
             load_dyn(&app_elf, app_elf_slice, app_code, 0);
 
-            modify_plt(&app_elf, &lib_elf);
+            modify_plt_for_app(&app_elf, &lib_elf);
             modify_plt_for_lib(&app_elf, &lib_elf);
 
             println!("Lib elf size: 0x{:x}", lib_elf_size);
@@ -243,10 +247,11 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                     APP_START + app_sym.st_value as usize;
 
                 debug!(
-                    "[plt] @0x{:x} value 0x{:x} st_name {}",
+                    "[Lib-plt ENTRY] @0x{:x} value 0x{:x} type {} st_name {}",
                     LIB_START as u64 + lib_rela.r_offset,
                     APP_START + app_sym.st_value as usize,
-                    lib_rela_name
+                    lib_sym.st_symtype(),
+                    lib_rela_name,
                 );
                 if app_sym.st_value == 0 {
                     panic!("Bad st_value");
@@ -257,10 +262,11 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                 *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
                     LIB_START + lib_sym.st_value as usize;
                 debug!(
-                    "[plt] @0x{:x} value 0x{:x} st_name {}",
+                    "[Lib-plt] @0x{:x} value 0x{:x} type {} st_name {}",
                     LIB_START as u64 + lib_rela.r_offset,
                     LIB_START + lib_sym.st_value as usize,
-                    lib_rela_name
+                    lib_sym.st_symtype(),
+                    lib_rela_name,
                 );
                 if lib_sym.st_value == 0 {
                     panic!("Bad st_value");
@@ -278,29 +284,46 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
         .expect("Failed to parse .rela.dyn section");
 
     for lib_rela in lib_relas {
+        debug!("rela {:?}", lib_rela);
         let lib_sym = lib_dynsym_table
             .get(lib_rela.r_sym as usize)
             .expect("Failed to get symbol");
         let lib_rela_name = lib_dynstr_table
             .get(lib_sym.st_name as usize)
             .expect("Failed to get symbol name");
-        unsafe {
-            *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
-                LIB_START + lib_sym.st_value as usize;
+        let lib_sym_type = lib_sym.st_symtype();
+        if lib_sym_type == STB_GLOBAL || lib_sym_type == STB_WEAK {
+            unsafe {
+                *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
+                    LIB_START + lib_sym.st_value as usize;
+            }
             debug!(
-                "[GOT] name {} @0x{:x} modify value 0x{:x}",
-                lib_rela_name,
+                "[Lib-GOT modify] @0x{:x} modify value 0x{:x} type {} name({}) {}",
                 LIB_START as u64 + lib_rela.r_offset,
-                LIB_START + lib_sym.st_value as usize
+                LIB_START + lib_sym.st_value as usize,
+                lib_sym_type,
+                lib_sym.st_name,
+                lib_rela_name,
             );
             if lib_sym.st_value == 0 {
                 panic!("Bad st_value");
             }
+        } else {
+            unsafe {
+                *((LIB_START as u64 + lib_rela.r_offset) as *mut usize) =
+                    LIB_START + lib_sym.st_value as usize;
+            }
+            debug!(
+                "[Lib-GOT Skip] @0x{:x} type {} {:?}",
+                LIB_START as u64 + lib_rela.r_offset,
+                lib_sym_type,
+                lib_sym,
+            );
         }
     }
 }
 
-fn modify_plt(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
+fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
     debug!("modify for run code");
     let (app_dynsym_table, app_dynstr_table) = app_elf
         .dynamic_symbol_table()
@@ -352,10 +375,12 @@ fn modify_plt(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>
             *((APP_START as u64 + app_rela.r_offset) as *mut usize) =
                 LIB_START + lib_sym.st_value as usize;
             debug!(
-                "[plt] @0x{:x} value 0x{:x} st_name {}",
+                "[App-plt] @0x{:x} value 0x{:x} app-type {} lib-type {} st_name {}",
                 APP_START as u64 + app_rela.r_offset,
                 LIB_START + lib_sym.st_value as usize,
-                app_rela_name
+                app_sym.st_symtype(),
+                lib_sym.st_symtype(),
+                app_rela_name,
             );
             if lib_sym.st_value == 0 {
                 panic!("Bad st_value");

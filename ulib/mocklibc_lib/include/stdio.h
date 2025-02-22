@@ -90,6 +90,7 @@ int rename(const char *, const char *);
 
 // --------------------------------------
 
+int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 int printf(const char *__restrict, ...);
 int sprintf(char *__restrict, const char *__restrict, ...);
 int snprintf(char *__restrict, size_t, const char *__restrict, ...);

@@ -1,11 +1,6 @@
 #ifndef _FEATURES_H
 #define _FEATURES_H
 
-// FIXME: Remove these to /src(c)/include/features.h
-#define weak                 __attribute__((__weak__))
-#define hidden               __attribute__((__visibility__("hidden")))
-#define weak_alias(old, new) extern __typeof(old) new __attribute__((__weak__, __alias__(#old)))
-
 #if defined(_ALL_SOURCE) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE 1
 #endif
@@ -14,9 +9,10 @@
 #define _BSD_SOURCE 1
 #endif
 
-#if !defined(_POSIX_SOURCE) && !defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE) && \
-    !defined(_GNU_SOURCE) && !defined(_BSD_SOURCE) && !defined(__STRICT_ANSI__)
-#define _BSD_SOURCE   1
+#if !defined(_POSIX_SOURCE) && !defined(_POSIX_C_SOURCE) \
+ && !defined(_XOPEN_SOURCE) && !defined(_GNU_SOURCE) \
+ && !defined(_BSD_SOURCE) && !defined(__STRICT_ANSI__)
+#define _BSD_SOURCE 1
 #define _XOPEN_SOURCE 700
 #endif
 
@@ -39,6 +35,6 @@
 #define _Noreturn
 #endif
 
-#define __REDIR(x, y) __typeof__(x) x __asm__(#y)
+#define __REDIR(x,y) __typeof__(x) x __asm__(#y)
 
 #endif

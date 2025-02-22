@@ -4,18 +4,29 @@ version = "0.1.0"
 authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
+[features]
+default = ["fs", "driver-ramdisk"]
+fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
+alloc = ["axalloc", "axruntime/alloc"]
+# TODO: 添加"axruntime/paging", 修正PAGE_FAULT
+# paging = ["alloc", "axhal/paging", "axruntime/paging"]
+paging = ["alloc", "axhal/paging"]
+
+driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
+
 [dependencies]
 # `ArceOS` modules
 axstd = { workspace = true, features = ["alloc"] }
 axlog = { workspace = true }
-axhal = { workspace = true, features = ["paging"] }
+axhal = { workspace = true }
 axtask = { workspace = true }
-axalloc = { workspace = true }
 axsync = { workspace = true, features = ["multitask"] }
-axfs = { workspace = true, features = ["default", "use-ramdisk"] }
+axfs = { workspace = true, features = ["default"] }
 arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
-axruntime = { workspace = true, features = ["fs"] }
-axdriver = { workspace = true, features = ["block", "ramdisk"]}
+axruntime = { workspace = true }
+
+axdriver = { workspace = true, optional = true }
+axalloc = { workspace = true , optional = true }
 
 # Other crates
 elf = { version = "0.7.4", default-features = false }
