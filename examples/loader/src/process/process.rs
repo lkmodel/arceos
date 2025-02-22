@@ -126,7 +126,7 @@ impl Process {
         let mut task_inner = TaskInner::new(
             move || {
                 // 设置用户程序入口点
-                unsafe { user_entry(entry.as_usize(), page_table_token, usp); }
+                unsafe { user_entry(entry.as_usize(), usp); }
             },
             path.to_string(),
             TASK_STACK_SIZE,
@@ -212,59 +212,62 @@ impl Process {
         // 建立父子关系
         self.children.lock().push(Arc::clone(&child_process));
 
+
         // 创建子进程的任务
         let mut child_inner = TaskInner::new(
             move || {
-                // 通知父进程可以继续执行
-                FORK_WAIT.notify_all(true);
+                info!("Jump to sub_task ...");
 
                 let current = current();
-                let sub_kstack_top = current.kernel_stack_top().unwrap().as_usize();
-                let sub_sp = sub_kstack_top - stack_data.len();
+                let sub_sp = current.as_task_ref().inner().ctx().sp;
+                let sbu_s0 = current.as_task_ref().inner().ctx().s0;
 
-                info!("sub_sp : {:x?}, sub_kstack_top: {:x?}, stack_size : {:x?}", sub_sp, sub_kstack_top, sub_kstack_top - sub_sp);
+                info!("{:?}", current.as_task_ref().inner().ctx());
 
-                // let offset = sub_sp - user_ctx.sp;
+                // 通知父进程可以继续执行
+                FORK_WAIT.notify_all(false);
 
-                // info!("offset : {:x?}", offset);
-            
-                // // 复制栈内容
-                // unsafe {
-                //     core::ptr::copy_nonoverlapping(
-                //         stack_data.as_ptr(),
-                //         sub_sp as *mut u8,
-                //         stack_data.len()
-                //     );
-                // }
-
-                // unsafe {
-                //     core::arch::asm!(
-                //         "mv sp, {}",
-                //         "mv s0, {}",
-                //         // 设置子进程的返回值
-                //         "li a0, 0",
-                //         // 设置返回地址并跳转
-                //         "mv t0, {}",          // 保存跳转地址到临时寄存器
-                //         "jr t0",   // 跳转执行
-                //         in(reg) sub_sp,
-                //         in(reg) (user_ctx.s0 + offset + 48),
-                //         in(reg) user_ctx.ra
-                //     );
-                // }
+                unsafe {
+                    core::arch::asm!(
+                        "mv sp, {}",
+                        "mv s0, {}",
+                        // 设置子进程的返回值
+                        "li a0, 0",
+                        // 设置返回地址并跳转
+                        "mv t0, {}",    // 保存跳转地址到临时寄存器
+                        "jr t0",        // 跳转执行
+                        in(reg) sub_sp,
+                        in(reg) sbu_s0,
+                        in(reg) user_ctx.ra
+                    );
+                }
             },
             format!("task_{}", new_pid),
             TASK_STACK_SIZE,
         );
 
+        let sub_kstack_top = child_inner.kernel_stack_top().unwrap().as_usize();
+        let sub_sp = sub_kstack_top - stack_data.len();
+        info!("sub_sp : {:x?}, sub_kstack_top: {:x?}, stack_size : {:x?}", sub_sp, sub_kstack_top, sub_kstack_top - sub_sp);
+        
+        // 复制栈内容
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                stack_data.as_ptr(),
+                sub_sp as *mut u8,
+                stack_data.len()
+            );
+        }
+
         #[cfg(target_arch = "riscv64")]
         {
             child_inner.ctx_mut().set_page_table_root(page_table_root);
             // 复制 user_ctx 中的字段到 child_inner 的上下文中
-            // child_inner.ctx_mut().sp = user_ctx.sp;
+            child_inner.ctx_mut().sp = sub_sp;
             child_inner.ctx_mut().tp = user_ctx.tp;
 
             // 对于其他字段，也需要一一对应赋值，如下：
-            child_inner.ctx_mut().s0 = user_ctx.s0;
+            child_inner.ctx_mut().s0 = sub_sp + 48;
             child_inner.ctx_mut().s1 = user_ctx.s1;
             child_inner.ctx_mut().s2 = user_ctx.s2;
             child_inner.ctx_mut().s3 = user_ctx.s3;
@@ -414,7 +417,7 @@ impl Process {
     }
 }
 
-pub unsafe extern "C" fn user_entry(entry: usize, _page_table_token: PhysAddr, _usp: VirtAddr) -> () {
+pub unsafe extern "C" fn user_entry(entry: usize, _usp: VirtAddr) -> () {
     info!("entry: 0x{:x}", entry);
     println!("Jump to task ...");
 

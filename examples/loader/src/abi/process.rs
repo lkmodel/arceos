@@ -6,7 +6,7 @@ use crate::process::current_process;
 static mut SAVED_TASK_CTX: UserContext = UserContext::new();
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UserContext {
     pub ra: usize,
     pub sp: usize,
