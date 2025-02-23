@@ -1,31 +1,27 @@
 //! 规定进程控制块内容
 extern crate alloc;
-use alloc::string::ToString;
-use alloc::sync::Arc;
-use alloc::{format, vec};
-use alloc::vec::Vec;
-use alloc::{collections::BTreeMap, string::String};
+use alloc::vec;
+use alloc::{collections::BTreeMap, format, string::{String, ToString}, sync::Arc, vec::Vec};
+use axsync::Mutex;
+use axstd::println;
 use axerrno::{AxError, AxResult};
 use axlog::{debug, info, trace};
 use axmm::{new_kernel_aspace, AddrSpace, Backend};
-use axstd::println;
-use axsync::Mutex;
-use axtask::{current, spawn_task, yield_now, AxTaskRef, TaskId, TaskInner};
+use axtask::{current, spawn_task, AxTaskRef, TaskId, TaskInner};
 use memory_addr::{PhysAddr, VirtAddr, PAGE_SIZE_4K};
-use crate::abi::UserContext;
-use crate::config::{KERNEL_PROCESS_ID, TASK_STACK_SIZE};
-use crate::fs::{FileIO, OpenFlags};
-use crate::process::load_user_app;
-use crate::process::stdio::{Stderr, Stdin, Stdout};
-use crate::process::task_ext::TaskExt;
-use crate::{FORK_WAIT, MAIN_WAIT_QUEUE, PARENT_WAIT_QUEUE};
 use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
 
+use crate::abi::UserContext;
+use crate::process::load_user_app;
+use crate::fs::{FileIO, OpenFlags};
+use crate::process::task_ext::TaskExt;
+use crate::process::stdio::{Stderr, Stdin, Stdout};
 use crate::process::fd_manager::{FdManager, FdTable};
+use crate::{FORK_WAIT, MAIN_WAIT_QUEUE, PROCESS_COUNT};
+use crate::config::{KERNEL_PROCESS_ID, TASK_STACK_SIZE};
 
 /// Map from task id to arc pointer of task
 pub static TID2TASK: Mutex<BTreeMap<u64, AxTaskRef>> = Mutex::new(BTreeMap::new());
-
 /// Map from process id to arc pointer of process
 pub static PID2PC: Mutex<BTreeMap<u64, Arc<Process>>> = Mutex::new(BTreeMap::new());
 
@@ -143,6 +139,9 @@ impl Process {
         new_process.tasks.lock().push(Arc::clone(&new_task));
         PID2PC.lock().insert(new_process.pid(), Arc::clone(&new_process));
 
+        // 添加到进程计数
+        PROCESS_COUNT.fetch_add(1, Ordering::SeqCst);
+
         MAIN_WAIT_QUEUE.wait();
     }
 
@@ -212,7 +211,6 @@ impl Process {
         // 建立父子关系
         self.children.lock().push(Arc::clone(&child_process));
 
-
         // 创建子进程的任务
         let mut child_inner = TaskInner::new(
             move || {
@@ -224,8 +222,8 @@ impl Process {
 
                 info!("{:?}", current.as_task_ref().inner().ctx());
 
-                // 通知父进程可以继续执行
-                FORK_WAIT.notify_all(false);
+                // 在子进程中
+                FORK_WAIT.notify_one(false);
 
                 unsafe {
                     core::arch::asm!(
@@ -281,7 +279,7 @@ impl Process {
             child_inner.ctx_mut().s11 = user_ctx.s11;
         }
 
-        info!("child_inner.ctx() : {:x?}", child_inner.ctx());
+        info!("{:x?}", child_inner.ctx());
 
         // 设置任务扩展信息
         child_inner.init_task_ext(TaskExt::init(child_process.pid(), true));
@@ -294,15 +292,13 @@ impl Process {
         TID2TASK.lock().insert(child_task.id().as_u64(), Arc::clone(&child_task));
         PID2PC.lock().insert(child_process.pid(), Arc::clone(&child_process));
         
-        // 父进程等待子进程开始执行
-        FORK_WAIT.wait();
-
-        // 在最后添加这个 - 通知主进程父进程已完成
-        PARENT_WAIT_QUEUE.notify_one(false);
+        // 添加到进程计数
+        PROCESS_COUNT.fetch_add(1, Ordering::SeqCst);
 
         info!("Fork success! Parent={}, Child={}", self.pid(), new_pid);
 
-        yield_now();
+        // 父进程等待子进程开始执行
+        FORK_WAIT.wait();
 
         Ok(new_pid)
     }

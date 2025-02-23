@@ -21,10 +21,13 @@ use axtask::{current, exit, WaitQueue};
 use elf::PLASH_START;
 use process::Process;
 
-// 在全局添加一个 WaitQueue
-pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new();
-pub static PARENT_WAIT_QUEUE: WaitQueue = WaitQueue::new();
-pub static FORK_WAIT: WaitQueue = WaitQueue::new();
+// 全局等待队列
+pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new();    // main线程等待所有进程结束
+pub static FORK_WAIT: WaitQueue = WaitQueue::new();          // 父进程等待子进程开始执行 
+
+// 进程计数
+pub static PROCESS_COUNT: AtomicUsize = AtomicUsize::new(0);
+
 // 保存原始内核的 GP 和应用的 GP
 pub static APP_GP: AtomicUsize = AtomicUsize::new(0);
 pub static KERNEL_GP: AtomicUsize = AtomicUsize::new(0);

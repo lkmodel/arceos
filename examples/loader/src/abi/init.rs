@@ -11,7 +11,7 @@ use printf_compat::{format, output};
 
 use alloc::string::String;
 
-use crate::{config::KERNEL_PROCESS_ID, process::current_process, save_gp, switch_to_gp, APP_GP, FORK_WAIT, KERNEL_GP, MAIN_WAIT_QUEUE, PARENT_WAIT_QUEUE};
+use crate::{process::current_process, save_gp, switch_to_gp, APP_GP, KERNEL_GP, MAIN_WAIT_QUEUE, PROCESS_COUNT};
 
 type MainFn = unsafe extern "C" fn(argc: i32, argv: *mut *mut i8, envp: *mut *mut i8) -> i32;
 
@@ -59,23 +59,16 @@ pub extern "C" fn abi_init() {
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_fini() {
 	info!("[ABI:Fini]: abi_fini");
-    // // 通知等待的 main 进程
-    // MAIN_WAIT_QUEUE.notify_one(false);
-    // FORK_WAIT.notify_one(false);
-    // 获取当前进程
-    let current = current_process();
-    let pid = current.pid();
-    
-    // 检查是否为子进程
-    if current.parent.load(Ordering::Relaxed) != 2 {
-        // 是子进程，通知父进程
-        info!("Child process {} exiting, notifying parent", pid);
-        PARENT_WAIT_QUEUE.notify_one(false);
-    } else {
-        // 是父进程，通知主线程
-        info!("Parent process {} exiting, notifying main thread", pid);
-        MAIN_WAIT_QUEUE.notify_one(false);
+
+    // 减少进程计数并检查
+    let remaining = PROCESS_COUNT.fetch_sub(1, Ordering::SeqCst);
+    if remaining <= 0 {  // 注意这里是<=1因为fetch_sub返回的是减少前的值
+        // 如果进程数量为1，说明是最后一个进程
+        info!("All processes finished");
+        MAIN_WAIT_QUEUE.notify_all(true);
     }
+
+    info!("Exit process");
 }
 
 #[unsafe(no_mangle)]

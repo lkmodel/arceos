@@ -12,8 +12,7 @@ use init::{
 };
 
 use mem::{abi_calloc, abi_free, abi_malloc, abi_realloc};
-use process::{abi_fork, abi_fork_entry};
-// use process::abi_fork_entry;
+use process::abi_fork_entry;
 use string::abi_strlen;
 use thread::{
     abi_pthread_create, abi_pthread_exit, abi_pthread_join, abi_pthread_mutex_destroy, abi_pthread_mutex_init, abi_pthread_mutex_lock, abi_pthread_mutex_unlock, abi_pthread_self
