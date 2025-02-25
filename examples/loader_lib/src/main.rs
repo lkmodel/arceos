@@ -2,11 +2,12 @@
 #![feature(stmt_expr_attributes)]
 #![no_std]
 #![no_main]
+#![feature(f128)]
+
 extern crate arceos_posix_api;
 extern crate axstd;
 extern crate axstd as std;
 extern crate cty;
-extern crate printf_compat;
 use std::println;
 extern crate alloc;
 
@@ -22,6 +23,8 @@ mod init;
 
 mod linux_env;
 mod syscall;
+
+mod runtime_func;
 
 #[unsafe(no_mangle)]
 fn main() {

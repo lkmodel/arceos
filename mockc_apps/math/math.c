@@ -510,7 +510,7 @@ int main()
     test_nan();
     test_nearbyint();
     test_nextafter();
-    // test_nexttoward(); // NOTE: Not implement yet.
+    test_nexttoward();
     test_pow();
     test_remainder();
     test_remquo();

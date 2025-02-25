@@ -22,8 +22,7 @@ LIB_DIR = lib
 
 STATIC_LIB = $(LIB_DIR)/libmock.a
 DYNAMIC_LIB = $(LIB_DIR)/libmock.so
-LIBSRC += $(wildcard $(SRC_DIR)/__file/*.c)
-LIBSRC += $(wildcard $(SRC_DIR)/__hidden/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/__rt_float/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/complex/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/ctype/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/errno/*.c)
@@ -61,8 +60,7 @@ INC_DIRS := $(subst $(SRC_DIR)/,-I./c/,$(wildcard $(SRC_DIR)/*/))
 INTERNAL_INCLUDE += -I./arch/riscv64/
 INTERNAL_INCLUDE += $(INC_DIRS)
 INTERNAL_INCLUDE += -I./include
-CFLAGS = -nostartfiles -ffreestanding -nostdlib -mcmodel=medany $(INTERNAL_INCLUDE) -fPIC -pie
-
+CFLAGS = -nostartfiles -ffreestanding -nostdlib -mcmodel=medany $(INTERNAL_INCLUDE) -fPIC -pie -nostdinc
 
 
 # 编译选项
@@ -103,9 +101,9 @@ $(DYNAMIC_LIB): $(LIB_OBJ) $(CRT_OBJ)
 	@$(CC) $(CFLAGS) $(LDFLAGS) -shared -fPIE -o $@ $^
 
 makedir:
-	mkdir -p $(OBJ_DIR)
-	mkdir -p $(LIB_DIR)
-	mkdir -p $(SUBDIRS)
+	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(LIB_DIR)
+	@mkdir -p $(SUBDIRS)
 
 clean:
 	@rm -rf $(LIB_DIR)

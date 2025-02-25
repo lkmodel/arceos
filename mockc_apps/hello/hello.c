@@ -17,6 +17,7 @@ int main()
     printf("[Test printf] %s\n", 0 == printf("HEX: %0x\n", 0x55) ? "BAD!" : "PASS!");
 
     puts("[Test sprintf]\n");
+    putchar('f');
     char str1[20];
     int i;
     sprintf(str1, "%p\n", &i);

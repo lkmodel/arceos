@@ -69,8 +69,8 @@ int __towrite(FILE *);
 // #if defined(__PIC__) && (100*__GNUC__+__GNUC_MINOR__ >= 303)
 // __attribute__((visibility("protected")))
 // #endif
-// int __overflow(FILE *, int), __uflow(FILE *);
-// 
+int __overflow(FILE *, int), __uflow(FILE *);
+ 
 // hidden int __fseeko(FILE *, off_t, int);
 // hidden int __fseeko_unlocked(FILE *, off_t, int);
 // hidden off_t __ftello(FILE *);
@@ -78,13 +78,13 @@ int __towrite(FILE *);
 size_t __fwritex(const unsigned char *, size_t, FILE *);
 // hidden int __putc_unlocked(int, FILE *);
 // 
-// hidden FILE *__fdopen(int, const char *);
-// hidden int __fmodeflags(const char *);
+hidden FILE *__fdopen(int, const char *);
+hidden int __fmodeflags(const char *);
 // 
-// hidden FILE *__ofl_add(FILE *f);
-// hidden FILE **__ofl_lock(void);
-// hidden void __ofl_unlock(void);
-// 
+hidden FILE *__ofl_add(FILE *f);
+hidden FILE **__ofl_lock(void);
+hidden void __ofl_unlock(void);
+
 // struct __pthread;
 // hidden void __register_locked_file(FILE *, struct __pthread *);
 // hidden void __unlist_locked_file(FILE *);
@@ -99,12 +99,12 @@ size_t __fwritex(const unsigned char *, size_t, FILE *);
 
 // #define getc_unlocked(f) \
 // 	( ((f)->rpos != (f)->rend) ? *(f)->rpos++ : __uflow((f)) )
-// 
-// #define putc_unlocked(c, f) \
-// 	( (((unsigned char)(c)!=(f)->lbf && (f)->wpos!=(f)->wend)) \
-// 	? *(f)->wpos++ = (unsigned char)(c) \
-// 	: __overflow((f),(unsigned char)(c)) )
-// 
+ 
+#define putc_unlocked(c, f) \
+	( (((unsigned char)(c)!=(f)->lbf && (f)->wpos!=(f)->wend)) \
+	? *(f)->wpos++ = (unsigned char)(c) \
+	: __overflow((f),(unsigned char)(c)) )
+
 // /* Caller-allocated FILE * operations */
 // hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
 // hidden int __fclose_ca(FILE *);

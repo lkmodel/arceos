@@ -1,10 +1,7 @@
-#include <mocklibc.h>
 #include <stdio.h>
+#include "putc.h"
 
-void putchar(char c)
+int putchar(int c)
 {
-    typedef void (*FnABI)(char c);
-    long *abi_ptr = (long *)(abi_entry + 8 * ABI_PUTCHAR);
-    FnABI func = (FnABI)(*abi_ptr);
-    return func(c);
+	return do_putc(c, stdout);
 }

@@ -30,7 +30,7 @@ axalloc = { workspace = true , optional = true }
 
 # Other crates
 elf = { version = "0.7.4", default-features = false }
-printf-compat = { version = "0.1.1", default-features = false }
+# printf-compat = { version = "0.1.1", default-features = false }
 axio = { version = "0.1", features = ["alloc"] }
 cty = "0.2.2"
 axerrno = "0.1.0"

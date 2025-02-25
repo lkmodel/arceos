@@ -3,13 +3,13 @@
 
 #include "atomic.h"
 #include "futex.h"
-/// #include "libc.h"
+#include "libc.h"
 #include "syscall.h"
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
 // #include <signal.h>
-// #include <sys/mman.h>
+#include <sys/mman.h>
 
 #include "pthread_arch.h"
 
