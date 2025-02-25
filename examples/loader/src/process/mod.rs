@@ -1,11 +1,8 @@
 //! This module provides the process management API for the operating system.
 
 mod api;
-mod stdio;
 mod process;
 mod task_ext;
-mod fd_manager;
-mod context;
 pub mod flags;
 
 pub use api::*;

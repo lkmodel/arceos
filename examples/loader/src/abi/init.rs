@@ -26,8 +26,9 @@ pub extern "C" fn abi_libc_start_main(
     _init: usize,
     _fini: usize,
 ) {
-    unsafe { 
+    unsafe {
         save_gp(&APP_GP);
+        info!("Save app GP");
         switch_to_gp(&KERNEL_GP);
     }
 
@@ -48,7 +49,24 @@ pub extern "C" fn abi_libc_start_main(
         main(argc, argv, core::ptr::null_mut());
     }
 
+    info!("abi_fini : 0x{:x}", abi_fini as usize);
+
     abi_fini();
+
+    let mut pc: usize;
+    let mut ra: usize;
+
+    unsafe {
+        core::arch::asm!(
+            // 获取当前 PC
+            "auipc {}, 0",  // 将当前 PC 值加载到寄存器中
+            "mv {}, ra",
+            out(reg) pc,
+            out(reg) ra,
+        );
+    }
+    
+    info!("Current PC: 0x{:x}, ra: 0x{:x}", pc, ra);
 }
 
 #[unsafe(no_mangle)]
@@ -62,13 +80,27 @@ pub extern "C" fn abi_fini() {
 
     // 减少进程计数并检查
     let remaining = PROCESS_COUNT.fetch_sub(1, Ordering::SeqCst);
-    if remaining <= 0 {  // 注意这里是<=1因为fetch_sub返回的是减少前的值
+    info!("Remaining processes: {}", remaining);
+    if remaining <= 1 {  // 注意这里是 <=1 因为fetch_sub返回的是减少前的值
         // 如果进程数量为1，说明是最后一个进程
         info!("All processes finished");
         MAIN_WAIT_QUEUE.notify_all(true);
     }
 
-    info!("Exit process");
+    let mut pc: usize;
+    let mut ra: usize;
+
+    unsafe {
+        core::arch::asm!(
+            // 获取当前PC
+            "auipc {}, 0",  // 将当前PC值加载到寄存器中
+            "mv {}, ra",
+            out(reg) pc,
+            out(reg) ra,
+        );
+    }
+    
+    info!("xxxxCurrent PC: 0x{:x}, ra: {:x}", pc, ra);
 }
 
 #[unsafe(no_mangle)]

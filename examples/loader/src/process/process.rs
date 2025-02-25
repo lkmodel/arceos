@@ -4,50 +4,36 @@ use alloc::vec;
 use alloc::{collections::BTreeMap, format, string::{String, ToString}, sync::Arc, vec::Vec};
 use axsync::Mutex;
 use axstd::println;
-use axerrno::{AxError, AxResult};
-use axlog::{debug, info, trace};
+use axerrno::AxResult;
+use axlog::{info, trace};
 use axmm::{new_kernel_aspace, AddrSpace, Backend};
-use axtask::{current, spawn_task, AxTaskRef, TaskId, TaskInner};
+use axtask::{current, spawn_task, AxTaskRef, TaskInner};
 use memory_addr::{PhysAddr, VirtAddr, PAGE_SIZE_4K};
-use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
+use core::sync::atomic::{AtomicU64, Ordering};
 
-use crate::abi::UserContext;
 use crate::process::load_user_app;
-use crate::fs::{FileIO, OpenFlags};
 use crate::process::task_ext::TaskExt;
-use crate::process::stdio::{Stderr, Stdin, Stdout};
-use crate::process::fd_manager::{FdManager, FdTable};
-use crate::{FORK_WAIT, MAIN_WAIT_QUEUE, PROCESS_COUNT};
-use crate::config::{KERNEL_PROCESS_ID, TASK_STACK_SIZE};
+use crate::{UserContext, FORK_WAIT, MAIN_WAIT_QUEUE, PROCESS_COUNT};
+use crate::config::TASK_STACK_SIZE;
 
 /// Map from task id to arc pointer of task
 pub static TID2TASK: Mutex<BTreeMap<u64, AxTaskRef>> = Mutex::new(BTreeMap::new());
 /// Map from process id to arc pointer of process
 pub static PID2PC: Mutex<BTreeMap<u64, Arc<Process>>> = Mutex::new(BTreeMap::new());
 
-const FD_LIMIT_ORIGIN: usize = 1025;
-
 #[allow(unused)]
 /// The process control block
 pub struct Process {
     /// 进程号
-    pub pid: u64,
+    pub pid: AtomicU64,
     /// 父进程号 
     pub parent: AtomicU64,
     /// 子进程
     pub children: Mutex<Vec<Arc<Process>>>,
     /// 所管理的线程
     pub tasks: Mutex<Vec<AxTaskRef>>,
-    /// 文件描述符管理器
-    pub fd_manager: FdManager,
-    /// 进程状态
-    pub is_zombie: AtomicBool,
-    /// 退出状态码
-    pub exit_code: AtomicI32,
     /// 地址空间
     pub memory_set: Mutex<Arc<Mutex<AddrSpace>>>,
-    /// 可执行文件路径
-    pub file_path: Mutex<String>,
     /// the page table token of the process which the task belongs to
     pub page_table_token: AtomicU64,
 }
@@ -56,12 +42,8 @@ impl Process {
     /// 创建一个新的进程
     #[allow(unused)]
     pub fn new(
-        pid: u64,
         parent: u64,
         memory_set: Mutex<Arc<Mutex<AddrSpace>>>,
-        cwd: Arc<Mutex<String>>,
-        mask: Arc<AtomicI32>,
-        fd_table: FdTable,
     ) -> Self {
         let page_table_token = { 
             let ms = memory_set.lock();
@@ -70,15 +52,11 @@ impl Process {
         };
 
         Self {
-            pid,
+            pid: AtomicU64::new(0),
             parent: AtomicU64::new(parent),
             children: Mutex::new(Vec::new()),
             tasks: Mutex::new(Vec::new()),
-            is_zombie: AtomicBool::new(false),
-            exit_code: AtomicI32::new(0),
             memory_set,
-            fd_manager: FdManager::new(fd_table, cwd, mask, FD_LIMIT_ORIGIN),
-            file_path:   Mutex::new(String::new()),
             page_table_token,
         }
     }
@@ -94,30 +72,10 @@ impl Process {
         
         let (entry, usp) = load_user_app(&mut memory_set, "fork", elf_file).unwrap();
     
-        let new_fd_table: FdTable = Arc::new(Mutex::new(vec![
-            Some(Arc::new(Stdin { flags: Mutex::new(OpenFlags::empty()) })),
-            Some(Arc::new(Stdout { flags: Mutex::new(OpenFlags::empty()) })),
-            Some(Arc::new(Stderr { flags: Mutex::new(OpenFlags::empty()) })),
-        ]));
-    
         let mut new_process = Arc::new(Self::new(
-            TaskId::new().as_u64(),
-            KERNEL_PROCESS_ID,
+            current().id().as_u64(),
             Mutex::new(Arc::new(Mutex::new(memory_set))),
-            Arc::new(Mutex::new(String::from("/").into())),
-            Arc::new(AtomicI32::new(0o022)),
-            new_fd_table,
         ));
-    
-        if !path.starts_with('/') {
-            let cwd = new_process.get_cwd();
-            assert!(cwd.ends_with('/'));
-            path = format!("{}{}", cwd, path);
-        }
-    
-        new_process.set_file_path(path.clone());
-        
-        let task_ext = TaskExt::init(new_process.pid(), true);
 
         let mut task_inner = TaskInner::new(
             move || {
@@ -131,13 +89,19 @@ impl Process {
         #[cfg(target_arch = "riscv64")]
         task_inner.ctx_mut().set_page_table_root(page_table_token);
 
+        let proc_id = task_inner.id().as_u64();
+
+        new_process.pid.store(proc_id, Ordering::Release);
+
+        let task_ext = TaskExt::init(proc_id, true);
+
         task_inner.init_task_ext(task_ext);
 
         let new_task = spawn_task(task_inner);
 
         TID2TASK.lock().insert(new_task.id().as_u64(), Arc::clone(&new_task));
         new_process.tasks.lock().push(Arc::clone(&new_task));
-        PID2PC.lock().insert(new_process.pid(), Arc::clone(&new_process));
+        PID2PC.lock().insert(proc_id, Arc::clone(&new_process));
 
         // 添加到进程计数
         PROCESS_COUNT.fetch_add(1, Ordering::SeqCst);
@@ -145,8 +109,13 @@ impl Process {
         MAIN_WAIT_QUEUE.wait();
     }
 
-    pub fn fork(&self, stack_data: &'static [u8], user_ctx: UserContext) -> AxResult<u64> {
-        // 1. 创建新的地址空间
+    pub fn fork(
+        &self, 
+        stack_data: &'static [u8],
+        #[allow(unused)]
+        user_ctx: UserContext
+    ) -> AxResult<u64> {
+        // 创建新的地址空间
         let parent_memory_set = self.memory_set.lock();
         let parent_ms = parent_memory_set.lock();
 
@@ -195,18 +164,10 @@ impl Process {
         info!("page_table_root: 0x{:x}", page_table_root);
 
         // 创建新进程控制块
-        let new_pid = TaskId::new().as_u64();
         let child_process = Arc::new(Process::new(
-            new_pid,
             self.pid(),
             Mutex::new(Arc::new(Mutex::new(child_memory_set))),
-            Arc::clone(&self.fd_manager.cwd),
-            Arc::clone(&self.fd_manager.umask),
-            Arc::clone(&self.fd_manager.fd_table),
         ));
-
-        // 继承父进程属性
-        child_process.set_file_path(self.get_file_path());
 
         // 建立父子关系
         self.children.lock().push(Arc::clone(&child_process));
@@ -215,32 +176,32 @@ impl Process {
         let mut child_inner = TaskInner::new(
             move || {
                 info!("Jump to sub_task ...");
-
-                let current = current();
-                let sub_sp = current.as_task_ref().inner().ctx().sp;
-                let sbu_s0 = current.as_task_ref().inner().ctx().s0;
-
-                info!("{:?}", current.as_task_ref().inner().ctx());
-
+                
                 // 在子进程中
-                FORK_WAIT.notify_one(false);
+                FORK_WAIT.notify_one(true);
 
-                unsafe {
-                    core::arch::asm!(
-                        "mv sp, {}",
-                        "mv s0, {}",
-                        // 设置子进程的返回值
-                        "li a0, 0",
-                        // 设置返回地址并跳转
-                        "mv t0, {}",    // 保存跳转地址到临时寄存器
-                        "jr t0",        // 跳转执行
-                        in(reg) sub_sp,
-                        in(reg) sbu_s0,
-                        in(reg) user_ctx.ra
-                    );
+                #[cfg(target_arch = "riscv64")]
+                {
+                    let current = current();
+                    let sub_sp = current.as_task_ref().inner().ctx().sp;
+                    let sbu_s0 = current.as_task_ref().inner().ctx().s0;
+
+                    unsafe {
+                        let mut pc: usize;
+                        core::arch::asm!(
+                            // 获取当前PC
+                            "auipc {}, 0",  // 将当前PC值加载到寄存器中
+                            out(reg) pc,
+                        );
+                    
+                        info!("Current PC: 0x{:x}", pc);
+
+                        info!("{:x?}", current.ctx());
+                        fork_entry(sub_sp, sbu_s0, user_ctx.ra);
+                    }
                 }
             },
-            format!("task_{}", new_pid),
+            format!("child"),
             TASK_STACK_SIZE,
         );
 
@@ -257,19 +218,27 @@ impl Process {
             );
         }
 
+        // let mut pc: usize;
+
+        // unsafe {
+        //     core::arch::asm!(
+        //         // 获取当前PC
+        //         "auipc {}, 0",  // 将当前PC值加载到寄存器中
+        //         out(reg) pc,
+        //     );
+        // }
+        
+        // info!("Current PC: 0x{:x}", pc);
+
         #[cfg(target_arch = "riscv64")]
         {
             child_inner.ctx_mut().set_page_table_root(page_table_root);
-            // 复制 user_ctx 中的字段到 child_inner 的上下文中
             child_inner.ctx_mut().sp = sub_sp;
-            child_inner.ctx_mut().tp = user_ctx.tp;
-
-            // 对于其他字段，也需要一一对应赋值，如下：
             child_inner.ctx_mut().s0 = sub_sp + 48;
             child_inner.ctx_mut().s1 = user_ctx.s1;
             child_inner.ctx_mut().s2 = user_ctx.s2;
             child_inner.ctx_mut().s3 = user_ctx.s3;
-            child_inner.ctx_mut().s4 = user_ctx.s4;
+            child_inner.ctx_mut().s4 = user_ctx.s4; 
             child_inner.ctx_mut().s5 = user_ctx.s5;
             child_inner.ctx_mut().s6 = user_ctx.s6;
             child_inner.ctx_mut().s7 = user_ctx.s7;
@@ -277,12 +246,15 @@ impl Process {
             child_inner.ctx_mut().s9 = user_ctx.s9;
             child_inner.ctx_mut().s10 = user_ctx.s10;
             child_inner.ctx_mut().s11 = user_ctx.s11;
+            child_inner.ctx_mut().tp = user_ctx.tp;
         }
 
         info!("{:x?}", child_inner.ctx());
 
+        let child_pid = child_inner.id().as_u64();
+
         // 设置任务扩展信息
-        child_inner.init_task_ext(TaskExt::init(child_process.pid(), true));
+        child_inner.init_task_ext(TaskExt::init(child_pid, true));
         
         // 创建子进程任务
         let child_task = spawn_task(child_inner);
@@ -295,121 +267,31 @@ impl Process {
         // 添加到进程计数
         PROCESS_COUNT.fetch_add(1, Ordering::SeqCst);
 
-        info!("Fork success! Parent={}, Child={}", self.pid(), new_pid);
+        info!("Fork success! Parent={}, Child={}", self.pid(), child_pid);
 
         // 父进程等待子进程开始执行
         FORK_WAIT.wait();
 
-        Ok(new_pid)
+        Ok(child_pid)
     }
 }
 
 impl Process {
-    /// get the process id
-    #[allow(unused)]
+    /// get the process ID
     pub fn pid(&self) -> u64 {
-        self.pid
+        self.pid.load(Ordering::Acquire)
     }
-    
+
     /// get the page table token
     #[allow(unused)]
     pub fn page_table_token(&self) -> u64 {
         self.page_table_token.load(Ordering::Acquire) 
-    }
-    /// get the parent process id
-    #[allow(unused)]
-    pub fn get_parent(&self) -> u64 {
-        self.parent.load(Ordering::Acquire)
-    }
-
-    /// set the parent process id
-    #[allow(unused)]
-    pub fn set_parent(&self, parent: u64) {
-        self.parent.store(parent, Ordering::Release)
-    }
-
-    /// get the exit code of the process
-    #[allow(unused)]
-    pub fn get_exit_code(&self) -> i32 {
-        self.exit_code.load(Ordering::Acquire)
-    }
-    
-    /// set the exit code of the process
-    #[allow(unused)]
-    pub fn set_exit_code(&self, exit_code: i32) {
-        self.exit_code.store(exit_code, Ordering::Release)
-    }
-    
-    /// whether the process is a zombie process
-    #[allow(unused)]
-    pub fn get_zombie(&self) -> bool {
-        self.is_zombie.load(Ordering::Acquire)
-    }
-
-    /// set the process as a zombie process
-    #[allow(unused)]
-    pub fn set_zombie(&self, status: bool) {
-        self.is_zombie.store(status, Ordering::Release)
-    }
-    
-    /// set the executable file path of the process
-    #[allow(unused)]
-    pub fn set_file_path(&self, path: String) {
-        let mut file_path = self.file_path.lock();
-        *file_path = path;
     }
 
     /// set the page table token of the process
     #[allow(unused)]
     pub fn set_page_table_token(&self, token: u64) {
         self.page_table_token.store(token, Ordering::Release);
-    }
-    
-    /// get the executable file path of the process
-    #[allow(unused)]
-    pub fn get_file_path(&self) -> String {
-        (*self.file_path.lock()).clone()
-    }
-
-    /// 若进程运行完成，则获取其返回码
-    /// 若正在运行（可能上锁或没有上锁），则返回None
-    #[allow(unused)]
-    pub fn get_code_if_exit(&self) -> Option<i32> {
-        if self.get_zombie() {
-            return Some(self.get_exit_code());
-        }
-        None
-    }
-}
-
-/// 与文件相关的进程方法
-impl Process {
-    /// 为进程分配一个文件描述符
-    #[allow(unused)]
-    pub fn alloc_fd(&self, fd_table: &mut Vec<Option<Arc<dyn FileIO>>>) -> AxResult<usize> {
-        for (i, fd) in fd_table.iter().enumerate() {
-            if fd.is_none() {
-                return Ok(i);
-            }
-        }
-        if fd_table.len() >= self.fd_manager.get_limit() as usize {
-            debug!("fd table is full");
-            return Err(AxError::StorageFull);
-        }
-        fd_table.push(None);
-        Ok(fd_table.len() - 1)
-    }
-
-    /// 获取当前进程的工作目录
-    #[allow(unused)]
-    pub fn get_cwd(&self) -> String {
-        self.fd_manager.cwd.lock().clone().to_string()
-    }
-
-    /// Set the current working directory of the process
-    #[allow(unused)]
-    pub fn set_cwd(&self, cwd: String) {
-        *self.fd_manager.cwd.lock() = cwd.into();
     }
 }
 
@@ -424,5 +306,18 @@ pub unsafe extern "C" fn user_entry(entry: usize, _usp: VirtAddr) -> () {
             run_start = in(reg) entry,
             clobber_abi("C"),
         )
+    }
+}
+
+#[naked]
+#[allow(unused)]
+pub unsafe extern "C" fn fork_entry(sp: usize, s0: usize, ra: usize) -> () {
+    unsafe {
+        core::arch::naked_asm!(
+            "mv sp, a0",   // 第一个参数作为 sp
+            "mv s0, a1",   // 第二个参数作为 s0
+            "li a0, 0",    // 子进程返回值为 0
+            "jr a2",       // 跳转到第三个参数（ra）
+        );
     }
 }

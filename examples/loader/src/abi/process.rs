@@ -1,43 +1,9 @@
-use core::{fmt::Display, slice::from_raw_parts};
-use crate::process::current_process;
+use core::slice::from_raw_parts;
+use crate::{process::current_process, UserContext};
 use axlog::{error, info, trace};
 use axtask::current;
 
 static mut SAVED_TASK_CTX: UserContext = UserContext::new();
-
-#[repr(C)]
-#[derive(Debug, Clone)]
-pub struct UserContext {
-    pub ra: usize,
-    pub sp: usize,
-    pub s0: usize,
-    pub s1: usize,
-    pub s2: usize,
-    pub s3: usize,
-    pub s4: usize,
-    pub s5: usize,
-    pub s6: usize,
-    pub s7: usize,
-    pub s8: usize,
-    pub s9: usize,
-    pub s10: usize,
-    pub s11: usize,
-    pub tp: usize,
-}
-
-impl UserContext {
-    pub const fn new() -> Self {
-        unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
-    }
-}
-
-impl Display for UserContext {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "UserContext {{ ra: 0x{:x}, sp: 0x{:x}, s0: 0x{:x}, s1: 0x{:x}, s2: 0x{:x}, s3: 0x{:x}, s4: 0x{:x}, s5: 0x{:x}, s6: 0x{:x}, s7: 0x{:x}, s8: 0x{:x}, s9: 0x{:x}, s10: 0x{:x}, s11: 0x{:x}, tp: 0x{:x} }}",
-            self.ra, self.sp, self.s0, self.s1, self.s2, self.s3, self.s4, self.s5, self.s6, self.s7, self.s8, self.s9, self.s10, self.s11, self.tp
-        )
-    }
-}
 
 #[naked]
 #[unsafe(no_mangle)]
@@ -78,6 +44,22 @@ pub unsafe extern "C" fn abi_fork_entry() -> i32 {
 pub unsafe extern "C" fn abi_fork(task_ctx: UserContext) -> i32 {
     info!("[ABI:Process] Fork a new process!");
     info!("TaskContext: {:x?}", task_ctx);
+
+    let mut pc: usize;
+
+    unsafe {
+        core::arch::asm!(
+            // 获取当前PC
+            "auipc {}, 0",  // 将当前PC值加载到寄存器中
+            out(reg) pc,
+        );
+    }
+    
+    info!("Current PC: 0x{:x}", pc);
+    // 获取 abi_fork_entry 的地址
+    let entry_addr = abi_fork_entry as usize;
+    info!("abi_fork_entry address: 0x{:x}", entry_addr);
+
     let current = current();
     let kernel_top = current.as_task_ref().inner().kernel_stack_top().unwrap();
     let stack_size = kernel_top.as_usize() - task_ctx.sp;

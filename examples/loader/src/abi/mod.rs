@@ -18,8 +18,6 @@ use thread::{
     abi_pthread_create, abi_pthread_exit, abi_pthread_join, abi_pthread_mutex_destroy, abi_pthread_mutex_init, abi_pthread_mutex_lock, abi_pthread_mutex_unlock, abi_pthread_self
 };
 
-pub use process::UserContext;
-
 const SYS_HELLO: usize = 1;
 const SYS_PUTCHAR: usize = 2;
 const SYS_EXIT: usize = 3;

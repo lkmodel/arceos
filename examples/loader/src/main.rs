@@ -9,10 +9,9 @@ extern crate alloc;
 mod abi;
 mod config;
 mod elf;
-mod fs;
 mod process;
 
-use core::{slice::from_raw_parts, sync::atomic::{AtomicUsize, Ordering}};
+use core::{fmt::Display, slice::from_raw_parts, sync::atomic::{AtomicUsize, Ordering}};
 
 use alloc::string::ToString;
 use axlog::info;
@@ -114,4 +113,38 @@ pub unsafe fn current_gp() -> usize {
 
 pub unsafe fn get_saved_gp(gp: &AtomicUsize) -> usize {
     gp.load(Ordering::SeqCst)
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct UserContext {
+    pub ra: usize,
+    pub sp: usize,
+    pub s0: usize,
+    pub s1: usize,
+    pub s2: usize,
+    pub s3: usize,
+    pub s4: usize,
+    pub s5: usize,
+    pub s6: usize,
+    pub s7: usize,
+    pub s8: usize,
+    pub s9: usize,
+    pub s10: usize,
+    pub s11: usize,
+    pub tp: usize,
+}
+
+impl UserContext {
+    pub const fn new() -> Self {
+        unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
+    }
+}
+
+impl Display for UserContext {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "UserContext {{ ra: 0x{:x}, sp: 0x{:x}, s0: 0x{:x}, s1: 0x{:x}, s2: 0x{:x}, s3: 0x{:x}, s4: 0x{:x}, s5: 0x{:x}, s6: 0x{:x}, s7: 0x{:x}, s8: 0x{:x}, s9: 0x{:x}, s10: 0x{:x}, s11: 0x{:x}, tp: 0x{:x} }}",
+            self.ra, self.sp, self.s0, self.s1, self.s2, self.s3, self.s4, self.s5, self.s6, self.s7, self.s8, self.s9, self.s10, self.s11, self.tp
+        )
+    }
 }
