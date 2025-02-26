@@ -2,7 +2,7 @@ use axlog::{debug, info};
 use axstd::{
     print, println, process::exit, thread::sleep
 };
-use axtask::current;
+use axtask::{current, TaskExtRef};
 
 use core::{
     ffi::{c_char, c_int}, mem, slice, str, sync::atomic::Ordering, time::Duration
@@ -10,9 +10,9 @@ use core::{
 
 use printf_compat::{format, output};
 
-use alloc::string::String;
+use alloc::{string::String, sync::Arc};
 
-use crate::{process::{current_process, PID2PC, TID2TASK}, save_gp, switch_to_gp, APP_GP, KERNEL_GP, PROCESS_COUNT};
+use crate::{process::{current_process, PID2PC, TID2TASK}, save_gp, switch_to_gp, APP_GP, KERNEL_GP, MAIN_WAIT_QUEUE, PROCESS_COUNT};
 
 type MainFn = unsafe extern "C" fn(argc: i32, argv: *mut *mut i8, envp: *mut *mut i8) -> i32;
 
@@ -83,9 +83,13 @@ pub extern "C" fn abi_fini() {
     let remaining = PROCESS_COUNT.fetch_sub(1, Ordering::SeqCst) - 1;
     info!("Remaining processes: {}", remaining);
     
-    // 获取当前进程ID
-    let current_process = current_process();
-    let pid = current_process.pid();
+    let current_task = current();
+
+    info!("Current task: {:?}", current_task.id());
+
+    let pid = &current_task.task_ext().get_process_id();
+
+    info!("Current task: {:?}", pid);
     
     // 获取当前任务
     let current_task = current();
@@ -93,53 +97,49 @@ pub extern "C" fn abi_fini() {
     
     if remaining == 0 {
         info!("All processes finished");
+        MAIN_WAIT_QUEUE.notify_one(false);
     }
     
-    // 在安全清理前确保所有资源不再被访问
-    // 防止后续代码访问已释放的任务上下文
     {
-        // 清理进程资源
-        if let Some(process) = PID2PC.lock().get(&pid) {
-            // 从进程任务列表中移除当前任务
-            let mut tasks = process.tasks.lock();
-            tasks.retain(|t| t.id().as_u64() != task_id);
-            
-            // 若为进程的最后一个任务，清理进程资源
-            if tasks.is_empty() {
-                // 从父进程的子进程列表中移除
-                let parent_id = process.parent.load(Ordering::Acquire);
-                if let Some(parent) = PID2PC.lock().get(&parent_id) {
-                    let mut parent_children = parent.children.lock();
-                    parent_children.retain(|c| c.pid() != pid);
-                }
-                
-                // 安全释放地址空间
-                let _ = process.memory_set.lock();
-                
-                // 从全局表中移除进程
-                drop(tasks); // 释放锁，防止死锁
-                PID2PC.lock().remove(&pid);
-            }
-        }
+        // 先查找进程，但不要持有PID2PC的锁
+        let process_to_clean = {
+            let pid_map = PID2PC.lock();
+            pid_map.get(&pid).cloned()
+        };
         
-        // 从全局表中移除任务
-        TID2TASK.lock().remove(&task_id);
+        // // 如果找到进程，处理它
+        // if let Some(process) = process_to_clean {
+        //     // 从进程任务列表中移除当前任务
+        //     let empty_tasks = {
+        //         let mut tasks = process.tasks.lock();
+        //         tasks.retain(|t| t.id().as_u64() != task_id);
+        //         tasks.is_empty()
+        //     };
+            
+        //     // 若为进程的最后一个任务，清理进程资源
+        //     if empty_tasks {
+        //         // 从父进程的子进程列表中移除
+        //         let parent_id = process.parent.load(Ordering::Acquire);
+                
+        //         // 获取父进程但不持有 PID2PC 锁
+        //         let parent_to_update = {
+        //             let pid_map = PID2PC.lock();
+        //             pid_map.get(&parent_id).cloned()
+        //         };
+                
+        //         if let Some(parent) = parent_to_update {
+        //             let mut parent_children = parent.children.lock();
+        //             parent_children.retain(|c| c.pid() != *pid);
+        //         }
+                
+        //         // 从全局表中移除进程（现在没有持有PID2PC锁）
+        //         PID2PC.lock().remove(&pid);
+        //     }
+        // }
+        
+        // // 从全局表中移除任务
+        // TID2TASK.lock().remove(&task_id);
     }
-
-    let mut pc: usize;
-    let mut ra: usize;
-
-    unsafe {
-        core::arch::asm!(
-            // 获取当前PC
-            "auipc {}, 0",  // 将当前PC值加载到寄存器中
-            "mv {}, ra",
-            out(reg) pc,
-            out(reg) ra,
-        );
-    }
-    
-    info!("xxxxCurrent PC: 0x{:x}, ra: {:x}", pc, ra);
 }
 
 #[unsafe(no_mangle)]

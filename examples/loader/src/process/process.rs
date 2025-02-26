@@ -18,6 +18,7 @@ use crate::config::TASK_STACK_SIZE;
 
 /// Map from task id to arc pointer of task
 pub static TID2TASK: Mutex<BTreeMap<u64, AxTaskRef>> = Mutex::new(BTreeMap::new());
+
 /// Map from process id to arc pointer of process
 pub static PID2PC: Mutex<BTreeMap<u64, Arc<Process>>> = Mutex::new(BTreeMap::new());
 
@@ -311,7 +312,7 @@ pub unsafe extern "C" fn user_entry(entry: usize, _usp: VirtAddr) -> () {
 
 #[naked]
 #[allow(unused)]
-pub unsafe extern "C" fn fork_entry(sp: usize, s0: usize, ra: usize) -> () {
+pub unsafe extern "C" fn fork_entry(sp: usize, s0: usize, ra: usize) {
     unsafe {
         core::arch::naked_asm!(
             "mv sp, a0",   // 第一个参数作为 sp

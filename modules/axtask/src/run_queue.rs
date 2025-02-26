@@ -380,6 +380,8 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
                 WAIT_FOR_EXIT.current_ref_mut_raw().notify_one(false);
             }
 
+            trace!("task exit: {} done", curr.id_name());
+
             // Schedule to next task.
             self.inner.resched();
         }
@@ -529,14 +531,15 @@ impl AxRunQueue {
             !axhal::arch::irqs_enabled(),
             "IRQs must be disabled during scheduling"
         );
+        
+        info!("context switch: {}", prev_task.id_name());
+        info!("context switch: {}", next_task.id_name());
 
-        // info!("prev_task: {:x?}, next_task: {:x?}", prev_task.ctx(), next_task.ctx());
-
-        trace!(
-            "context switch: {} -> {}",
-            prev_task.id_name(),
-            next_task.id_name()
-        );
+        // trace!(
+        //     "context switch: {} -> {}",
+        //     prev_task.id_name(),
+        //     next_task.id_name()
+        // );
         #[cfg(feature = "preempt")]
         next_task.set_preempt_pending(false);
         next_task.set_state(TaskState::Running);
