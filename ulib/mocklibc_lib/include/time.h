@@ -53,8 +53,8 @@ clock_t clock(void);
 time_t time(time_t *);
 double difftime(time_t, time_t);
 // time_t mktime(struct tm *);
-// size_t strftime(char *__restrict, size_t, const char *__restrict, const struct tm *__restrict);
-// struct tm *gmtime(const time_t *);
+size_t strftime(char *__restrict, size_t, const char *__restrict, const struct tm *__restrict);
+struct tm *gmtime(const time_t *);
 // struct tm *localtime(const time_t *);
 // char *asctime(const struct tm *);
 // char *ctime(const time_t *);
@@ -70,38 +70,38 @@ double difftime(time_t, time_t);
 // size_t strftime_l(char *__restrict, size_t, const char *__restrict, const struct tm *__restrict,
 //                   locale_t);
 
-// struct tm *gmtime_r(const time_t *__restrict, struct tm *__restrict);
+struct tm *gmtime_r(const time_t *__restrict, struct tm *__restrict);
 // struct tm *localtime_r(const time_t *__restrict, struct tm *__restrict);
 // char *asctime_r(const struct tm *__restrict, char *__restrict);
 // char *ctime_r(const time_t *, char *);
 //
 // void tzset(void);
-//
-// struct itimerspec {
-//     struct timespec it_interval;
-//     struct timespec it_value;
-// };
 
-// #define CLOCK_REALTIME           0
-// #define CLOCK_MONOTONIC          1
-// #define CLOCK_PROCESS_CPUTIME_ID 2
-// #define CLOCK_THREAD_CPUTIME_ID  3
-// #define CLOCK_MONOTONIC_RAW      4
-// #define CLOCK_REALTIME_COARSE    5
-// #define CLOCK_MONOTONIC_COARSE   6
-// #define CLOCK_BOOTTIME           7
-// #define CLOCK_REALTIME_ALARM     8
-// #define CLOCK_BOOTTIME_ALARM     9
-// #define CLOCK_SGI_CYCLE          10
-// #define CLOCK_TAI                11
-//
-// #define TIMER_ABSTIME 1
+struct itimerspec {
+    struct timespec it_interval;
+    struct timespec it_value;
+};
 
-// int nanosleep(const struct timespec *, struct timespec *);
+#define CLOCK_REALTIME           0
+#define CLOCK_MONOTONIC          1
+#define CLOCK_PROCESS_CPUTIME_ID 2
+#define CLOCK_THREAD_CPUTIME_ID  3
+#define CLOCK_MONOTONIC_RAW      4
+#define CLOCK_REALTIME_COARSE    5
+#define CLOCK_MONOTONIC_COARSE   6
+#define CLOCK_BOOTTIME           7
+#define CLOCK_REALTIME_ALARM     8
+#define CLOCK_BOOTTIME_ALARM     9
+#define CLOCK_SGI_CYCLE          10
+#define CLOCK_TAI                11
+
+#define TIMER_ABSTIME 1
+
+int nanosleep(const struct timespec *, struct timespec *);
 // int clock_getres(clockid_t, struct timespec *);
-// int clock_gettime(clockid_t, struct timespec *);
+int clock_gettime(clockid_t, struct timespec *);
 // int clock_settime(clockid_t, const struct timespec *);
-// int clock_nanosleep(clockid_t, int, const struct timespec *, struct timespec *);
+int clock_nanosleep(clockid_t, int, const struct timespec *, struct timespec *);
 // int clock_getcpuclockid(pid_t, clockid_t *);
 //
 // struct sigevent;

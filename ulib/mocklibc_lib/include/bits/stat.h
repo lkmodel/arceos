@@ -1,4 +1,4 @@
-typedef struct stat {
+struct stat {
     dev_t st_dev;
     ino_t st_ino;
     mode_t st_mode;
@@ -15,4 +15,4 @@ typedef struct stat {
     struct timespec st_mtim;
     struct timespec st_ctim;
     unsigned __unused[2];
-} stat;
+};

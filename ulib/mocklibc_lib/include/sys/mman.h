@@ -113,9 +113,9 @@ extern "C" {
 
 #include <bits/mman.h>
 
-// void *mmap (void *, size_t, int, int, int, off_t);
-// int munmap (void *, size_t);
-// 
+void *mmap (void *, size_t, int, int, int, off_t);
+int munmap (void *, size_t);
+
 // int mprotect (void *, size_t, int);
 // int msync (void *, size_t, int);
 // 
@@ -127,7 +127,7 @@ extern "C" {
 // int munlockall (void);
 
 #ifdef _GNU_SOURCE
-// void *mremap (void *, size_t, size_t, int, ...);
+void *mremap (void *, size_t, size_t, int, ...);
 // int remap_file_pages (void *, size_t, int, size_t, int);
 // int memfd_create (const char *, unsigned);
 // int mlock2 (const void *, size_t, unsigned);
@@ -141,7 +141,7 @@ extern "C" {
 // int shm_open (const char *, int, mode_t);
 // int shm_unlink (const char *);
 
-#if defined(_LARGEFILE64_SOURCE) || defined(_GNU_SOURCE)
+#if defined(_LARGEFILE64_SOURCE)
 #define mmap64 mmap
 #define off64_t off_t
 #endif

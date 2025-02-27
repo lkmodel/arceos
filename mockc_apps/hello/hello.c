@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <time.h>
 
 int main()
@@ -28,6 +29,23 @@ int main()
     printf("isalpha %s\n", isalpha('a') ? "PASS!" : "BAD!");
     printf("isblank %s\n", isblank(' ') ? "PASS!" : "BAD!");
     printf("fff %f\n", 3.14f);
+
+    puts("[Test time.h]\n");
+    struct timeval tv;
+    struct timezone tz;
+
+    // 获取当前时间
+    if (gettimeofday(&tv, &tz) == 0) {
+        printf("Seconds since Epoch: %ld\n", tv.tv_sec);
+        printf("Microseconds: %ld\n", tv.tv_usec);
+    } else {
+        perror("gettimeofday failed");
+        return 1;
+    }
+
+    char str[30];
+    scanf("%s", str);
+    printf("get input: %s\n", str);
 
     return 0;
 }

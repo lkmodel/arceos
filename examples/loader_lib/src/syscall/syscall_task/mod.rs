@@ -12,18 +12,18 @@ pub use imp::*;
 /// 进行 syscall 的分发
 pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]) -> SyscallResult {
     match syscall_id {
-        //        EXIT => syscall_exit(args),
+        EXIT => syscall_exit(args),
         //        EXECVE => syscall_exec(args),
         //        CLONE => syscall_clone(args),
         //        CLONE3 => syscall_clone3(args),
-        //        NANO_SLEEP => syscall_sleep(args),
+        NANO_SLEEP => syscall_sleep(args),
         //        SCHED_YIELD => syscall_yield(),
         //        TIMES => syscall_time(args),
         //        UNAME => syscall_uname(args),
-        //        GETTIMEOFDAY => syscall_get_time_of_day(args),
+        GETTIMEOFDAY => syscall_get_time_of_day(args),
         //        GETPGID => syscall_getpgid(),
         //        SETPGID => syscall_setpgid(args),
-        //        GETPID => syscall_getpid(),
+        GETPID => syscall_getpid(),
         //        GETPPID => syscall_getppid(),
         //        WAIT4 => syscall_wait4(args),
         //        GETRANDOM => syscall_getrandom(args),
@@ -44,9 +44,9 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        EXIT_GROUP => syscall_exit(args),
         //        SET_TID_ADDRESS => syscall_set_tid_address(args),
         //        PRLIMIT64 => syscall_prlimit64(args),
-        //        CLOCK_GET_TIME => syscall_clock_get_time(args),
+        CLOCK_GET_TIME => syscall_clock_get_time(args),
         //        GETUID => syscall_getuid(),
-        //        GETEUID => syscall_geteuid(),
+        GETEUID => syscall_geteuid(),
         //        GETGID => syscall_getgid(),
         //        GETEGID => syscall_getegid(),
         //        GETTID => syscall_gettid(),
@@ -71,7 +71,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        SCHED_GETSCHEDULER => syscall_sched_getscheduler(args),
         //        GET_MEMPOLICY => Ok(0),
         //        CLOCK_GETRES => syscall_clock_getres(args),
-        //        CLOCK_NANOSLEEP => syscall_clock_nanosleep(args),
+        CLOCK_NANOSLEEP => syscall_clock_nanosleep(args),
         //        // syscall below just for x86_64
         //        #[cfg(target_arch = "x86_64")]
         //        PRCTL => syscall_prctl(args),

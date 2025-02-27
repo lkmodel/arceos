@@ -65,7 +65,7 @@ char *strtok_r(char *__restrict, const char *__restrict, char **__restrict);
 char *stpcpy(char *__restrict, const char *__restrict);
 char *stpncpy(char *__restrict, const char *__restrict, size_t);
 size_t strnlen(const char *, size_t);
-// char *strdup(const char *);
+char *strdup(const char *);
 // char *strndup(const char *, size_t);
 // char *strsignal(int);
 // char *strerror_l(int, locale_t);

@@ -2,11 +2,13 @@ use crate::linux_env::axfs_ext::api::{
     ConsoleWinSize, FIOCLEX, FileExt, FileIO, FileIOType, OpenFlags, TCGETS, TIOCGPGRP, TIOCGWINSZ,
     TIOCSPGRP,
 };
+use alloc::string::String;
 use axerrno::{AxError, AxResult};
 use axhal::console::{read_bytes, write_bytes};
 use axio::{Read, Seek, SeekFrom, Write};
 use axlog::warn;
 use axsync::Mutex;
+use axtask::yield_now;
 /// `stdin` file for getting chars from console
 pub struct Stdin {
     pub flags: Mutex<OpenFlags>,
@@ -22,31 +24,65 @@ pub struct Stderr {
     pub flags: Mutex<OpenFlags>,
 }
 
-// XXX: Check here if you can.
+pub const LF: u8 = 0x0au8;
+pub const CR: u8 = 0x0du8;
+pub const DL: u8 = 0x7fu8;
+pub const BS: u8 = 0x08u8;
+
+pub const SPACE: u8 = 0x20u8;
+
+pub const BACKSPACE: [u8; 3] = [BS, SPACE, BS];
+
 fn stdin_read(buf: &mut [u8]) -> AxResult<usize> {
-    // Use `read_bytes` to get.
-    let bytes_read = read_bytes(buf);
-
-    Ok(bytes_read)
-
-    // ```
-    //    let ch: u8;
-    //    loop {
-    //        match getchar() {
-    //            Some(c) => {
-    //                ch = c;
-    //                break;
-    //            }
-    //            None => {
-    //                yield_now();
-    //                continue;
-    //            }
-    //        }
-    //    }
-    //    unsafe {
-    //        buf.as_mut_ptr().write_volatile(ch);
-    //    }
-    //    Ok(1)
+    // `busybox`
+    if buf.len() == 1 {
+        let mut ch = [0u8; 1];
+        loop {
+            let read_len = read_bytes(&mut ch);
+            if read_len > 0 {
+                break;
+            }
+            yield_now();
+        }
+        unsafe {
+            buf.as_mut_ptr().write_volatile(ch[0]);
+        }
+        Ok(1)
+    } else {
+        // User application
+        let mut line = String::new();
+        let mut ch = [0u8; 1];
+        loop {
+            let read_len = read_bytes(&mut ch);
+            if read_len > 0 {
+                match ch[0] {
+                    LF | CR => {
+                        // Convert '\r' to '\n'
+                        line.push('\n');
+                        write_bytes(b"\n");
+                        break;
+                    }
+                    BS | DL => {
+                        if !line.is_empty() {
+                            write_bytes(&BACKSPACE);
+                            line.pop();
+                        }
+                    }
+                    _ => {
+                        // Echo
+                        write_bytes(&[ch[0]]);
+                        line.push(ch[0] as char);
+                    }
+                }
+            } else {
+                yield_now();
+                continue;
+            }
+        }
+        let len = line.len();
+        buf[..len].copy_from_slice(line.as_bytes());
+        Ok(len)
+    }
 }
 
 fn stdout_write(buf: &[u8]) -> AxResult<usize> {

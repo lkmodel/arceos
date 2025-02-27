@@ -34,7 +34,7 @@ pub const ABI_TERMINATE: usize = 2;
 const ABI_TIMESPEC: usize = 11;
 // const ABI_VFPRINTF: usize = 12;
 // const ABI_VSNPRINTF: usize = 13;
-const ABI_VSCANF: usize = 14;
+// const ABI_VSCANF: usize = 14;
 // const ABI_OUT: usize = 15;
 // `pthread`
 const ABI_PTHREAD_CREATE: usize = 20;
@@ -238,7 +238,7 @@ pub fn init_abis() {
     register_abi("timespec", ABI_TIMESPEC, abi_timespec as usize);
     // register_abi("vfprintf", ABI_VFPRINTF, vfprintf as usize);
     // register_abi("vsnprintf", ABI_VSNPRINTF, vsnprintf as usize);
-    register_abi("vscanf", ABI_VSCANF, vscanf as usize);
+    // register_abi("vscanf", ABI_VSCANF, vscanf as usize);
     // register_abi("out", ABI_OUT, abi_out as usize);
 
     register_abi(
@@ -416,8 +416,9 @@ unsafe extern "C" fn vsnprintf(
 /// `SYS_VSCANF: 7`
 #[unsafe(no_mangle)]
 unsafe extern "C" fn vscanf(_str: *mut c_char, _args: VaList) -> c_int {
-    println!("DONT USE THIS YET");
-    return -1;
+    unimplemented!();
+    //    println!("DONT USE THIS YET");
+    //    return -1;
     // ```
     //     if str.is_null() {
     //         return -1;

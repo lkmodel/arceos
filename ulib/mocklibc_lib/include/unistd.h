@@ -53,21 +53,21 @@ ssize_t pread(int, void *, size_t, off_t);
 ssize_t pwrite(int, const void *, size_t, off_t);
 
 // int chown(const char *, uid_t, gid_t);
-// int fchown(int, uid_t, gid_t);
+int fchown(int, uid_t, gid_t);
 // int lchown(const char *, uid_t, gid_t);
-// int fchownat(int, const char *, uid_t, gid_t, int);
-//
+int fchownat(int, const char *, uid_t, gid_t, int);
+
 // int link(const char *, const char *);
 int linkat(int, const char *, int, const char *, int);
 // int symlink(const char *, const char *);
 // int symlinkat(const char *, int, const char *);
-// ssize_t readlink(const char *__restrict, char *__restrict, size_t);
-// ssize_t readlinkat(int, const char *__restrict, char *__restrict, size_t);
-// int unlink(const char *);
+ssize_t readlink(const char *__restrict, char *__restrict, size_t);
+ssize_t readlinkat(int, const char *__restrict, char *__restrict, size_t);
+int unlink(const char *);
 int unlinkat(int, const char *, int);
-// int rmdir(const char *);
+int rmdir(const char *);
 // int truncate(const char *, off_t);
-// int ftruncate(int, off_t);
+int ftruncate(int, off_t);
 
 #define F_OK 0
 #define R_OK 4
@@ -79,8 +79,8 @@ int access(const char *, int);
 //
 int chdir(const char *);
 // int fchdir(int);
-// char *getcwd(char *, size_t);
-//
+char *getcwd(char *, size_t);
+
 // unsigned alarm(unsigned);
 unsigned sleep(unsigned);
 // int pause(void);
@@ -95,8 +95,8 @@ unsigned sleep(unsigned);
 // int execlp(const char *, const char *, ...);
 // int fexecve(int, char *const[], char *const[]);
 // _Noreturn void _exit(int);
-//
-// pid_t getpid(void);
+
+pid_t getpid(void);
 // pid_t getppid(void);
 // pid_t getpgrp(void);
 // pid_t getpgid(pid_t);
@@ -108,9 +108,9 @@ unsigned sleep(unsigned);
 // int isatty(int);
 // pid_t tcgetpgrp(int);
 // int tcsetpgrp(int, pid_t);
-//
+
 // uid_t getuid(void);
-// uid_t geteuid(void);
+uid_t geteuid(void);
 // gid_t getgid(void);
 // gid_t getegid(void);
 // int getgroups(int, gid_t[]);
@@ -118,19 +118,19 @@ unsigned sleep(unsigned);
 // int seteuid(uid_t);
 // int setgid(gid_t);
 // int setegid(gid_t);
-//
+
 // char *getlogin(void);
 // int getlogin_r(char *, size_t);
 // int gethostname(char *, size_t);
 // char *ctermid(char *);
-//
+
 // int getopt(int, char *const[], const char *);
 // extern char *optarg;
 // extern int optind, opterr, optopt;
-//
+
 // long pathconf(const char *, int);
 // long fpathconf(int, int);
-// long sysconf(int);
+long sysconf(int);
 // size_t confstr(int, char *, size_t);
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)

@@ -35,6 +35,9 @@ pub use fs::BLOCK_SIZE;
 pub mod api;
 pub mod fops;
 
+pub use axfs_devfs;
+pub use axfs_ramfs;
+
 use axdriver::{AxDeviceContainer, prelude::*};
 
 /// Initializes filesystems by block devices.

@@ -10,7 +10,7 @@
 #define ABI_TIMESPEC 11
 // #define ABI_VFPRINTF  12
 // #define ABI_VSNPRINTF 13
-#define ABI_VSCANF 14
+// #define ABI_VSCANF 14
 // #define ABI_OUT       15
 // `pthread`
 #define ABI_PTHREAD_CREATE        20

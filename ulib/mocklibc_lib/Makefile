@@ -9,6 +9,8 @@ AR=$(PLATFORM)-ar
 STRIP=$(PLATFORM)-strip
 OBJCOPY=$(PLATFORM)-objcopy
 
+CFLAGS += -nostartfiles -ffreestanding -nostdlib -nostdinc -mcmodel=medany $(INTERNAL_INCLUDE) -fPIC -pie
+CFLAGS += # -Wno-builtin-macro-redefined
 CFLAGS += # -L./rela/libgcc.c -lgcc
 # CFLAGS += -fvisibility=hidden # 尝试修正compile-rt被-nolib屏蔽的问题，也就是__getf2符号没有的问题。
 ASFLAGS = 
@@ -25,6 +27,7 @@ DYNAMIC_LIB = $(LIB_DIR)/libmock.so
 LIBSRC += $(wildcard $(SRC_DIR)/__rt_float/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/complex/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/ctype/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/env/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/errno/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/fcntl/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/fenv/*.c)
@@ -39,8 +42,11 @@ else
 endif
 LIBSRC += $(wildcard $(SRC_DIR)/math/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/misc/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/mman/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/multibyte/*.c)
 LIBSRC += # $(wildcard $(SRC_DIR)/network/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/prng/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/select/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stat/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stdio/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stdlib/*.c)
@@ -60,7 +66,6 @@ INC_DIRS := $(subst $(SRC_DIR)/,-I./c/,$(wildcard $(SRC_DIR)/*/))
 INTERNAL_INCLUDE += -I./arch/riscv64/
 INTERNAL_INCLUDE += $(INC_DIRS)
 INTERNAL_INCLUDE += -I./include
-CFLAGS = -nostartfiles -ffreestanding -nostdlib -mcmodel=medany $(INTERNAL_INCLUDE) -fPIC -pie -nostdinc
 
 
 # 编译选项

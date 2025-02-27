@@ -23,24 +23,24 @@ extern "C" {
 int atoi(const char *);
 long atol(const char *);
 long long atoll(const char *);
-// double atof(const char *);
+double atof(const char *);
 
-// float strtof(const char *__restrict, char **__restrict);
-// double strtod(const char *__restrict, char **__restrict);
-// long double strtold(const char *__restrict, char **__restrict);
+float strtof(const char *__restrict, char **__restrict);
+double strtod(const char *__restrict, char **__restrict);
+long double strtold(const char *__restrict, char **__restrict);
 
-// long strtol(const char *__restrict, char **__restrict, int);
-// unsigned long strtoul(const char *__restrict, char **__restrict, int);
-// long long strtoll(const char *__restrict, char **__restrict, int);
-// unsigned long long strtoull(const char *__restrict, char **__restrict, int);
+long strtol(const char *__restrict, char **__restrict, int);
+unsigned long strtoul(const char *__restrict, char **__restrict, int);
+long long strtoll(const char *__restrict, char **__restrict, int);
+unsigned long long strtoull(const char *__restrict, char **__restrict, int);
 
-// int rand(void);
-// void srand(unsigned);
+int rand(void);
+void srand(unsigned);
 
 void *malloc(size_t);
-// void *calloc(size_t, size_t);
-// void *realloc(void *, size_t);
-// void free(void *);
+void *calloc(size_t, size_t);
+void *realloc(void *, size_t);
+void free(void *);
 // void *aligned_alloc(size_t, size_t);
 
 // _Noreturn void abort(void);
@@ -50,7 +50,7 @@ void *malloc(size_t);
 // int at_quick_exit(void (*)(void));
 // _Noreturn void quick_exit(int);
 
-// char *getenv(const char *);
+char *getenv(const char *);
 
 // int system(const char *);
 
@@ -75,11 +75,11 @@ div_t div(int, int);
 ldiv_t ldiv(long, long);
 lldiv_t lldiv(long long, long long);
 
-// int mblen(const char *, size_t);
-// int mbtowc(wchar_t *__restrict, const char *__restrict, size_t);
+int mblen(const char *, size_t);
+int mbtowc(wchar_t *__restrict, const char *__restrict, size_t);
 int wctomb(char *, wchar_t);
-// size_t mbstowcs(wchar_t *__restrict, const char *__restrict, size_t);
-// size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
+size_t mbstowcs(wchar_t *__restrict, const char *__restrict, size_t);
+size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
@@ -109,14 +109,14 @@ int wctomb(char *, wchar_t);
 // int mkostemp(char *, int);
 // char *mkdtemp(char *);
 // int getsubopt(char **, char *const *, char **);
-// int rand_r(unsigned *);
+int rand_r(unsigned *);
 
 #endif
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 // char *realpath(const char *__restrict, char *__restrict);
-// long int random(void);
-// void srandom(unsigned int);
+long int random(void);
+void srandom(unsigned int);
 // char *initstate(unsigned int, char *, size_t);
 // char *setstate(char *);
 // int putenv(char *);
@@ -127,15 +127,15 @@ int wctomb(char *, wchar_t);
 // char *l64a(long);
 long a64l(const char *);
 // void setkey(const char *);
-// double drand48(void);
+double drand48(void);
 // double erand48(unsigned short[3]);
-// long int lrand48(void);
+long int lrand48(void);
 // long int nrand48(unsigned short[3]);
-// long mrand48(void);
+long mrand48(void);
 // long jrand48(unsigned short[3]);
-// void srand48(long);
-// unsigned short *seed48(unsigned short[3]);
-// void lcong48(unsigned short[7]);
+void srand48(long);
+unsigned short *seed48(unsigned short[3]);
+void lcong48(unsigned short[7]);
 #endif
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)

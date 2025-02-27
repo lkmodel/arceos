@@ -3,7 +3,7 @@ use crate::{
         axfs_ext::api::{FileIOType, OpenFlags, SeekFrom},
         linux_fs::{
             fd_manager::{FDM, alloc_fd},
-            link::create_link,
+            link::{create_link, deal_with_path},
             utils::{UtilsError, deal_path, has_permission},
         },
     },
@@ -528,6 +528,7 @@ pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
         .unwrap_or_else(|_| Err(SyscallError::EINVAL))
 }
 
+// FIX: 有待测试
 /// 78
 /// `readlinkat`
 /// 读取符号链接文件的内容
@@ -541,6 +542,59 @@ pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
 /// * `bufsiz: usize`
 pub fn syscall_readlinkat(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
+    // let dir_fd = args[0];
+    //    let path = args[1] as *const u8;
+    //    let buf = args[2] as *mut u8;
+    //    let bufsiz = args[3];
+    //    let process = current_process();
+    //    if process
+    //        .manual_alloc_for_lazy((path as usize).into())
+    //        .is_err()
+    //    {
+    //        return Err(SyscallError::EFAULT);
+    //    }
+    //    if !buf.is_null()
+    //        && process
+    //            .manual_alloc_for_lazy((buf as usize).into())
+    //            .is_err()
+    //    {
+    //        return Err(SyscallError::EFAULT);
+    //    }
+
+    //    let path = deal_with_path(dir_fd, Some(path), false);
+    //
+    //    if path.is_none() {
+    //        return Err(SyscallError::ENOENT);
+    //    }
+    //    let path = path.unwrap();
+    //    if path.path() == "proc/self/exe" {
+    //        // 针对lmbench_all特判
+    //        let name = "/lmbench_all";
+    //        let len = bufsiz.min(name.len());
+    //        let slice = unsafe { core::slice::from_raw_parts_mut(buf, bufsiz) };
+    //        slice.copy_from_slice(&name.as_bytes()[..len]);
+    //        return Ok(len as isize);
+    //    }
+    //    // 获取进程自身的符号链接信息
+    //    if path.path() == "/proc/self/exe" {
+    //        // 获取该进程符号链接对应的真正地址
+    //        let file_real_path = process.get_file_path();
+    //        let len = bufsiz.min(file_real_path.len());
+    //        let slice = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+    //        slice.copy_from_slice(&file_real_path.as_bytes()[..len]);
+    //
+    //        return Ok(file_real_path.len() as isize);
+    //    }
+    //
+    //    if *path.path() != real_path(&(path.path().to_string())) {
+    //        // 说明链接存在
+    //        let path = path.path();
+    //        let len = bufsiz.min(path.len());
+    //        let slice = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+    //        slice.copy_from_slice(&path.as_bytes()[..len]);
+    //        return Ok(path.len() as isize);
+    //    }
+    //    Err(SyscallError::EINVAL)
 }
 
 /// 68

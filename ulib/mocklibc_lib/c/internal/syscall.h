@@ -402,9 +402,9 @@ hidden long __syscall_ret(unsigned long),
 // 
 // #define sys_wait4(a,b,c,d) __syscall_ret(__sys_wait4(a,b,c,d))
 // #define sys_wait4_cp(a,b,c,d) __syscall_ret(__sys_wait4_cp(a,b,c,d))
-// 
-// hidden void __procfdname(char __buf[static 15+3*sizeof(int)], unsigned);
-// 
+ 
+hidden void __procfdname(char __buf[static 15+3*sizeof(int)], unsigned);
+ 
 // hidden void *__vdsosym(const char *, const char *);
 
 #endif

@@ -24,6 +24,7 @@ axsync = { workspace = true, features = ["multitask"] }
 axfs = { workspace = true, features = ["default"] }
 arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
 axruntime = { workspace = true }
+# axconfig = { workspace = true }
 
 axdriver = { workspace = true, optional = true }
 axalloc = { workspace = true , optional = true }

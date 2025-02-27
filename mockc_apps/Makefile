@@ -4,6 +4,7 @@ TYPE ?= static
 
 all: subdir toplash
 
+# 对于`subdir`的要求，仅仅是要在同名文件夹下，存在文件`apps.bin`就可以。
 subdir:
 	$(MAKE) -C $(SRC) $(TYPE)
 

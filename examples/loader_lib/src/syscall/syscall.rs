@@ -1,5 +1,6 @@
 use super::{
     syscall_fs::{FsSyscallId, fs_syscall},
+    syscall_mem::{MemSyscallId, mem_syscall},
     syscall_task::{TaskSyscallId, task_syscall},
 };
 use axlog::info;
@@ -10,6 +11,15 @@ use super::{SyscallResult, deal_result};
 pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
     #[allow(unused_mut, unused_assignments)]
     let mut ans: Option<SyscallResult> = None;
+
+    if let Ok(mem_syscall_id) = MemSyscallId::try_from(syscall_id) {
+        info!(
+            "[syscall] id = {:#?}, args = {:?}, entry",
+            mem_syscall_id, args
+        );
+        #[allow(unused_assignments)]
+        ans = Some(mem_syscall(mem_syscall_id, args));
+    }
 
     if let Ok(fs_syscall_id) = FsSyscallId::try_from(syscall_id) {
         info!(

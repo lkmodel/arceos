@@ -1,6 +1,6 @@
 use crate::{
     linux_env::{
-        axfs_ext::api::OpenFlags,
+        axfs_ext::api::{FileIO, OpenFlags},
         linux_fs::{
             fd_manager::{FDM, alloc_fd},
             link::{AT_FDCWD, FilePath, deal_with_path},
@@ -8,10 +8,12 @@ use crate::{
         },
     },
     syscall::{
-        SyscallError, SyscallResult,
+        SyscallError, SyscallResult, TimeSecs,
         ctypes::{Fcntl64Cmd, RenameFlags},
+        syscall_fs::ctype::file::{FileDesc, new_fd},
     },
 };
+use alloc::{string::ToString, sync::Arc, vec};
 use axerrno::AxError;
 use axfs::api::{
     Permissions, create_dir, metadata, remove_dir, remove_file, rename, set_current_dir,
@@ -501,6 +503,55 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
     }
 }
 
+/// 修改指定文件描述符的文件权限
+/// mode: 0o777, 3位八进制数字
+/// # Arguments
+/// * `fd: usize`, 文件的文件描述符
+/// * `mode: usize`, 文件的权限
+pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let mode = args[1];
+
+    // 将模式转换为 Permissions 类型
+    let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
+        ans
+    } else {
+        return Err(SyscallError::EINVAL);
+    };
+
+    // 获取文件描述符对应的文件
+    let file_io = match FDM.fd_table.lock().get(fd) {
+        Some(Some(f)) => f.clone(),
+        _ => return Err(SyscallError::EBADF), // 文件描述符无效
+    };
+
+    if let Some(file_desc) = file_io.as_any().downcast_ref::<FileDesc>() {
+        // 修改文件权限
+        match file_desc.file.lock().metadata() {
+            Ok(mut metadata) => {
+                metadata.set_permissions(mode);
+                Ok(0)
+            }
+            Err(e) => {
+                warn!("Unexpected err catched. {:?}", e);
+                Err(SyscallError::EINVAL)
+            }
+        }
+    } else {
+        Err(SyscallError::EINVAL) // 文件描述福类型错误
+    }
+}
+
+// TODO: 添加支持与文档
+pub fn syscall_fchownat(_args: [usize; 6]) -> SyscallResult {
+    unimplemented!();
+}
+
+// TODO: 添加支持与文档
+pub fn syscall_fchown(_args: [usize; 6]) -> SyscallResult {
+    unimplemented!();
+}
+
 /// 48
 /// 获取文件权限
 /// 类似上面的`fchmodat`
@@ -604,6 +655,7 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
     }
 }
 
+// FIX: 待测试
 /// 88
 /// 用于修改文件或目录的时间戳(timestamp)
 /// 如果 `fir_fd < 0`,它和 `path` 共同决定要找的文件；
@@ -613,6 +665,71 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`, 文件的路径
 /// * `times: *const TimeSecs`, 时间戳
 /// * `flags: usize`, 选项
-pub fn syscall_utimensat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let times = args[2] as *const TimeSecs;
+    let _flags = args[3];
+    //    let process = current_process();
+    // info!("dir_fd: {}, path: {}", dir_fd as usize, path as usize);
+    if dir_fd != AT_FDCWD && (dir_fd as isize) < 0 {
+        return Err(SyscallError::EBADF); // 错误的文件描述符
+    }
+
+    if dir_fd == AT_FDCWD
+    //        && process
+    //            .manual_alloc_for_lazy((path as usize).into())
+    //            .is_err()
+    {
+        return Err(SyscallError::EFAULT); // 地址不合法
+    }
+    // 需要设置的时间
+    let (new_atime, new_mtime) = if times.is_null() {
+        (TimeSecs::now(), TimeSecs::now())
+    } else {
+        //        if process.manual_alloc_type_for_lazy(times).is_err() {
+        //            return Err(SyscallError::EFAULT);
+        //        }
+        unsafe { (*times, *(times.add(1))) } //  注意传入的TimeVal中 sec和nsec都是usize, 但TimeValue中nsec是u32
+    };
+    // 感觉以下仿照maturin的实现不太合理,并没有真的把时间写给文件,只是写给了一个新建的临时的fd
+    if (dir_fd as isize) > 0 {
+        // let file = process_inner.fd_manager.fd_table[dir_fd].clone();
+        // if !file.unwrap().lock().set_time(new_atime, new_mtime) {
+        //     error!("Set time failed: unknown reason.");
+        //     return ErrorNo::EPERM as isize;
+        // }
+        //        let fd_table = process.fd_manager.fd_table.lock();
+        let fd_table = FDM.fd_table.lock();
+        if dir_fd > fd_table.len() || fd_table[dir_fd].is_none() {
+            return Err(SyscallError::EBADF);
+        }
+        if let Some(file) = fd_table[dir_fd].as_ref() {
+            if let Some(fat_file) = file.as_any().downcast_ref::<FileDesc>() {
+                // if !fat_file.set_time(new_atime, new_mtime) {
+                //     error!("Set time failed: unknown reason.");
+                //     return ErrorNo::EPERM as isize;
+                // }
+                fat_file.stat.lock().atime.set_as_utime(&new_atime);
+                fat_file.stat.lock().mtime.set_as_utime(&new_mtime);
+            } else {
+                return Err(SyscallError::EPERM);
+            }
+        }
+        Ok(0)
+    } else {
+        let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+        if !axfs::api::path_exists(file_path.path()) {
+            error!("Set time failed: file {} doesn't exist!", file_path.path());
+            if !axfs::api::path_exists(file_path.dir().unwrap()) {
+                return Err(SyscallError::ENOTDIR);
+            } else {
+                return Err(SyscallError::ENOENT);
+            }
+        }
+        let file = new_fd(file_path.path().to_string(), 0.into()).unwrap();
+        file.stat.lock().atime.set_as_utime(&new_atime);
+        file.stat.lock().mtime.set_as_utime(&new_mtime);
+        Ok(0)
+    }
 }

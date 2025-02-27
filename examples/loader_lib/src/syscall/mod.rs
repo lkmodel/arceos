@@ -2,6 +2,7 @@ mod api;
 mod ctypes;
 pub mod syscall;
 mod syscall_fs;
+mod syscall_mem;
 mod syscall_task;
 
 pub use api::*;

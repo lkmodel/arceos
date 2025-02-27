@@ -5,6 +5,8 @@ use axhal::{
 use bitflags::*;
 use core::panic;
 
+use crate::linux_env::linux_fs::config::TIMER_FREQUENCY;
+
 /// A flag used in `sys_dup3`
 pub const O_CLOEXEC: u32 = 524288;
 /// The nano seconds number per second
@@ -32,38 +34,37 @@ pub const NSEC_PER_SEC: usize = 1_000_000_000;
 //     /// 子进程内核态执行时间和，单位为us
 //     pub tms_cstime: usize,
 // }
-//
-// /// sys_gettimeofday 中指定的类型
-// #[repr(C)]
-// #[derive(Debug, Clone, Copy)]
-// pub struct TimeVal {
-//     /// seconds
-//     pub sec: usize,
-//     /// microseconds
-//     pub usec: usize,
-// }
-//
-// impl TimeVal {
-//     /// turn the TimeVal to nano seconds
-//     pub fn turn_to_nanos(&self) -> usize {
-//         self.sec * NANOS_PER_SEC as usize + self.usec * NANOS_PER_MICROS as usize
-//     }
-//
-//     /// create a TimeVal from nano seconds
-//     pub fn from_micro(micro: usize) -> Self {
-//         TimeVal {
-//             sec: micro / (MICROS_PER_SEC as usize),
-//             usec: micro % (MICROS_PER_SEC as usize),
-//         }
-//     }
-//
-//     /// turn the TimeVal to cpu ticks, which is related to cpu frequency
-//     pub fn turn_to_ticks(&self) -> u64 {
-//         (self.sec * axconfig::TIMER_FREQUENCY) as u64
-//             + nanos_to_ticks((self.usec as u64) * NANOS_PER_MICROS)
-//     }
-// }
-//
+
+/// `sys_gettimeofday` 中指定的类型
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct TimeVal {
+    /// seconds
+    pub sec: usize,
+    /// microseconds
+    pub usec: usize,
+}
+
+impl TimeVal {
+    /// turn the TimeVal to nano seconds
+    pub fn turn_to_nanos(&self) -> usize {
+        self.sec * NANOS_PER_SEC as usize + self.usec * NANOS_PER_MICROS as usize
+    }
+
+    /// create a TimeVal from nano seconds
+    pub fn from_micro(micro: usize) -> Self {
+        TimeVal {
+            sec: micro / (MICROS_PER_SEC as usize),
+            usec: micro % (MICROS_PER_SEC as usize),
+        }
+    }
+
+    /// turn the TimeVal to cpu ticks, which is related to cpu frequency
+    pub fn turn_to_ticks(&self) -> u64 {
+        (self.sec * TIMER_FREQUENCY) as u64 + nanos_to_ticks((self.usec as u64) * NANOS_PER_MICROS)
+    }
+}
+
 // /// sys_gettimer / sys_settimer 指定的类型，用户输入输出计时器
 // #[repr(C)]
 // #[derive(Debug, Clone, Copy)]
@@ -101,10 +102,10 @@ impl TimeSecs {
         self.tv_sec * NSEC_PER_SEC + self.tv_nsec
     }
 
-    //    /// turn the TimeSecs to cpu ticks, which is related to cpu frequency
-    //    pub fn get_ticks(&self) -> usize {
-    //        self.tv_sec * axconfig::TIMER_FREQUENCY + (nanos_to_ticks(self.tv_nsec as u64) as usize)
-    //    }
+    /// turn the TimeSecs to cpu ticks, which is related to cpu frequency
+    pub fn get_ticks(&self) -> usize {
+        self.tv_sec * TIMER_FREQUENCY + (nanos_to_ticks(self.tv_nsec as u64) as usize)
+    }
 
     /// Set the `Timesecs` to the given time
     ///
