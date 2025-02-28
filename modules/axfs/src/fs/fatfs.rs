@@ -8,7 +8,7 @@ use fatfs::{Dir, File, LossyOemCpConverter, NullTimeProvider, Read, Seek, SeekFr
 
 use crate::dev::Disk;
 
-const BLOCK_SIZE: usize = 512;
+pub const BLOCK_SIZE: usize = 512;
 
 pub struct FatFileSystem {
     inner: fatfs::FileSystem<Disk, NullTimeProvider, LossyOemCpConverter>,
@@ -66,6 +66,7 @@ impl VfsNodeOps for FileWrapper<'static> {
     axfs_vfs::impl_vfs_non_dir_default! {}
 
     fn get_attr(&self) -> VfsResult<VfsNodeAttr> {
+        warn!("CHECKPOINT 2");
         let size = self.0.lock().seek(SeekFrom::End(0)).map_err(as_vfs_err)?;
         let blocks = size.div_ceil(BLOCK_SIZE as u64);
         // FAT fs doesn't support permissions, we just set everything to 755

@@ -1,0 +1,40 @@
+[package]
+name = "arceos-loader_lib"
+version = "0.1.0"
+authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
+edition.workspace = true
+
+[features]
+default = ["fs", "driver-ramdisk"]
+fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
+alloc = ["axalloc", "axruntime/alloc"]
+# TODO: 添加"axruntime/paging", 修正PAGE_FAULT
+# paging = ["alloc", "axhal/paging", "axruntime/paging"]
+paging = ["alloc", "axhal/paging"]
+
+driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
+
+[dependencies]
+# `ArceOS` modules
+axstd = { workspace = true, features = ["alloc"] }
+axlog = { workspace = true }
+axhal = { workspace = true }
+axtask = { workspace = true }
+axsync = { workspace = true, features = ["multitask"] }
+axfs = { workspace = true, features = ["default"] }
+arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
+axruntime = { workspace = true }
+# axconfig = { workspace = true }
+
+axdriver = { workspace = true, optional = true }
+axalloc = { workspace = true , optional = true }
+
+# Other crates
+elf = { version = "0.7.4", default-features = false }
+# printf-compat = { version = "0.1.1", default-features = false }
+axio = { version = "0.1", features = ["alloc"] }
+cty = "0.2.2"
+axerrno = "0.1.0"
+numeric-enum-macro = "0.2.0"
+bitflags = "2.0"
+lazyinit = "0.2"

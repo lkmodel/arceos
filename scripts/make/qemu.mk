@@ -30,6 +30,7 @@ qemu_args-x86_64 := \
 qemu_args-riscv64 := \
   -machine $(machine) \
   -bios default \
+	-drive if=pflash,file=$(CURDIR)/payload/apps.bin,format=raw,unit=1 \
   -kernel $(OUT_BIN)
 
 qemu_args-aarch64 := \
