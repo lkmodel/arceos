@@ -1,0 +1,352 @@
+---
+source: xtask/src/main.rs
+description: riscv64-linux-musl-gcc (GCC) 11.2.1 20211120
+expression: from_utf8(&output.stdout).unwrap()
+---
+fork:     file format elf64-littleriscv
+fork
+architecture: riscv:rv64, flags 0x00000150:
+HAS_SYMS, DYNAMIC, D_PAGED
+start address 0x00000000000005e0
+
+Program Header:
+    PHDR off    0x0000000000000040 vaddr 0x0000000000000040 paddr 0x0000000000000040 align 2**3
+         filesz 0x0000000000000188 memsz 0x0000000000000188 flags r--
+  INTERP off    0x00000000000001c8 vaddr 0x00000000000001c8 paddr 0x00000000000001c8 align 2**0
+         filesz 0x000000000000001a memsz 0x000000000000001a flags r--
+    LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**12
+         filesz 0x00000000000008c4 memsz 0x00000000000008c4 flags r-x
+    LOAD off    0x0000000000000e30 vaddr 0x0000000000001e30 paddr 0x0000000000001e30 align 2**12
+         filesz 0x0000000000000248 memsz 0x0000000000000280 flags rw-
+ DYNAMIC off    0x0000000000000e40 vaddr 0x0000000000001e40 paddr 0x0000000000001e40 align 2**3
+         filesz 0x00000000000001c0 memsz 0x00000000000001c0 flags rw-
+   STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**4
+         filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
+   RELRO off    0x0000000000000e30 vaddr 0x0000000000001e30 paddr 0x0000000000001e30 align 2**0
+         filesz 0x00000000000001d0 memsz 0x00000000000001d0 flags r--
+
+Dynamic Section:
+  NEEDED               libc.so
+  INIT                 0x0000000000000000
+  FINI                 0x0000000000000000
+  INIT_ARRAY           0x0000000000001e30
+  INIT_ARRAYSZ         0x0000000000000008
+  FINI_ARRAY           0x0000000000001e38
+  FINI_ARRAYSZ         0x0000000000000008
+  HASH                 0x00000000000001e8
+  GNU_HASH             0x0000000000000230
+  STRTAB               0x0000000000000390
+  SYMTAB               0x0000000000000258
+  STRSZ                0x00000000000000a6
+  SYMENT               0x0000000000000018
+  DEBUG                0x0000000000000000
+  PLTGOT               0x0000000000002008
+  PLTRELSZ             0x0000000000000048
+  PLTREL               0x0000000000000007
+  JMPREL               0x0000000000000540
+  RELA                 0x0000000000000438
+  RELASZ               0x0000000000000150
+  RELAENT              0x0000000000000018
+  FLAGS_1              0x0000000008000000
+  RELACOUNT            0x0000000000000004
+
+Sections:
+Idx Name          Size      VMA               LMA               File off  Algn
+  0 .interp       0000001a  00000000000001c8  00000000000001c8  000001c8  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .hash         00000048  00000000000001e8  00000000000001e8  000001e8  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .gnu.hash     00000024  0000000000000230  0000000000000230  00000230  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  3 .dynsym       00000138  0000000000000258  0000000000000258  00000258  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .dynstr       000000a6  0000000000000390  0000000000000390  00000390  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  5 .rela.dyn     00000108  0000000000000438  0000000000000438  00000438  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  6 .rela.plt     00000048  0000000000000540  0000000000000540  00000540  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  7 .plt          00000050  0000000000000590  0000000000000590  00000590  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  8 .text         000001f6  00000000000005e0  00000000000005e0  000005e0  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  9 .rodata       000000e7  00000000000007d8  00000000000007d8  000007d8  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 10 .eh_frame     00000004  00000000000008c0  00000000000008c0  000008c0  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 11 .init_array   00000008  0000000000001e30  0000000000001e30  00000e30  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 12 .fini_array   00000008  0000000000001e38  0000000000001e38  00000e38  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 13 .dynamic      000001c0  0000000000001e40  0000000000001e40  00000e40  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 14 .data         00000008  0000000000002000  0000000000002000  00001000  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 15 .got          00000070  0000000000002008  0000000000002008  00001008  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+ 16 .bss          00000038  0000000000002078  0000000000002078  00001078  2**3
+                  ALLOC
+ 17 .comment      0000001b  0000000000000000  0000000000000000  00001078  2**0
+                  CONTENTS, READONLY
+SYMBOL TABLE:
+00000000000001c8 l    d  .interp	0000000000000000 .interp
+00000000000001e8 l    d  .hash	0000000000000000 .hash
+0000000000000230 l    d  .gnu.hash	0000000000000000 .gnu.hash
+0000000000000258 l    d  .dynsym	0000000000000000 .dynsym
+0000000000000390 l    d  .dynstr	0000000000000000 .dynstr
+0000000000000438 l    d  .rela.dyn	0000000000000000 .rela.dyn
+0000000000000540 l    d  .rela.plt	0000000000000000 .rela.plt
+0000000000000590 l    d  .plt	0000000000000000 .plt
+00000000000005e0 l    d  .text	0000000000000000 .text
+00000000000007d8 l    d  .rodata	0000000000000000 .rodata
+00000000000008c0 l    d  .eh_frame	0000000000000000 .eh_frame
+0000000000001e30 l    d  .init_array	0000000000000000 .init_array
+0000000000001e38 l    d  .fini_array	0000000000000000 .fini_array
+0000000000001e40 l    d  .dynamic	0000000000000000 .dynamic
+0000000000002000 l    d  .data	0000000000000000 .data
+0000000000002008 l    d  .got	0000000000000000 .got
+0000000000002078 l    d  .bss	0000000000000000 .bss
+0000000000000000 l    d  .comment	0000000000000000 .comment
+0000000000000000 l    df *ABS*	0000000000000000 Scrt1.c
+0000000000000000 l    df *ABS*	0000000000000000 crtstuff.c
+000000000000061a l     F .text	0000000000000000 deregister_tm_clones
+000000000000063c l     F .text	0000000000000000 register_tm_clones
+0000000000000668 l     F .text	0000000000000000 __do_global_dtors_aux
+0000000000002078 l     O .bss	0000000000000001 completed.1
+0000000000001e38 l     O .fini_array	0000000000000000 __do_global_dtors_aux_fini_array_entry
+00000000000006b6 l     F .text	0000000000000000 frame_dummy
+0000000000002080 l     O .bss	0000000000000030 object.0
+0000000000001e30 l     O .init_array	0000000000000000 __frame_dummy_init_array_entry
+0000000000000000 l    df *ABS*	0000000000000000 fork.c
+0000000000000000 l    df *ABS*	0000000000000000 crtstuff.c
+00000000000008c0 l     O .eh_frame	0000000000000000 __FRAME_END__
+0000000000001e40 l     O *ABS*	0000000000000000 _DYNAMIC
+0000000000000590 l     O *ABS*	0000000000000000 _PROCEDURE_LINKAGE_TABLE_
+0000000000002030 l     O *ABS*	0000000000000000 _GLOBAL_OFFSET_TABLE_
+0000000000000000       F *UND*	0000000000000000 printf
+0000000000002800 g       *ABS*	0000000000000000 .hidden __global_pointer$
+0000000000002078 g       .got	0000000000000000 __SDATA_BEGIN__
+0000000000002008 g     O .got	0000000000000000 .hidden __TMC_END__
+0000000000000000  w    F *UND*	0000000000000000 __cxa_finalize
+0000000000002000 g     O .data	0000000000000000 .hidden __dso_handle
+0000000000000000  w    F *UND*	0000000000000000 _init
+0000000000000000  w      *UND*	0000000000000000 __deregister_frame_info
+0000000000000000  w      *UND*	0000000000000000 _ITM_registerTMCloneTable
+00000000000005e0 g     F .text	0000000000000000 _start
+00000000000005f8 g     F .text	0000000000000022 _start_c
+0000000000000000       F *UND*	0000000000000000 fork
+00000000000020b0 g       .bss	0000000000000000 __BSS_END__
+0000000000000000  w      *UND*	0000000000000000 _ITM_deregisterTMCloneTable
+0000000000002078 g       .bss	0000000000000000 __bss_start
+00000000000006de g     F .text	00000000000000f8 main
+0000000000000000  w    F *UND*	0000000000000000 _fini
+0000000000002000 g       .data	0000000000000000 __DATA_BEGIN__
+0000000000002078 g       .got	0000000000000000 _edata
+00000000000020b0 g       .bss	0000000000000000 _end
+0000000000000000       F *UND*	0000000000000000 __libc_start_main
+0000000000000000  w      *UND*	0000000000000000 __register_frame_info
+
+
+
+Disassembly of section .plt:
+
+0000000000000590 <.plt>:
+ 590:	00002397          	auipc	t2,0x2
+ 594:	41c30333          	sub	t1,t1,t3
+ 598:	a783be03          	ld	t3,-1416(t2) # 2008 <__TMC_END__>
+ 59c:	fd430313          	addi	t1,t1,-44
+ 5a0:	a7838293          	addi	t0,t2,-1416
+ 5a4:	00135313          	srli	t1,t1,0x1
+ 5a8:	0082b283          	ld	t0,8(t0)
+ 5ac:	000e0067          	jr	t3
+
+00000000000005b0 <printf@plt>:
+ 5b0:	00002e17          	auipc	t3,0x2
+ 5b4:	a68e3e03          	ld	t3,-1432(t3) # 2018 <printf>
+ 5b8:	000e0367          	jalr	t1,t3
+ 5bc:	00000013          	nop
+
+00000000000005c0 <fork@plt>:
+ 5c0:	00002e17          	auipc	t3,0x2
+ 5c4:	a60e3e03          	ld	t3,-1440(t3) # 2020 <fork>
+ 5c8:	000e0367          	jalr	t1,t3
+ 5cc:	00000013          	nop
+
+00000000000005d0 <__libc_start_main@plt>:
+ 5d0:	00002e17          	auipc	t3,0x2
+ 5d4:	a58e3e03          	ld	t3,-1448(t3) # 2028 <__libc_start_main>
+ 5d8:	000e0367          	jalr	t1,t3
+ 5dc:	00000013          	nop
+
+Disassembly of section .text:
+
+00000000000005e0 <_start>:
+ 5e0:	00002197          	auipc	gp,0x2
+ 5e4:	22018193          	addi	gp,gp,544 # 2800 <__global_pointer$>
+ 5e8:	850a                	mv	a0,sp
+ 5ea:	00002597          	auipc	a1,0x2
+ 5ee:	85658593          	addi	a1,a1,-1962 # 1e40 <_DYNAMIC>
+ 5f2:	ff017113          	andi	sp,sp,-16
+ 5f6:	a009                	j	5f8 <_start_c>
+
+00000000000005f8 <_start_c>:
+ 5f8:	410c                	lw	a1,0(a0)
+ 5fa:	00850613          	addi	a2,a0,8
+ 5fe:	4781                	li	a5,0
+ 600:	00002717          	auipc	a4,0x2
+ 604:	a6873703          	ld	a4,-1432(a4) # 2068 <_fini>
+ 608:	00002697          	auipc	a3,0x2
+ 60c:	a386b683          	ld	a3,-1480(a3) # 2040 <_init>
+ 610:	00002517          	auipc	a0,0x2
+ 614:	a5053503          	ld	a0,-1456(a0) # 2060 <_GLOBAL_OFFSET_TABLE_+0x30>
+ 618:	bf65                	j	5d0 <__libc_start_main@plt>
+
+000000000000061a <deregister_tm_clones>:
+ 61a:	00002517          	auipc	a0,0x2
+ 61e:	9ee50513          	addi	a0,a0,-1554 # 2008 <__TMC_END__>
+ 622:	00002797          	auipc	a5,0x2
+ 626:	9e678793          	addi	a5,a5,-1562 # 2008 <__TMC_END__>
+ 62a:	00a78863          	beq	a5,a0,63a <deregister_tm_clones+0x20>
+ 62e:	00002797          	auipc	a5,0x2
+ 632:	a2a7b783          	ld	a5,-1494(a5) # 2058 <_ITM_deregisterTMCloneTable>
+ 636:	c391                	beqz	a5,63a <deregister_tm_clones+0x20>
+ 638:	8782                	jr	a5
+ 63a:	8082                	ret
+
+000000000000063c <register_tm_clones>:
+ 63c:	00002517          	auipc	a0,0x2
+ 640:	9cc50513          	addi	a0,a0,-1588 # 2008 <__TMC_END__>
+ 644:	00002597          	auipc	a1,0x2
+ 648:	9c458593          	addi	a1,a1,-1596 # 2008 <__TMC_END__>
+ 64c:	8d89                	sub	a1,a1,a0
+ 64e:	4035d793          	srai	a5,a1,0x3
+ 652:	91fd                	srli	a1,a1,0x3f
+ 654:	95be                	add	a1,a1,a5
+ 656:	8585                	srai	a1,a1,0x1
+ 658:	c599                	beqz	a1,666 <register_tm_clones+0x2a>
+ 65a:	00002797          	auipc	a5,0x2
+ 65e:	9f67b783          	ld	a5,-1546(a5) # 2050 <_ITM_registerTMCloneTable>
+ 662:	c391                	beqz	a5,666 <register_tm_clones+0x2a>
+ 664:	8782                	jr	a5
+ 666:	8082                	ret
+
+0000000000000668 <__do_global_dtors_aux>:
+ 668:	1141                	addi	sp,sp,-16
+ 66a:	e022                	sd	s0,0(sp)
+ 66c:	00002417          	auipc	s0,0x2
+ 670:	a0c40413          	addi	s0,s0,-1524 # 2078 <completed.1>
+ 674:	00044783          	lbu	a5,0(s0)
+ 678:	e406                	sd	ra,8(sp)
+ 67a:	eb95                	bnez	a5,6ae <__do_global_dtors_aux+0x46>
+ 67c:	00002797          	auipc	a5,0x2
+ 680:	9bc7b783          	ld	a5,-1604(a5) # 2038 <__cxa_finalize>
+ 684:	c791                	beqz	a5,690 <__do_global_dtors_aux+0x28>
+ 686:	00002517          	auipc	a0,0x2
+ 68a:	97a53503          	ld	a0,-1670(a0) # 2000 <__dso_handle>
+ 68e:	9782                	jalr	a5
+ 690:	f8bff0ef          	jal	ra,61a <deregister_tm_clones>
+ 694:	00002797          	auipc	a5,0x2
+ 698:	9b47b783          	ld	a5,-1612(a5) # 2048 <__deregister_frame_info>
+ 69c:	c791                	beqz	a5,6a8 <__do_global_dtors_aux+0x40>
+ 69e:	00000517          	auipc	a0,0x0
+ 6a2:	22250513          	addi	a0,a0,546 # 8c0 <__FRAME_END__>
+ 6a6:	9782                	jalr	a5
+ 6a8:	4785                	li	a5,1
+ 6aa:	00f40023          	sb	a5,0(s0)
+ 6ae:	60a2                	ld	ra,8(sp)
+ 6b0:	6402                	ld	s0,0(sp)
+ 6b2:	0141                	addi	sp,sp,16
+ 6b4:	8082                	ret
+
+00000000000006b6 <frame_dummy>:
+ 6b6:	00002797          	auipc	a5,0x2
+ 6ba:	9ba7b783          	ld	a5,-1606(a5) # 2070 <__register_frame_info>
+ 6be:	cf99                	beqz	a5,6dc <frame_dummy+0x26>
+ 6c0:	1141                	addi	sp,sp,-16
+ 6c2:	e406                	sd	ra,8(sp)
+ 6c4:	00002597          	auipc	a1,0x2
+ 6c8:	9bc58593          	addi	a1,a1,-1604 # 2080 <object.0>
+ 6cc:	00000517          	auipc	a0,0x0
+ 6d0:	1f450513          	addi	a0,a0,500 # 8c0 <__FRAME_END__>
+ 6d4:	9782                	jalr	a5
+ 6d6:	60a2                	ld	ra,8(sp)
+ 6d8:	0141                	addi	sp,sp,16
+ 6da:	b78d                	j	63c <register_tm_clones>
+ 6dc:	b785                	j	63c <register_tm_clones>
+
+00000000000006de <main>:
+ 6de:	7179                	addi	sp,sp,-48
+ 6e0:	f406                	sd	ra,40(sp)
+ 6e2:	f022                	sd	s0,32(sp)
+ 6e4:	1800                	addi	s0,sp,48
+ 6e6:	878a                	mv	a5,sp
+ 6e8:	fef43423          	sd	a5,-24(s0)
+ 6ec:	87a2                	mv	a5,s0
+ 6ee:	fef43023          	sd	a5,-32(s0)
+ 6f2:	8786                	mv	a5,ra
+ 6f4:	fcf43c23          	sd	a5,-40(s0)
+ 6f8:	fd843683          	ld	a3,-40(s0)
+ 6fc:	fe043603          	ld	a2,-32(s0)
+ 700:	fe843583          	ld	a1,-24(s0)
+ 704:	00000517          	auipc	a0,0x0
+ 708:	0d450513          	addi	a0,a0,212 # 7d8 <main+0xfa>
+ 70c:	ea5ff0ef          	jal	ra,5b0 <printf@plt>
+ 710:	00000597          	auipc	a1,0x0
+ 714:	0f858593          	addi	a1,a1,248 # 808 <main+0x12a>
+ 718:	00000517          	auipc	a0,0x0
+ 71c:	10050513          	addi	a0,a0,256 # 818 <main+0x13a>
+ 720:	e91ff0ef          	jal	ra,5b0 <printf@plt>
+ 724:	e9dff0ef          	jal	ra,5c0 <fork@plt>
+ 728:	87aa                	mv	a5,a0
+ 72a:	fcf42a23          	sw	a5,-44(s0)
+ 72e:	fd442783          	lw	a5,-44(s0)
+ 732:	85be                	mv	a1,a5
+ 734:	00000517          	auipc	a0,0x0
+ 738:	0f450513          	addi	a0,a0,244 # 828 <main+0x14a>
+ 73c:	e75ff0ef          	jal	ra,5b0 <printf@plt>
+ 740:	fd442783          	lw	a5,-44(s0)
+ 744:	2781                	sext.w	a5,a5
+ 746:	0007dc63          	bgez	a5,75e <main+0x80>
+ 74a:	fd442783          	lw	a5,-44(s0)
+ 74e:	85be                	mv	a1,a5
+ 750:	00000517          	auipc	a0,0x0
+ 754:	0e850513          	addi	a0,a0,232 # 838 <main+0x15a>
+ 758:	e59ff0ef          	jal	ra,5b0 <printf@plt>
+ 75c:	a805                	j	78c <main+0xae>
+ 75e:	fd442783          	lw	a5,-44(s0)
+ 762:	2781                	sext.w	a5,a5
+ 764:	eb99                	bnez	a5,77a <main+0x9c>
+ 766:	fd442783          	lw	a5,-44(s0)
+ 76a:	85be                	mv	a1,a5
+ 76c:	00000517          	auipc	a0,0x0
+ 770:	0e450513          	addi	a0,a0,228 # 850 <main+0x172>
+ 774:	e3dff0ef          	jal	ra,5b0 <printf@plt>
+ 778:	a811                	j	78c <main+0xae>
+ 77a:	fd442783          	lw	a5,-44(s0)
+ 77e:	85be                	mv	a1,a5
+ 780:	00000517          	auipc	a0,0x0
+ 784:	10050513          	addi	a0,a0,256 # 880 <main+0x1a2>
+ 788:	e29ff0ef          	jal	ra,5b0 <printf@plt>
+ 78c:	00000597          	auipc	a1,0x0
+ 790:	07c58593          	addi	a1,a1,124 # 808 <main+0x12a>
+ 794:	00000517          	auipc	a0,0x0
+ 798:	11c50513          	addi	a0,a0,284 # 8b0 <main+0x1d2>
+ 79c:	e15ff0ef          	jal	ra,5b0 <printf@plt>
+ 7a0:	878a                	mv	a5,sp
+ 7a2:	fef43423          	sd	a5,-24(s0)
+ 7a6:	87a2                	mv	a5,s0
+ 7a8:	fef43023          	sd	a5,-32(s0)
+ 7ac:	8786                	mv	a5,ra
+ 7ae:	fcf43c23          	sd	a5,-40(s0)
+ 7b2:	fd843683          	ld	a3,-40(s0)
+ 7b6:	fe043603          	ld	a2,-32(s0)
+ 7ba:	fe843583          	ld	a1,-24(s0)
+ 7be:	00000517          	auipc	a0,0x0
+ 7c2:	01a50513          	addi	a0,a0,26 # 7d8 <main+0xfa>
+ 7c6:	debff0ef          	jal	ra,5b0 <printf@plt>
+ 7ca:	4781                	li	a5,0
+ 7cc:	853e                	mv	a0,a5
+ 7ce:	70a2                	ld	ra,40(sp)
+ 7d0:	7402                	ld	s0,32(sp)
+ 7d2:	6145                	addi	sp,sp,48
+ 7d4:	8082                	ret

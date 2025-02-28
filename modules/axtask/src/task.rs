@@ -78,7 +78,7 @@ pub struct TaskInner {
 }
 
 impl TaskId {
-    fn new() -> Self {
+    pub fn new() -> Self {
         static ID_COUNTER: AtomicU64 = AtomicU64::new(1);
         Self(ID_COUNTER.fetch_add(1, Ordering::Relaxed))
     }
@@ -184,11 +184,26 @@ impl TaskInner {
         self.ctx.get_mut()
     }
 
+    /// Returns a reference to the task context.
+    #[inline]
+    pub const fn ctx(&self) -> &TaskContext {
+        unsafe { &*self.ctx.get() }
+    }
+
     /// Returns the top address of the kernel stack.
     #[inline]
     pub const fn kernel_stack_top(&self) -> Option<VirtAddr> {
         match &self.kstack {
             Some(s) => Some(s.top()),
+            None => None,
+        }
+    }
+
+    /// Returns the top address of the kernel stack.
+    #[inline]
+    pub const fn kernel_stack_bottom(&self) -> Option<VirtAddr> {
+        match &self.kstack {
+            Some(s) => Some(s.bottom()),
             None => None,
         }
     }
@@ -261,7 +276,7 @@ impl TaskInner {
         t
     }
 
-    pub(crate) fn into_arc(self) -> AxTaskRef {
+    pub fn into_arc(self) -> AxTaskRef {
         Arc::new(AxTask::new(self))
     }
 
@@ -451,6 +466,10 @@ impl TaskStack {
     pub const fn top(&self) -> VirtAddr {
         unsafe { core::mem::transmute(self.ptr.as_ptr().add(self.layout.size())) }
     }
+
+    pub const fn bottom(&self) -> VirtAddr {
+        unsafe { core::mem::transmute(self.ptr.as_ptr()) }
+    }
 }
 
 impl Drop for TaskStack {
@@ -485,7 +504,7 @@ impl CurrentTask {
         &self.0
     }
 
-    pub(crate) fn clone(&self) -> AxTaskRef {
+    pub fn clone(&self) -> AxTaskRef {
         self.0.deref().clone()
     }
 
@@ -498,14 +517,14 @@ impl CurrentTask {
         #[cfg(feature = "tls")]
         axhal::arch::write_thread_pointer(init_task.tls.tls_ptr() as usize);
         let ptr = Arc::into_raw(init_task);
-        axhal::cpu::set_current_task_ptr(ptr);
+        unsafe { axhal::cpu::set_current_task_ptr(ptr) };
     }
 
     pub(crate) unsafe fn set_current(prev: Self, next: AxTaskRef) {
         let Self(arc) = prev;
         ManuallyDrop::into_inner(arc); // `call Arc::drop()` to decrease prev task reference count.
         let ptr = Arc::into_raw(next);
-        axhal::cpu::set_current_task_ptr(ptr);
+        unsafe { axhal::cpu::set_current_task_ptr(ptr) };
     }
 }
 

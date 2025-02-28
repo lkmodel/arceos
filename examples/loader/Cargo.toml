@@ -6,13 +6,34 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+axerrno = "0.1"
+axio = "0.1"
+bitflags = "2.0"
+cfg-if = "1.0"
+riscv = "0.12"
+memory_addr = "0.3"
+xmas-elf = "0.9"
+
+axalloc = { workspace = true }
 axlog = { workspace = true }
+axfs = { workspace = true }
+axmm = { workspace = true }
 axstd = { workspace = true }
+axsync = { workspace = true }
 axtask = { workspace = true }
-arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
-elf = { git = "https://github.com/cole14/rust-elf/", commit = "cdc6769", default-features = false, features = ["to_str"] }
-printf-compat = { version = "0.1.0", default-features = false }
+axconfig = { workspace = true }
+
+kernel-elf-parser = "0.1"
+
 axhal = { workspace = true, features = ["paging"] }
+arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
+
 page_table_multiarch = { version = "0.5", optional = true }
+printf-compat = { version = "0.1.0", default-features = false }
+
+axruntime = { workspace = true, features = ["alloc", "multitask", "paging"] }
+
+abi_macro = { workspace = true }
+linkme = "0.3.31"
 
 [features]

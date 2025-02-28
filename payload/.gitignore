@@ -1,3 +1,4 @@
 *.dump
 *.elf
 *.d
+sqlite_app/snapshot/*

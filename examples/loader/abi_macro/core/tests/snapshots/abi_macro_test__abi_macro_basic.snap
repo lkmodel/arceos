@@ -1,0 +1,26 @@
+---
+source: examples/loader/abi_macro/core/tests/abi_macro_test.rs
+expression: result
+---
+#[::linkme::distributed_slice(ABI_TABLE)]
+#[linkme(crate = ::linkme)]
+static ABI_PRINTF: AbiEntry = AbiEntry {
+    name: "printf",
+    addr: abi_printf as *const (),
+};
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_printf(fat: *const c_char, mut args: ...) -> c_int {
+    info!("[ABI:Print] Print a formatted string!");
+    if fat.is_null() {
+        error!("[ABI:Print] Print NULL!");
+        return -1;
+    }
+    let fat = ((fat as usize)) as *const c_char;
+    info!("fat: {:p}", fat);
+    let mut s = String::new();
+    let bytes_written = unsafe {
+        format(fat, args.as_va_list(), output::fmt_write(&mut s))
+    };
+    print!("{}", s);
+    bytes_written as c_int
+}

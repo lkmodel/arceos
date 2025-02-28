@@ -1,0 +1,61 @@
+[  0.163876 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc000101000, size = 0x1000, flags = READ | WRITE | DEVICE
+[  0.164438 0:5 arceos_loader::process::process:186] fork: linear
+[  0.164752 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc000101000, VA:0xffffffc000102000) -> [PA:0x101000, PA:0x102000) READ | WRITE | DEVICE
+[  0.165341 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc000101000, 0xffffffc000102000) READ | WRITE | DEVICE
+[  0.166037 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc00c000000, size = 0x210000, flags = READ | WRITE | DEVICE
+[  0.166530 0:5 arceos_loader::process::process:186] fork: linear
+[  0.166836 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc00c000000, VA:0xffffffc00c210000) -> [PA:0xc000000, PA:0xc210000) READ | WRITE | DEVICE
+[  0.167411 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc00c000000, 0xffffffc00c210000) READ | WRITE | DEVICE
+[  0.167962 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc010000000, size = 0x1000, flags = READ | WRITE | DEVICE
+[  0.168456 0:5 arceos_loader::process::process:186] fork: linear
+[  0.168754 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc010000000, VA:0xffffffc010001000) -> [PA:0x10000000, PA:0x10001000) READ | WRITE | DEVICE
+[  0.169345 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc010000000, 0xffffffc010001000) READ | WRITE | DEVICE
+[  0.169879 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc010001000, size = 0x8000, flags = READ | WRITE | DEVICE
+[  0.170511 0:5 arceos_loader::process::process:186] fork: linear
+[  0.170789 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc010001000, VA:0xffffffc010009000) -> [PA:0x10001000, PA:0x10009000) READ | WRITE | DEVICE
+[  0.171367 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc010001000, 0xffffffc010009000) READ | WRITE | DEVICE
+[  0.171884 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc022000000, size = 0x2000000, flags = READ | WRITE | DEVICE
+[  0.172366 0:5 arceos_loader::process::process:186] fork: linear
+[  0.172645 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc022000000, VA:0xffffffc024000000) -> [PA:0x22000000, PA:0x24000000) READ | WRITE | DEVICE
+[  0.173255 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc022000000, 0xffffffc024000000) READ | WRITE | DEVICE
+[  0.174279 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc030000000, size = 0x10000000, flags = READ | WRITE | DEVICE
+[  0.174787 0:5 arceos_loader::process::process:186] fork: linear
+[  0.175078 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc030000000, VA:0xffffffc040000000) -> [PA:0x30000000, PA:0x40000000) READ | WRITE | DEVICE
+[  0.175675 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc030000000, 0xffffffc040000000) READ | WRITE | DEVICE
+[  0.180211 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc040000000, size = 0x40000000, flags = READ | WRITE | DEVICE
+[  0.180717 0:5 arceos_loader::process::process:186] fork: linear
+[  0.181012 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc040000000, VA:0xffffffc080000000) -> [PA:0x40000000, PA:0x80000000) READ | WRITE | DEVICE
+[  0.181602 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc040000000, 0xffffffc080000000) READ | WRITE | DEVICE
+[  0.198830 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc0800f0000, size = 0x10000, flags = READ | WRITE
+[  0.199525 0:5 arceos_loader::process::process:197] fork: alloc
+[  0.199849 0:5 axmm::backend::alloc:36] map_alloc: [VA:0xffffffc0800f0000, VA:0xffffffc080100000) READ | WRITE (populate=true)
+[  0.200842 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080100000, size = 0x1000, flags = READ | WRITE | EXECUTE
+[  0.201351 0:5 arceos_loader::process::process:197] fork: alloc
+[  0.201771 0:5 axmm::backend::alloc:36] map_alloc: [VA:0xffffffc080100000, VA:0xffffffc080101000) READ | WRITE | EXECUTE (populate=true)
+[  0.202308 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080101000, size = 0x2000, flags = READ | WRITE
+[  0.202776 0:5 arceos_loader::process::process:197] fork: alloc
+[  0.203065 0:5 axmm::backend::alloc:36] map_alloc: [VA:0xffffffc080101000, VA:0xffffffc080103000) READ | WRITE (populate=true)
+[  0.203804 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080200000, size = 0x26000, flags = READ | EXECUTE
+[  0.204282 0:5 arceos_loader::process::process:186] fork: linear
+[  0.204572 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc080200000, VA:0xffffffc080226000) -> [PA:0x80200000, PA:0x80226000) READ | EXECUTE
+[  0.205152 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc080200000, 0xffffffc080226000) READ | EXECUTE
+[  0.205722 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080226000, size = 0xb000, flags = READ
+[  0.206167 0:5 arceos_loader::process::process:186] fork: linear
+[  0.206507 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc080226000, VA:0xffffffc080231000) -> [PA:0x80226000, PA:0x80231000) READ
+[  0.207327 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc080226000, 0xffffffc080231000) READ
+[  0.208035 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080231000, size = 0x3000, flags = READ | WRITE
+[  0.208510 0:5 arceos_loader::process::process:186] fork: linear
+[  0.208889 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc080231000, VA:0xffffffc080234000) -> [PA:0x80231000, PA:0x80234000) READ | WRITE
+[  0.209465 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc080231000, 0xffffffc080234000) READ | WRITE
+[  0.209967 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080234000, size = 0x40000, flags = READ | WRITE
+[  0.210438 0:5 arceos_loader::process::process:186] fork: linear
+[  0.210732 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc080234000, VA:0xffffffc080274000) -> [PA:0x80234000, PA:0x80274000) READ | WRITE
+[  0.211298 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc080234000, 0xffffffc080274000) READ | WRITE
+[  0.211798 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080274000, size = 0x4000, flags = READ | WRITE
+[  0.212266 0:5 arceos_loader::process::process:186] fork: linear
+[  0.212556 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc080274000, VA:0xffffffc080278000) -> [PA:0x80274000, PA:0x80278000) READ | WRITE
+[  0.213119 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc080274000, 0xffffffc080278000) READ | WRITE
+[  0.213607 0:5 arceos_loader::process::process:182] fork: start = VA:0xffffffc080278000, size = 0x7d88000, flags = READ | WRITE
+[  0.214085 0:5 arceos_loader::process::process:186] fork: linear
+[  0.214377 0:5 axmm::backend::linear:21] map_linear: [VA:0xffffffc080278000, VA:0xffffffc088000000) -> [PA:0x80278000, PA:0x88000000) READ | WRITE
+[  0.214938 0:5 page_table_multiarch::bits64:173] map_region(PA:0x8072b000): [0xffffffc080278000, 0xffffffc088000000) READ | WRITE

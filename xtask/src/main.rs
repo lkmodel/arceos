@@ -6,11 +6,15 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str::from_utf8;
+use std::sync::OnceLock;
 use std::{env, fs, io};
 
 const MUSL: &str = "xtask/riscv64-linux-musl-cross/bin/";
-const DYNAMIC_FLAG: [&str; 1] = ["-fPIE", ];
+const DYNAMIC_FLAG: [&str; 0] = [];
 const STATIC_FLAG: [&str; 0] = [];
+static DIR: OnceLock<PathBuf> = OnceLock::new();
+const FAIL_FLAGS: &str = "[41mFAIL[0m";
+const READ_CHAR: &str = "[31m";
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -35,6 +39,10 @@ struct Args {
     #[arg(long, short)]
     snapshot: bool,
 
+    /// Skip APP build
+    #[arg(long)]
+    skip: bool,
+
     /// Which app to run, "all" to run all apps
     app: String,
 }
@@ -55,13 +63,20 @@ struct DevConfig {
 
 fn main() {
     let args = Args::parse();
-    let current_dir = env::current_dir().expect("Failed to get current directory");
+    DIR.set(PathBuf::from(env!("CARGO_MANIFEST_DIR").strip_suffix("xtask").unwrap())).unwrap();
+    let current_dir = DIR.get().unwrap();
+    assert_eq!(current_dir.to_path_buf(), env::current_dir().unwrap(), "Should run in ArceOS root path:{:?},but now in:{:?}", current_dir.to_path_buf(), env::current_dir().unwrap());
 
     Command::new("cargo")
-        .args(&["install", "cargo-insta"])
+        .args(&["install", "cargo-insta", "--version", "1.39.0"]) // 1.42.1 can not search snaps which not in cargo manifest path
         .status()
         .expect("Can`t install cargo-insta");
 
+    Command::new("git")
+        .args(&["config", "core.hooksPath", ".githooks/"])
+        .current_dir(current_dir)
+        .status()
+        .expect("Can`t set git hooks");
 
     if args.snapshot {
         review_snap(&current_dir.join("payload").join(args.app));
@@ -95,21 +110,25 @@ fn main() {
 
     let is_ci = env::var("CI").is_err();
     if args.app == "all".to_string() || !is_ci {
-        traverse_all_app(&current_dir.join("payload"), &|dir: &PathBuf| -> Result<(), String> {
+        let re = traverse_all_app(&current_dir.join("payload"), &|dir: &PathBuf| -> Result<(), String> {
             let arg = Args {
                 arch: "riscv64".to_string(),
                 log: "warn".to_string(),
                 qemu_log: "n".to_string(),
                 ttype: None,
                 snapshot: false,
+                skip: false,
                 app: dir.iter().last().unwrap().to_str().unwrap().to_string(),
             };
             let config = parse_toml(&current_dir.join("payload").join(&arg.app));
             println!("APP:{}", arg.app);
             dynamic_test(&arg, &current_dir, &config)
-        }).expect("Failed to traverse app")
-            .iter()
+        }).expect("Failed to traverse app");
+        re.iter()
             .for_each(|app| println!("{}\t{}", app[0], app[1]));
+        if re.iter().any(|app| app[1] != "OK".to_string()) {
+            std::process::exit(10);
+        }
         return;
     }
 
@@ -145,17 +164,27 @@ fn main() {
     println!("App: {}", args.app);
 
     // Run tests based on the test type
-    match ttype {
-        "dynamic" => dynamic_test(&args, &current_dir, &config).unwrap(),
-        "static" => static_test(&args, &current_dir, &config).unwrap(),
+    let re = match ttype {
+        "dynamic" => dynamic_test(&args, &current_dir, &config),
+        "static" => static_test(&args, &current_dir, &config),
         "all" => {
-            dynamic_test(&args, &current_dir, &config).unwrap();
+            static_test(&args, &current_dir, &config).unwrap();
             println!("----------------------------------------");
             println!(" ");
             println!("----------------------------------------");
-            static_test(&args, &current_dir, &config).unwrap();
+            dynamic_test(&args, &current_dir, &config)
         }
-        _ => eprintln!("Invalid test type"),
+        _ => {
+            eprintln!("Invalid test type");
+            Err("Invalid test type".to_string())
+        },
+    };
+    match re {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(10);
+        }
     }
 }
 fn review_snap(app_dir: &PathBuf) {
@@ -204,17 +233,17 @@ fn check_installation() -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
-        || PathBuf::from("xtask/riscv64-linux-musl-cross").exists()
+        || DIR.get().unwrap().join("xtask").join("riscv64-linux-musl-cross").exists()
 }
 
 fn install_musl_riscv64() -> bool {
     if check_installation() {
         return true;
     }
-
+    let cur_dir = DIR.get().unwrap().join("xtask");
     let status = Command::new("wget")
         .args(["-N", "https://musl.cc/riscv64-linux-musl-cross.tgz"])
-        .current_dir(env::current_dir().unwrap().join("xtask"))
+        .current_dir(&cur_dir)
         .status()
         .expect("Failed to download riscv64-linux-musl-cross");
 
@@ -225,7 +254,7 @@ fn install_musl_riscv64() -> bool {
 
     let status = Command::new("tar")
         .args(["-xzf", "riscv64-linux-musl-cross.tgz"])
-        .current_dir(env::current_dir().unwrap().join("xtask"))
+        .current_dir(&cur_dir)
         .status()
         .expect("Failed to unzip riscv64-linux-musl-cross");
 
@@ -236,7 +265,7 @@ fn install_musl_riscv64() -> bool {
 
 
     println!("Musl RISC-V64 toolchain installation complete");
-    std::fs::remove_file("xtask/riscv64-linux-musl-cross.tgz").expect("Failed to remove musl-cross-make.tgz");
+    fs::remove_file(cur_dir.join("riscv64-linux-musl-cross.tgz")).expect("Failed to remove musl-cross-make.tgz");
 
     true
 }
@@ -283,10 +312,40 @@ fn static_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> R
 fn dynamic_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> Result<(), String> {
     let payload_dir = current_dir.join("payload");
     let app_path = payload_dir.join(args.app.as_str());
-    build(&app_path, true, config).expect("Failed to build dynamic test");
+    if !args.skip {
+        build(&app_path, true, config).expect("Failed to build dynamic test");
+    }
     run_make(args, current_dir)
 }
+fn test_judge(stdout: &[u8]) -> Option<String> {
+    let fail_flags_bytes = FAIL_FLAGS.as_bytes();
+    let read_bytes = READ_CHAR.as_bytes();
+    let mut start = 0;
+    let mut matched_line = None;
 
+    for (i, &byte) in stdout.iter().enumerate() {
+        if byte == b'\n' {
+            let line = &stdout[start..i];
+            if line.windows(fail_flags_bytes.len()).any(|w| w == fail_flags_bytes) {
+                matched_line = Some(String::from_utf8_lossy(line).to_string());
+                break;
+            } else if line.windows(read_bytes.len()).any(|w| w == read_bytes) {
+                matched_line = Some(format!("{}[m", String::from_utf8_lossy(line).to_string()));
+                break;
+            }
+            start = i + 1;
+        }
+    }
+
+    if matched_line.is_none() && start < stdout.len() {
+        let line = &stdout[start..];
+        if line.windows(fail_flags_bytes.len()).any(|w| w == fail_flags_bytes) {
+            matched_line = Some(String::from_utf8_lossy(line).to_string());
+        }
+    }
+
+    matched_line
+}
 fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
     let status = Command::new("make")
         .args(["defconfig", "ARCH=riscv64"])
@@ -298,7 +357,7 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
         return Err(String::from("make defconfig failed"));
     }
 
-    let status = Command::new("make")
+    let mut process = Command::new("make")
         .args([
             "A=examples/loader",
             &format!("ARCH={}", args.arch),
@@ -307,11 +366,24 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
             "run",
         ])
         .current_dir(&current_dir)
-        .status()
+        .stdout(Stdio::piped())
+        .spawn()
         .expect("Failed to run make");
 
-    if !status.success() {
-        return Err(String::from("make run failed"));
+    let mut stdout = process.stdout.take().unwrap();
+    let mut buffer = Vec::new();
+    let mut chunk = [0u8; 512];
+
+    loop {
+        let n = stdout.read(&mut chunk).unwrap();
+        if n == 0 { break; }
+
+        buffer.extend_from_slice(&chunk[..n]);
+        io::stdout().write_all(&chunk[..n]).unwrap();
+    }
+
+    if let Some(e) = test_judge(&buffer) {
+        return Err(e);
     }
     Ok(())
 }
@@ -369,7 +441,10 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .and_then(|c| c.dev.rename.as_ref())
         .unwrap_or(&elf_file)
         .as_str();
+    let mut input_c = Vec::new();
     let c_file = format!("{}.c", rename); // C source file
+    input_c.push(String::from("-v"));
+    input_c.push(c_file);
     let elf_output = format!("{}", rename); // Output ELF file
 
     // Determine the flags based on the config
@@ -385,7 +460,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .map(|flags| flags.iter().map(|s| s.as_str()).collect::<Vec<_>>())
         .unwrap_or_else(|| STATIC_FLAG.iter().map(|s| *s).collect());
 
-    let cur_dir = env::current_dir()?;
+    let cur_dir = DIR.get().unwrap();
     let tools = if !env::var("CC").is_err() {
         env::var("CC").unwrap()
     } else if (!env::var("CI").is_err()) || (Command::new("which")
@@ -404,23 +479,23 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     let output_str = String::from_utf8(output.stdout).unwrap();
     let gcc_version = output_str.lines().next().unwrap();
     // Compile the C file
-    let mut status = Command::new(gcc);
+    let mut gcc = Command::new(gcc);
     let flags = if ttype {
         dynamic_flags
     } else {
         static_flags
     };
 
-    status
-        .args(&["-v", &c_file])
+    let output = gcc
+        .args(&input_c)
         .args(flags)
         .args(&["-o", &elf_output])
         .current_dir(elf_path)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-    let re = status.status()?;
+        .output()?;
+    let re = output.status;
 
     if !re.success() {
+        io::stdout().write_all(&output.stderr)?;
         return Err(io::Error::new(
             io::ErrorKind::Other,
             "Failed to compile C file",
@@ -437,6 +512,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         insta_set.set_description(gcc_version);
         unsafe {
             env::set_var("INSTA_FORCE_PASS", "1");
+            env::set_var("INSTA_OUTPUT", "minimal");
         }
     }
 

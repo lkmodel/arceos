@@ -54,17 +54,12 @@ impl Pthread {
 
         let main = move || {
             let arg = arg_wrapper;
-
-            debug!("checkpoint");
-
             let ret = start_routine(arg.0);
             unsafe { *their_packet.result.get() = ret };
             drop(their_packet);
         };
 
         let task_inner = axtask::spawn(main);
-
-        info!("task_inner checkpoint",);
 
         let tid = task_inner.id().as_u64();
         let thread = Pthread {

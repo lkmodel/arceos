@@ -1,11 +1,12 @@
 use alloc::collections::VecDeque;
 use alloc::sync::Arc;
 use core::mem::MaybeUninit;
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 #[cfg(feature = "smp")]
 use alloc::sync::Weak;
 
-use kernel_guard::BaseGuard;
+use kernel_guard::{BaseGuard, NoPreemptIrqSave};
 use kspin::SpinRaw;
 use lazyinit::LazyInit;
 use scheduler::BaseScheduler;
@@ -14,7 +15,7 @@ use axhal::cpu::this_cpu_id;
 
 use crate::task::{CurrentTask, TaskState};
 use crate::wait_queue::WaitQueueGuard;
-use crate::{AxCpuMask, AxTaskRef, Scheduler, TaskInner, WaitQueue};
+use crate::{AxCpuMask, AxTaskRef, Scheduler, TaskExtMut, TaskInner, WaitQueue};
 
 macro_rules! percpu_static {
     ($(
@@ -379,6 +380,8 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
                 WAIT_FOR_EXIT.current_ref_mut_raw().notify_one(false);
             }
 
+            trace!("task exit: {} done", curr.id_name());
+
             // Schedule to next task.
             self.inner.resched();
         }
@@ -528,11 +531,15 @@ impl AxRunQueue {
             !axhal::arch::irqs_enabled(),
             "IRQs must be disabled during scheduling"
         );
-        trace!(
-            "context switch: {} -> {}",
-            prev_task.id_name(),
-            next_task.id_name()
-        );
+        
+        info!("context switch: {}", prev_task.id_name());
+        info!("context switch: {}", next_task.id_name());
+
+        // trace!(
+        //     "context switch: {} -> {}",
+        //     prev_task.id_name(),
+        //     next_task.id_name()
+        // );
         #[cfg(feature = "preempt")]
         next_task.set_preempt_pending(false);
         next_task.set_state(TaskState::Running);
@@ -576,6 +583,7 @@ fn gc_entry() {
     loop {
         // Drop all exited tasks and recycle resources.
         let n = EXITED_TASKS.with_current(|exited_tasks| exited_tasks.len());
+
         for _ in 0..n {
             // Do not do the slow drops in the critical section.
             let task = EXITED_TASKS.with_current(|exited_tasks| exited_tasks.pop_front());
