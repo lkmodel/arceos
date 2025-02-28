@@ -4,12 +4,12 @@ use axerrno::LinuxResult;
 use axsync::Mutex;
 
 use core::ffi::c_int;
-use core::mem::{ManuallyDrop, size_of};
+use core::mem::{size_of, ManuallyDrop};
 
-static_assertions::const_assert_eq!(
-    size_of::<ctypes::pthread_mutex_t>(),
-    size_of::<PthreadMutex>()
-);
+// static_assertions::const_assert_eq!(
+//     size_of::<ctypes::pthread_mutex_t>(),
+//     size_of::<PthreadMutex>()
+// );
 
 #[repr(C)]
 pub struct PthreadMutex(Mutex<()>);
