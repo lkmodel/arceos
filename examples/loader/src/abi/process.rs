@@ -7,6 +7,7 @@ use core::slice::from_raw_parts;
 
 static mut SAVED_TASK_CTX: UserContext = UserContext::new();
 
+#[abi(fork)]
 #[naked]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_fork_entry() -> i32 {
@@ -43,7 +44,6 @@ pub unsafe extern "C" fn abi_fork_entry() -> i32 {
 }
 
 
-#[abi(fork)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_fork(task_ctx: UserContext) -> i32 {
     info!("[ABI:Process] Fork a new process!");

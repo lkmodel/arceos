@@ -330,7 +330,7 @@ fn test_judge(stdout: &[u8]) -> Option<String> {
                 matched_line = Some(String::from_utf8_lossy(line).to_string());
                 break;
             } else if line.windows(read_bytes.len()).any(|w| w == read_bytes) {
-                matched_line = Some(String::from_utf8_lossy(line).to_string());
+                matched_line = Some(format!("{}[m", String::from_utf8_lossy(line).to_string()));
                 break;
             }
             start = i + 1;
