@@ -14,12 +14,13 @@ mod process;
 use core::{fmt::Display, slice::from_raw_parts, sync::atomic::{AtomicUsize, Ordering}};
 
 use alloc::string::ToString;
+use alloc::vec::Vec;
 use axlog::info;
 use axstd::println;
 use axtask::{current, exit, WaitQueue};
 use elf::PLASH_START;
-use process::Process;
 use linkme::distributed_slice;
+use process::Process;
 
 // 全局等待队列
 pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new();    // main线程等待所有进程结束
@@ -44,6 +45,8 @@ unsafe impl Sync for AbiEntry {}
 
 #[unsafe(no_mangle)]
 fn main() {
+    let fns = ABI_TABLE.iter().map(|table| table.name).collect::<Vec<&str>>();
+    info!("Existed Abi functions:{}", fns.join(","));
     println!("Load payload ...");
     let elf_size = unsafe { *(PLASH_START as *const usize) };
 
