@@ -4,8 +4,6 @@ use api::{sys_pthread_create, sys_pthread_exit, sys_pthread_join, sys_pthread_se
 use arceos_posix_api::{self as api, ctypes, sys_pthread_mutex_init, sys_pthread_mutex_lock, sys_pthread_mutex_unlock};
 use axlog::info;
 use core::ffi::{c_int, c_void};
-use crate::{AbiEntry, ABI_TABLE};
-use abi_macro::abi;
 
 #[abi(pthread_create)]
 #[unsafe(no_mangle)]
