@@ -14,6 +14,7 @@ const DYNAMIC_FLAG: [&str; 0] = [];
 const STATIC_FLAG: [&str; 0] = [];
 static DIR: OnceLock<PathBuf> = OnceLock::new();
 const FAIL_FLAGS: &str = "[41mFAIL[0m";
+const READ_CHAR: &str = "[31m";
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -318,6 +319,7 @@ fn dynamic_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> 
 }
 fn test_judge(stdout: &[u8]) -> Option<String> {
     let fail_flags_bytes = FAIL_FLAGS.as_bytes();
+    let read_bytes = READ_CHAR.as_bytes();
     let mut start = 0;
     let mut matched_line = None;
 
@@ -325,6 +327,9 @@ fn test_judge(stdout: &[u8]) -> Option<String> {
         if byte == b'\n' {
             let line = &stdout[start..i];
             if line.windows(fail_flags_bytes.len()).any(|w| w == fail_flags_bytes) {
+                matched_line = Some(String::from_utf8_lossy(line).to_string());
+                break;
+            } else if line.windows(read_bytes.len()).any(|w| w == read_bytes) {
                 matched_line = Some(String::from_utf8_lossy(line).to_string());
                 break;
             }
