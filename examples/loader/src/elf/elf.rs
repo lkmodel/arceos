@@ -6,7 +6,7 @@
 use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}, vec::Vec};
 
 use axhal::paging::MappingFlags;
-use axlog::{debug, trace};
+use axlog::{debug, info, trace};
 use axstd::println;
 use memory_addr::{MemoryAddr, VirtAddr};
 use xmas_elf::{sections::SectionData, symbol_table::Entry, ElfFile};
@@ -143,7 +143,7 @@ fn process_relocations(elf: &ElfFile, segment_data: &mut [u8], elf_offset: usize
             }
         }
     }
-
+    let mut unimpl = Vec::new();
     // 处理 .rela.plt
     if let Some(rela_plt) = elf.find_section_by_name(".rela.plt") {
         if let Ok(SectionData::Rela64(rela_data)) = rela_plt.get_data(elf) {
@@ -163,10 +163,13 @@ fn process_relocations(elf: &ElfFile, segment_data: &mut [u8], elf_offset: usize
                                     
                                     segment_data[relative_offset..relative_offset + 8]
                                         .copy_from_slice(&(func_addr as u64).to_ne_bytes());
+                                }else {
+                                    unimpl.push(name);
                                 }
                             }
                         }
                     }
+                    info!("Not be implemented functions:{}",unimpl.join(","));
                 }
             }
         }

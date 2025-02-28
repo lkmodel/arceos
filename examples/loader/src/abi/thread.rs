@@ -2,7 +2,10 @@ use axlog::info;
 use arceos_posix_api::{self as api, ctypes, sys_pthread_mutex_init, sys_pthread_mutex_lock, sys_pthread_mutex_unlock};
 use api::{sys_pthread_create, sys_pthread_exit, sys_pthread_join, sys_pthread_self};
 use core::ffi::{c_int, c_void};
+use crate::{AbiEntry, ABI_TABLE};
+use abi_macro::abi;
 
+#[abi(pthread_create)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_pthread_create(
     res: *mut ctypes::pthread_t,
@@ -27,6 +30,7 @@ pub extern "C" fn abi_pthread_create(
     }
 }
 
+#[abi(pthread_join)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_pthread_join(
     thread: ctypes::pthread_t, 
@@ -38,18 +42,21 @@ pub extern "C" fn abi_pthread_join(
     }
 }
 
+#[abi(pthread_exit)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_pthread_exit(retval: *mut c_void) -> ! {
     info!("[ABI:Thread] Exit the current thread!");
     sys_pthread_exit(retval);
 }
 
+#[abi(pthread_self)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_pthread_self() -> ctypes::pthread_t {
     info!("[ABI:Thread] Get the `pthread` struct of current thread!");
     sys_pthread_self()
 }
 
+#[abi(pthread_mutex_init)]
 #[unsafe(no_mangle)]
 pub fn abi_pthread_mutex_init(
     mutex: *mut ctypes::pthread_mutex_t,
@@ -59,18 +66,21 @@ pub fn abi_pthread_mutex_init(
     sys_pthread_mutex_init(mutex, _attr)
 }
 
+#[abi(pthread_mutex_lock)]
 #[unsafe(no_mangle)]
 pub fn abi_pthread_mutex_lock(mutex: *mut ctypes::pthread_mutex_t) -> c_int {
     info!("[ABI:Thread] Lock the given mutex!");
     sys_pthread_mutex_lock(mutex)
 }
 
+#[abi(pthread_mutex_unlock)]
 #[unsafe(no_mangle)]
 pub fn abi_pthread_mutex_unlock(mutex: *mut ctypes::pthread_mutex_t) -> c_int {
     info!("[ABI:Thread] Unlock the given mutex!");
     sys_pthread_mutex_unlock(mutex)
 }
 
+#[abi(pthread_mutex_destroy)]
 #[unsafe(no_mangle)]
 pub fn abi_pthread_mutex_destroy() {
     info!("[ABI:Thread] Destroy the given mutex!");

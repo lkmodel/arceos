@@ -1,0 +1,8 @@
+[dev]
+rename = "sqlite3"
+ttype = "dynamic"
+#dynamic_flags = ["shell.c", "-lpthread", "-ldl", "-lm"] #See https://www.sqlite.org/howtocompile.html
+#dynamic_flags = ["shell.c", "-DSQLITE_THREADSAFE=0", "-ldl", "-lm"] #non-threadsafe mode
+#dynamic_flags = ["shell.c", "-DSQLITE_THREADSAFE=0", "-DSQLITE_OMIT_LOAD_EXTENSION"] #no dynamic loading
+dynamic_flags = ["main.c", "-DSQLITE_THREADSAFE=0", "-DSQLITE_OMIT_FLOATING_POINT", "-DSQLITE_OMIT_LOAD_EXTENSION", "-DSQLITE_DEBUG", "-Isqlite3_src"] #https://github.com/arceos-org/arceos-apps/blob/main/c/sqlite3/axbuild.mk
+snapshot = false

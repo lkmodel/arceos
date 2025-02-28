@@ -6,7 +6,7 @@ use axlog::debug;
 use xmas_elf::{ElfFile, header};
 
 pub const PLASH_START: usize = 0xffff_ffc0_2200_0000;
-pub const EXEC_ZONE_START: usize = 0xffff_ffc0_8010_0000;
+pub const EXEC_ZONE_START: usize = 0xffff_ffc0_8100_0000;
 // pub const MAX_APP_SIZE: usize = 0x100000;
 
 pub fn verify_elf_header(elf: &ElfFile) -> Result<(), LoadError> {

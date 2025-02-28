@@ -3,7 +3,7 @@
 #![feature(c_variadic)]
 #![feature(alloc_error_handler)]
 #![feature(naked_functions)]
-
+#![feature(c_size_t)]
 extern crate alloc;
 
 mod abi;
@@ -19,6 +19,7 @@ use axstd::println;
 use axtask::{current, exit, WaitQueue};
 use elf::PLASH_START;
 use process::Process;
+use linkme::distributed_slice;
 
 // 全局等待队列
 pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new();    // main线程等待所有进程结束
@@ -30,6 +31,16 @@ pub static PROCESS_COUNT: AtomicUsize = AtomicUsize::new(0);
 // 保存原始内核的 GP 和应用的 GP
 pub static APP_GP: AtomicUsize = AtomicUsize::new(0);
 pub static KERNEL_GP: AtomicUsize = AtomicUsize::new(0);
+
+#[distributed_slice]
+pub static ABI_TABLE: [AbiEntry] = [..];
+
+#[repr(C)]
+pub struct AbiEntry {
+    pub name: &'static str,
+    addr: *const (),
+}
+unsafe impl Sync for AbiEntry {}
 
 #[unsafe(no_mangle)]
 fn main() {

@@ -33,4 +33,7 @@ printf-compat = { version = "0.1.0", default-features = false }
 
 axruntime = { workspace = true, features = ["alloc", "multitask", "paging"] }
 
+abi_macro = { workspace = true }
+linkme = "0.3.31"
+
 [features]

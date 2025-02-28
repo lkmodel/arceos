@@ -1,0 +1,10 @@
+[package]
+name = "abi_macro"
+version = "0.1.0"
+edition.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+abi_macro_core = { path = "./core" }

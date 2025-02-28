@@ -160,8 +160,8 @@ pub(crate) fn default_free_regions() -> impl Iterator<Item = MemRegion> {
     let start = virt_to_phys((_ekernel as usize).into()).align_up_4k();
     let end = pa!(PHYS_MEMORY_BASE + PHYS_MEMORY_SIZE).align_down_4k();
     core::iter::once(MemRegion {
-        paddr: start,
-        size: end.as_usize() - start.as_usize(),
+        paddr: start+0x100_0000,
+        size: end.as_usize() - start.as_usize()-0x100_0000,
         flags: MemRegionFlags::FREE | MemRegionFlags::READ | MemRegionFlags::WRITE,
         name: "free memory",
     })

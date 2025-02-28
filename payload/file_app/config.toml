@@ -1,0 +1,4 @@
+[dev]
+rename="file"
+ttype="dynamic"
+snapshot = true

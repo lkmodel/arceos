@@ -29,7 +29,9 @@ members = [
     "examples/httpserver",
     "examples/shell",
     "examples/loader",
-    "xtask"]
+    "xtask",
+    "examples/loader/abi_macro"
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -64,6 +66,7 @@ axsync = { path = "modules/axsync" }
 axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 
+abi_macro = { path = "examples/loader/abi_macro" }
 [profile.release]
 lto = true
 panic = "abort"
