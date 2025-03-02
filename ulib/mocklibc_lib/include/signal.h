@@ -287,7 +287,7 @@ typedef void (*sighandler_t)(int);
 typedef int sig_atomic_t;
 
 // void (*signal(int, void (*)(int)))(int);
-// int raise(int);
+int raise(int);
 
 #if _REDIR_TIME64
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \

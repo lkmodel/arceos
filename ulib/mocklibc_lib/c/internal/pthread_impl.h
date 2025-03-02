@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
-// #include <signal.h>
+#include <signal.h>
 #include <sys/mman.h>
 
 #include "pthread_arch.h"
@@ -200,9 +200,9 @@ static inline void __futexwait(volatile void *addr, int val, int priv)
 // hidden void __tl_sync(pthread_t);
 //
 // extern hidden volatile int __thread_list_lock;
-//
-// extern hidden volatile int __abort_lock[1];
-//
+
+extern hidden volatile int __abort_lock[1];
+
 // extern hidden unsigned __default_stacksize;
 // extern hidden unsigned __default_guardsize;
 

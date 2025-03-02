@@ -378,8 +378,8 @@
 #define SYS_newfstatat 79
 #define SYS_fstat      80
 // #define SYS_sync 81
-// #define SYS_fsync 82
-// #define SYS_fdatasync 83
+#define SYS_fsync     82
+#define SYS_fdatasync 83
 // #define SYS_sync_file_range 84
 // #define SYS_timerfd_create 85
 // #define SYS_timerfd_settime 86
@@ -389,8 +389,8 @@
 // #define SYS_capget 90
 // #define SYS_capset 91
 // #define SYS_personality 92
-// #define SYS_exit 93
-// #define SYS_exit_group 94
+#define SYS_exit       93
+#define SYS_exit_group 94
 // #define SYS_waitid 95
 // #define SYS_set_tid_address 96
 // #define SYS_unshare 97
@@ -419,19 +419,19 @@
 // #define SYS_sched_getscheduler 120
 // #define SYS_sched_getparam 121
 // #define SYS_sched_setaffinity 122
-// #define SYS_sched_getaffinity 123
+#define SYS_sched_getaffinity 123
 // #define SYS_sched_yield 124
 // #define SYS_sched_get_priority_max 125
 // #define SYS_sched_get_priority_min 126
 // #define SYS_sched_rr_get_interval 127
 // #define SYS_restart_syscall 128
 // #define SYS_kill 129
-// #define SYS_tkill 130
+#define SYS_tkill 130
 // #define SYS_tgkill 131
 // #define SYS_sigaltstack 132
 // #define SYS_rt_sigsuspend 133
-// #define SYS_rt_sigaction 134
-// #define SYS_rt_sigprocmask 135
+#define SYS_rt_sigaction   134
+#define SYS_rt_sigprocmask 135
 // #define SYS_rt_sigpending 136
 // #define SYS_rt_sigtimedwait 137
 // #define SYS_rt_sigqueueinfo 138
@@ -475,7 +475,7 @@
 // #define SYS_getgid 176
 // #define SYS_getegid 177
 // #define SYS_gettid 178
-// #define SYS_sysinfo 179
+#define SYS_sysinfo 179
 // #define SYS_mq_open 180
 // #define SYS_mq_unlink 181
 // #define SYS_mq_timedsend 182
@@ -542,7 +542,7 @@
 // #define SYS_recvmmsg 243
 // #define SYS_arch_specific_syscall 244
 // #define SYS_wait4 260
-// #define SYS_prlimit64 261
+#define SYS_prlimit64 261
 // #define SYS_fanotify_init 262
 // #define SYS_fanotify_mark 263
 // #define SYS_name_to_handle_at 264

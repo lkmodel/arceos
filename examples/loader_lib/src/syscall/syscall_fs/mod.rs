@@ -1,4 +1,4 @@
-mod ctype;
+pub mod ctype;
 mod fs_syscall_id;
 pub mod imp;
 
@@ -48,6 +48,7 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         IOCTL => syscall_ioctl(args),
         // 不做处理即可
         SYNC => Ok(0),
+        FDATASYNC => unimplemented!(),
         COPYFILERANGE => syscall_copyfilerange(args),
         LINKAT => sys_linkat(args),
         UNLINKAT => syscall_unlinkat(args),

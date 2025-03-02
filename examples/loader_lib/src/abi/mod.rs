@@ -8,11 +8,15 @@ use axhal::time::monotonic_time;
 use axlog::{debug, info};
 use axstd::{println, process::exit};
 
-use crate::runtime_func::rt_float::{
-    abi_rt_addtf3, abi_rt_divtf3, abi_rt_eqtf2, abi_rt_extenddftf2, abi_rt_extendsftf2,
-    abi_rt_fixtfdi, abi_rt_fixtfsi, abi_rt_fixunstfsi, abi_rt_floatditf, abi_rt_floatsitf,
-    abi_rt_floatunsitf, abi_rt_getf2, abi_rt_gttf2, abi_rt_letf2, abi_rt_lttf2, abi_rt_multf3,
-    abi_rt_netf2, abi_rt_subtf3, abi_rt_trunctfdf2, abi_rt_trunctfsf2,
+use crate::runtime_func::{
+    rt_float::{
+        abi_rt_adddf3, abi_rt_addsf3, abi_rt_addtf3, abi_rt_addxf3, abi_rt_divtf3, abi_rt_eqtf2,
+        abi_rt_extenddftf2, abi_rt_extendsftf2, abi_rt_fixtfdi, abi_rt_fixtfsi, abi_rt_fixunstfsi,
+        abi_rt_floatditf, abi_rt_floatsitf, abi_rt_floatunsitf, abi_rt_getf2, abi_rt_gttf2,
+        abi_rt_letf2, abi_rt_lttf2, abi_rt_multf3, abi_rt_netf2, abi_rt_subdf3, abi_rt_subsf3,
+        abi_rt_subtf3, abi_rt_subxf3, abi_rt_trunctfdf2, abi_rt_trunctfsf2,
+    },
+    rt_integer::{abi_rt_bswapdi2, abi_rt_bswapsi2, abi_rt_clzdi2, abi_rt_clzsi2, abi_rt_clzti2},
 };
 use axtask::init_scheduler;
 use core::{
@@ -30,12 +34,7 @@ const ABI_NOIMPL: usize = 0;
 const ABI_INIT_SCHEDULER: usize = 1;
 pub const ABI_TERMINATE: usize = 2;
 // `stdio`
-// const ABI_PUTCHAR: usize = 10;
 const ABI_TIMESPEC: usize = 11;
-// const ABI_VFPRINTF: usize = 12;
-// const ABI_VSNPRINTF: usize = 13;
-// const ABI_VSCANF: usize = 14;
-// const ABI_OUT: usize = 15;
 // `pthread`
 const ABI_PTHREAD_CREATE: usize = 20;
 const ABI_PTHREAD_JOIN: usize = 21;
@@ -45,14 +44,6 @@ const ABI_PTHREAD_MUTEX_INIT: usize = 24;
 const ABI_PTHREAD_MUTEX_LOCK: usize = 25;
 const ABI_PTHREAD_MUTEX_UNLOCK: usize = 26;
 const ABI_PTHREAD_MUTEX_DESTORY: usize = 27;
-// `file`
-// const ABI_OPEN: usize = 30;
-// const ABI_LSEEK: usize = 31;
-// const ABI_STAT: usize = 32;
-// const ABI_FSTAT: usize = 33;
-// const ABI_LSTAT: usize = 34;
-// const ABI_GETCWD: usize = 35;
-// const ABI_RENAME: usize = 36;
 // `malloc`
 const ABI_MALLOC: usize = 40;
 const ABI_CALLOC: usize = 41;
@@ -70,15 +61,15 @@ const ABI_SYSCALL5: usize = 65;
 const ABI_SYSCALL6: usize = 66;
 // `rt_float`的实现
 // Arithmetic functions[100, 119]
-const _ABI_RT_ADDSF3: usize = 100;
-const _ABI_RT_ADDDF3: usize = 101;
+const ABI_RT_ADDSF3: usize = 100;
+const ABI_RT_ADDDF3: usize = 101;
 const ABI_RT_ADDTF3: usize = 102;
-const _ABI_RT_ADDXF3: usize = 103;
+const ABI_RT_ADDXF3: usize = 103;
 
-const _ABI_RT_SUBSF3: usize = 104;
-const _ABI_RT_SUBDF3: usize = 105;
+const ABI_RT_SUBSF3: usize = 104;
+const ABI_RT_SUBDF3: usize = 105;
 const ABI_RT_SUBTF3: usize = 106;
-const _ABI_RT_SUBXF3: usize = 107;
+const ABI_RT_SUBXF3: usize = 107;
 
 const _ABI_RT_MULSF3: usize = 108;
 const _ABI_RT_MULDF3: usize = 109;
@@ -226,6 +217,97 @@ const _ABI_RT_DIVDC3: usize = 221;
 const _ABI_RT_DIVTC3: usize = 222;
 const _ABI_RT_DIVXC3: usize = 223;
 
+// `rt_integer`的实现
+// Arithmetic functions[230, 256]
+const _ABI_RT_ASHLSI3: usize = 230;
+const _ABI_RT_ASHLDI3: usize = 231;
+const _ABI_RT_ASHLTI3: usize = 231;
+
+const _ABI_RT_ASHRSI3: usize = 232;
+const _ABI_RT_ASHRDI3: usize = 233;
+const _ABI_RT_ASHRTI3: usize = 234;
+
+const _ABI_RT_DIVSI3: usize = 235;
+const _ABI_RT_DIVDI3: usize = 236;
+const _ABI_RT_DIVTI3: usize = 237;
+
+const _ABI_RT_LSHRSI3: usize = 238;
+const _ABI_RT_LSHRDI3: usize = 239;
+const _ABI_RT_LSHRTI3: usize = 240;
+
+const _ABI_RT_MODSI3: usize = 241;
+const _ABI_RT_MODDI3: usize = 242;
+const _ABI_RT_MODTI3: usize = 243;
+
+const _ABI_RT_MULSI3: usize = 244;
+const _ABI_RT_MULDI3: usize = 245;
+const _ABI_RT_MULTI3: usize = 246;
+
+const _ABI_RT_NEGDI2: usize = 247;
+const _ABI_RT_NEGTI2: usize = 248;
+
+const _ABI_RT_UDIVSI3: usize = 249;
+const _ABI_RT_UDIVDI3: usize = 250;
+const _ABI_RT_UDIVTI3: usize = 251;
+
+const _ABI_RT_UDIVMODDI4: usize = 252;
+const _ABI_RT_UDIVMODTI4: usize = 253;
+
+const _ABI_RT_UMODSI3: usize = 254;
+const _ABI_RT_UMODDI3: usize = 255;
+const _ABI_RT_UMODTI3: usize = 256;
+
+// Comparison functions[257, 260]
+const _ABI_RT_CMPDI2: usize = 257;
+const _ABI_RT_CMPTI2: usize = 258;
+
+const _ABI_RT_UCMPDI2: usize = 259;
+const _ABI_RT_UCMPTI2: usize = 260;
+
+// Trapping Arithmetic functions[261, 270]
+const _ABI_RT_ABSVSI2: usize = 261;
+const _ABI_RT_ABSVDI2: usize = 262;
+
+const _ABI_RT_ADDVSI3: usize = 263;
+const _ABI_RT_ADDVDI3: usize = 264;
+
+const _ABI_RT_MULVSI3: usize = 265;
+const _ABI_RT_MULVDI3: usize = 266;
+
+const _ABI_RT_NEGVSI2: usize = 267;
+const _ABI_RT_NEGVDI2: usize = 268;
+
+const _ABI_RT_SUBVSI3: usize = 269;
+const _ABI_RT_SUBVDI3: usize = 270;
+
+// Bit operations functions[271, 286]
+const ABI_RT_CLZSI2: usize = 271;
+const ABI_RT_CLZDI2: usize = 272;
+const ABI_RT_CLZTI2: usize = 273;
+
+const _ABI_RT_CTZSI2: usize = 274;
+const _ABI_RT_CTZDI2: usize = 275;
+const _ABI_RT_CTZTI2: usize = 276;
+
+const _ABI_RT_FFSDI2: usize = 277;
+const _ABI_RT_FFSTI2: usize = 278;
+
+const _ABI_RT_PARITYSI2: usize = 279;
+const _ABI_RT_PARITYDI2: usize = 280;
+const _ABI_RT_PARITYTI2: usize = 281;
+
+const _ABI_RT_POPCOUNTSI2: usize = 282;
+const _ABI_RT_POPCOUNTDI2: usize = 283;
+const _ABI_RT_POPCOUNTTI2: usize = 284;
+
+const ABI_RT_BSWAPSI2: usize = 285;
+const ABI_RT_BSWAPDI2: usize = 286;
+
+// Bit-precise integer arithmetic functions[287, 288]
+const _ABI_RT_MULBITINT3: usize = 287;
+
+const _ABI_RT_DIVMODBITINT4: usize = 288;
+
 /// 当访问到没有被绑定的`ABI`时，将会使用`ABI_NOIMPL`
 pub static mut ABI_TABLE: [usize; 300] = [0; 300];
 
@@ -286,8 +368,16 @@ pub fn init_abis() {
     register_abi("syscall6", ABI_SYSCALL6, abi_syscall6 as usize);
 
     // `rt_float`的实现
+    register_abi("rt_addsf3", ABI_RT_ADDSF3, abi_rt_addsf3 as usize);
+    register_abi("rt_adddf3", ABI_RT_ADDDF3, abi_rt_adddf3 as usize);
     register_abi("rt_addtf3", ABI_RT_ADDTF3, abi_rt_addtf3 as usize);
+    register_abi("rt_addxf3", ABI_RT_ADDXF3, abi_rt_addxf3 as usize);
+
+    register_abi("rt_subsf3", ABI_RT_SUBSF3, abi_rt_subsf3 as usize);
+    register_abi("rt_subdf3", ABI_RT_SUBDF3, abi_rt_subdf3 as usize);
     register_abi("rt_subtf3", ABI_RT_SUBTF3, abi_rt_subtf3 as usize);
+    register_abi("rt_subxf3", ABI_RT_SUBXF3, abi_rt_subxf3 as usize);
+
     register_abi("rt_multf3", ABI_RT_MULTF3, abi_rt_multf3 as usize);
     register_abi("rt_divtf3", ABI_RT_DIVTF3, abi_rt_divtf3 as usize);
     register_abi(
@@ -330,6 +420,13 @@ pub fn init_abis() {
     register_abi("rt_lttf2", ABI_RT_LTTF2, abi_rt_lttf2 as usize);
     register_abi("rt_letf2", ABI_RT_LETF2, abi_rt_letf2 as usize);
     register_abi("rt_gttf2", ABI_RT_GTTF2, abi_rt_gttf2 as usize);
+
+    register_abi("rt_clzsi2", ABI_RT_CLZSI2, abi_rt_clzsi2 as usize);
+    register_abi("rt_clzdi2", ABI_RT_CLZDI2, abi_rt_clzdi2 as usize);
+    register_abi("rt_clzti2", ABI_RT_CLZTI2, abi_rt_clzti2 as usize);
+
+    register_abi("rt_bswapsi2", ABI_RT_BSWAPSI2, abi_rt_bswapsi2 as usize);
+    register_abi("rt_bswapdi2", ABI_RT_BSWAPDI2, abi_rt_bswapdi2 as usize);
 }
 
 fn register_abi(name: &str, num: usize, handle: usize) {

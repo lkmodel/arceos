@@ -1,20 +1,20 @@
-#ifndef __HIDDEN_H
-#define __HIDDEN_H
+#ifndef __RT_FLOAT_H
+#define __RT_FLOAT_H
 
 #include <features.h>
 
 // 3.2.1 Arithmetic functions
 
-// float __addsf3(float a, float b);
-// double __adddf3(double a, double b);
+float __addsf3(float a, float b);
+double __adddf3(double a, double b);
 long double __addtf3(long double a, long double b);
-// long double __addxf3(long double a, long double b);
+long double __addxf3(long double a, long double b);
 // These functions return the sum of `a` and `b`.
 
-// float __subsf3(float a, float b);
-// double __subdf3(double a, double b);
+float __subsf3(float a, float b);
+double __subdf3(double a, double b);
 long double __subtf3(long double a, long double b);
-// long double __subxf3(long double a, long double b);
+long double __subxf3(long double a, long double b);
 // These functions return the difference between `b` and `a`; that is, `a` - `b`.
 
 // float __mulsf3(float a, float b);

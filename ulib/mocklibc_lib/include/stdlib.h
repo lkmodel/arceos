@@ -43,10 +43,10 @@ void *realloc(void *, size_t);
 void free(void *);
 // void *aligned_alloc(size_t, size_t);
 
-// _Noreturn void abort(void);
+_Noreturn void abort(void);
 // int atexit(void (*)(void));
 // _Noreturn void exit(int);
-// _Noreturn void _Exit(int);
+_Noreturn void _Exit(int);
 // int at_quick_exit(void (*)(void));
 // _Noreturn void quick_exit(int);
 

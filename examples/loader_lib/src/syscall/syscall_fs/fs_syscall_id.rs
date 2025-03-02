@@ -50,6 +50,7 @@ pub enum FsSyscallId {
     FSTAT = 80,
     SYNC = 81,
     FSYNC = 82,
+    FDATASYNC = 83,
     UTIMENSAT = 88,
     RENAMEAT2 = 276,
     COPYFILERANGE = 285,

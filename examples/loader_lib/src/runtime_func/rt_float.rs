@@ -4,17 +4,53 @@ use cty::{c_double, c_float, c_int, c_long, c_uint};
 use core::f128;
 type CLongDouble = f128;
 
+/// 100
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_rt_addsf3(a: c_float, b: c_float) -> c_float {
+    info!("[ABI] addsf3");
+    a + b
+}
+/// 101
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_rt_adddf3(a: c_double, b: c_double) -> c_double {
+    info!("[ABI] adddf3");
+    a + b
+}
 /// 102
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_rt_addtf3(a: CLongDouble, b: CLongDouble) -> CLongDouble {
     info!("[ABI] addtf3");
     a + b
 }
+/// 103
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_rt_addxf3(a: CLongDouble, b: CLongDouble) -> CLongDouble {
+    info!("[ABI] addxf3");
+    a + b
+}
 
+/// 104
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_rt_subsf3(a: c_float, b: c_float) -> c_float {
+    info!("[ABI] subsf3");
+    a - b
+}
+/// 105
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_rt_subdf3(a: c_double, b: c_double) -> c_double {
+    info!("[ABI] subdf3");
+    a - b
+}
 /// 106
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_rt_subtf3(a: CLongDouble, b: CLongDouble) -> CLongDouble {
     info!("[ABI] subtf3");
+    a - b
+}
+/// 107
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn abi_rt_subxf3(a: CLongDouble, b: CLongDouble) -> CLongDouble {
+    info!("[ABI] subxf3");
     a - b
 }
 
