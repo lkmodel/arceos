@@ -1,4 +1,3 @@
-mod file;
 mod mem;
 mod noimpl;
 mod syscall;

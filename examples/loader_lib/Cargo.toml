@@ -30,6 +30,7 @@ axdriver = { workspace = true, optional = true }
 axalloc = { workspace = true , optional = true }
 
 # Other crates
+xmas-elf = "0.9"
 elf = { version = "0.7.4", default-features = false }
 # printf-compat = { version = "0.1.1", default-features = false }
 axio = { version = "0.1", features = ["alloc"] }

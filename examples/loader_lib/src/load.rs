@@ -5,7 +5,7 @@ use core::{
 
 use axstd::{format, println};
 
-use axlog::debug;
+use axlog::{debug, warn};
 
 use elf::{
     ElfBytes,
@@ -220,13 +220,16 @@ fn load_segment(
 }
 
 fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
-    debug!("modify for solib");
-
-    // Relocation section `.rela.plt` at offset 0x7fc0 contains 237 entries:
     let (lib_dynsym_table, lib_dynstr_table) = lib_elf
         .dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")
         .expect("ELF should have a dynamic symbol table");
+    let (app_dynsym_table, app_dynstr_table) = app_elf
+        .dynamic_symbol_table()
+        .expect("Failed to parse dynamic symbol table")
+        .expect("ELF should have a dynamic symbol table");
+
+    debug!("modify for LIB-RELA.PLT so lib");
     let lib_rela_plt_shdr = lib_elf
         .section_header_by_name(".rela.plt")
         .expect("section table should be parseable")
@@ -234,10 +237,6 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
     let lib_rela_plts = lib_elf
         .section_data_as_relas(&lib_rela_plt_shdr)
         .expect("Failed to parse .rela.plt section");
-    let (app_dynsym_table, app_dynstr_table) = app_elf
-        .dynamic_symbol_table()
-        .expect("Failed to parse dynamic symbol table")
-        .expect("ELF should have a dynamic symbol table");
 
     let run_code_entry_name = "main";
 
@@ -254,54 +253,59 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                 "Failed to get symbol name for index: {}",
                 lib_sym.st_name
             ));
-        let lib_sym_type = lib_sym.st_symtype();
+        let lib_rela_type = lib_rela_plt.r_type;
 
-        if lib_rela_name == run_code_entry_name {
-            // Find symbol main in APP ELF
-            let app_sym = app_dynsym_table
-                .iter()
-                .find(|s| {
-                    let name = app_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
-                    name == lib_rela_name
-                })
-                .expect("Failed to find symbol in APP dynamic symbol table");
+        match lib_rela_type {
+            // Indicates the symbol associated with a `PLT` entry: `S`
+            R_RISCV_JUMP_SLOT => {
+                if lib_rela_name == run_code_entry_name {
+                    // Find symbol main in APP ELF
+                    let app_sym = app_dynsym_table
+                        .iter()
+                        .find(|s| {
+                            let name = app_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                            name == lib_rela_name
+                        })
+                        .expect("Failed to find symbol in APP dynamic symbol table");
 
-            unsafe {
-                *((LIB_START as u64 + lib_rela_plt.r_offset) as *mut usize) =
-                    APP_START + app_sym.st_value as usize;
+                    unsafe {
+                        *((LIB_START as u64 + lib_rela_plt.r_offset) as *mut usize) =
+                            APP_START + app_sym.st_value as usize;
 
-                debug!(
-                    "[Lib-plt ENTRY] @0x{:x} value 0x{:x} type {} st_name {}",
-                    LIB_START as u64 + lib_rela_plt.r_offset,
-                    APP_START + app_sym.st_value as usize,
-                    lib_sym.st_symtype(),
-                    lib_rela_name,
-                );
-                if app_sym.st_value == 0 {
-                    panic!("Bad st_value");
+                        debug!(
+                            "[Lib-plt ENTRY] @0x{:x} value 0x{:x} type {} st_name {}",
+                            LIB_START as u64 + lib_rela_plt.r_offset,
+                            APP_START + app_sym.st_value as usize,
+                            lib_sym.st_symtype(),
+                            lib_rela_name,
+                        );
+                        if app_sym.st_value == 0 {
+                            panic!("Bad st_value");
+                        }
+                    }
+                } else {
+                    unsafe {
+                        *((LIB_START as u64 + lib_rela_plt.r_offset) as *mut usize) =
+                            LIB_START + lib_sym.st_value as usize;
+                        debug!(
+                            "[Lib-rela.plt R_RISCV_JUMP_SLOT] @0x{:x}=0x{:x} st_name {}",
+                            LIB_START as u64 + lib_rela_plt.r_offset,
+                            LIB_START + lib_sym.st_value as usize,
+                            lib_rela_name,
+                        );
+                        if lib_sym.st_value == 0 {
+                            panic!("Bad st_value");
+                        }
+                    }
                 }
             }
-        } else {
-            unsafe {
-                *((LIB_START as u64 + lib_rela_plt.r_offset) as *mut usize) =
-                    LIB_START + lib_sym.st_value as usize;
-                debug!(
-                    "[Lib-plt] @0x{:x} value 0x{:x} type {} st_name {}",
-                    LIB_START as u64 + lib_rela_plt.r_offset,
-                    LIB_START + lib_sym.st_value as usize,
-                    lib_sym.st_symtype(),
-                    lib_rela_name,
-                );
-                if lib_sym.st_value == 0 {
-                    panic!("Bad st_value");
-                }
+            _ => {
+                panic!("Unknown relocation type: {}", lib_rela_type);
             }
         }
     }
 
-    // ======
-
-    // Relocation section `.rela.dyn` at offset 0x7c48 contains 37 entries:
+    debug!("modify for LIB-RELA.DYN so lib");
     let lib_rela_dyn_shdr = lib_elf
         .section_header_by_name(".rela.dyn")
         .expect("section table should be parseable")
@@ -323,17 +327,29 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                 "Failed to get symbol name for index: {}",
                 lib_sym.st_name
             ));
-        let lib_sym_type = lib_sym.st_symtype();
+        let lib_rela_type = lib_rela_dyn.r_type;
 
-        match lib_sym_type {
-            STB_WEAK | STB_GLOBAL => {
+        match lib_rela_type {
+            R_RISCV_RELATIVE => {
+                // Adjust a link address (A) to its load address: `(B + A)`.
                 unsafe {
-                    // FIX:
+                    *((LIB_START as u64 + lib_rela_dyn.r_offset) as *mut usize) =
+                        LIB_START + lib_rela_dyn.r_addend as usize; //  + lib_sym.st_value as usize;
+                }
+                debug!(
+                    "[Lib-rela.dyn R_RISCV_RELATIVE] @0x{:x}=0x{:x}",
+                    LIB_START as u64 + lib_rela_dyn.r_offset,
+                    LIB_START + lib_rela_dyn.r_addend as usize, // + lib_sym.st_value as usize,
+                );
+            }
+            R_RISCV_64 => {
+                // 64-bit relocation: `S + A`.
+                unsafe {
                     *((LIB_START as u64 + lib_rela_dyn.r_offset) as *mut usize) =
                         LIB_START + lib_sym.st_value as usize;
                 }
                 debug!(
-                    "[Lib-rela.dyn GLOBAL | WEAK] @0x{:x}=0x{:x} name {}",
+                    "[Lib-rela.dyn R_RISCV_64] @0x{:x}=0x{:x} name {}",
                     LIB_START as u64 + lib_rela_dyn.r_offset,
                     LIB_START + lib_sym.st_value as usize,
                     lib_rela_name,
@@ -342,61 +358,53 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                     panic!("Bad st_value");
                 }
             }
-            STB_LOCAL => {
-                unsafe {
-                    *((LIB_START as u64 + lib_rela_dyn.r_offset) as *mut usize) =
-                        LIB_START + lib_sym.st_value as usize;
-                }
-                debug!(
-                    "[Lib-rela.dyn LOCAL] @0x{:x}=0x{:x}",
-                    LIB_START as u64 + lib_rela_dyn.r_offset,
-                    LIB_START,
-                );
-            }
             _ => {
-                panic!("Unknown relocation type: {}", lib_sym_type);
+                panic!("Unknown relocation type: {}", lib_rela_type);
             }
         }
     }
 }
 
 fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
-    debug!("modify for run code");
+    // RISC-V relocation types
+    //
+    // `A` Addend field in the relocation entry associated with the symbol.
+    // `B` Base address of a shared object loaded into memory.
+    // `G` Offset of the symbol into the GOT (Global Offset Table).
+    // `GOT` Address of the GOT (Global Offset Table).
+    // `P` Position of the relocation.
+    // `S` Value of the symbol in the symbol table.
+    // `V` Value at the position of the relocation.
+    // `GP` Value of __global_pointer$ symbol.
+    // `TLSMODULE` TLS module index for the object containing the symbol.
+    // `TLSOFFSET` TLS static block offset (relative to `tp`) for the object containing the symbol.
+
     let (app_dynsym_table, app_dynstr_table) = app_elf
         .dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")
         .expect("ELF should have a dynamic symbol table");
-    let app_rela_shdr = app_elf
-        .section_header_by_name(".rela.plt")
-        .expect("section table should be parseable")
-        .expect("elf should have a .rela.plt section");
-    let app_relas = app_elf
-        .section_data_as_relas(&app_rela_shdr)
-        .expect("Failed to parse .rela.dyn section");
-    // Get LIB symbol table
     let (lib_dynsym_table, lib_dynstr_table) = lib_elf
         .dynamic_symbol_table()
         .expect("Failed to parse LIB dynamic symbol table")
         .expect("LIB ELF should have a dynamic symbol table");
-    lib_dynsym_table.iter().find(|s| {
-        let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
-        //        debug!(
-        //            "LIB dynamic_symbol_table value 0x{:016x} st_name {}",
-        //            LIB_START + s.st_value as usize,
-        //            name,
-        //        );
-        false
-    });
 
-    for app_rela in app_relas {
+    debug!("modify for APP-RELA.PLT run code");
+    let app_rela_plt_shdr = app_elf
+        .section_header_by_name(".rela.plt")
+        .expect("section table should be parseable")
+        .expect("elf should have a .rela.plt section");
+    let app_rela_plts = app_elf
+        .section_data_as_relas(&app_rela_plt_shdr)
+        .expect("Failed to parse .rela.dyn section");
+
+    for app_rela_plt in app_rela_plts {
         // Get the `r_sym'th` symbol from the dynamic symbol table
         let app_sym = app_dynsym_table
-            .get(app_rela.r_sym as usize)
+            .get(app_rela_plt.r_sym as usize)
             .expect("Failed to get symbol");
         let app_rela_name = app_dynstr_table
             .get(app_sym.st_name as usize)
             .expect("Failed to get symbol name");
-        //        debug!("Finding symbol name {}", app_rela_name);
 
         // Find symbol in LIB ELF
         let lib_sym = lib_dynsym_table
@@ -411,17 +419,96 @@ fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
         unsafe {
             debug!(
                 "[App-plt] @0x{:x} value 0x{:x} app-type {} lib-type {} st_name {}",
-                APP_START as u64 + app_rela.r_offset,
+                APP_START as u64 + app_rela_plt.r_offset,
                 LIB_START + lib_sym.st_value as usize,
                 app_sym.st_symtype(),
                 lib_sym.st_symtype(),
                 app_rela_name,
             );
 
-            *((APP_START as u64 + app_rela.r_offset) as *mut usize) =
+            *((APP_START as u64 + app_rela_plt.r_offset) as *mut usize) =
                 LIB_START + lib_sym.st_value as usize;
             if lib_sym.st_value == 0 {
                 panic!("Bad st_value");
+            }
+        }
+    }
+
+    debug!("modify for APP-RELA.DYN run code");
+    let app_rela_dyn_shdr = app_elf
+        .section_header_by_name(".rela.dyn")
+        .expect("section table should be parseable")
+        .expect("elf should have a .rela.dyn section");
+    let app_rela_dyns = app_elf
+        .section_data_as_relas(&app_rela_dyn_shdr)
+        .expect("Failed to parse .rela.dyn section");
+
+    for app_rela_dyn in app_rela_dyns {
+        let app_sym = app_dynsym_table
+            .get(app_rela_dyn.r_sym as usize)
+            .expect(&format!(
+                "Failed to get symbol for index: {}",
+                app_rela_dyn.r_sym
+            ));
+        let app_rela_name = app_dynstr_table
+            .get(app_sym.st_name as usize)
+            .expect(&format!(
+                "Failed to get symbol name for index: {}",
+                app_sym.st_name
+            ));
+        let app_rela_type = app_rela_dyn.r_type;
+
+        match app_rela_type {
+            R_RISCV_RELATIVE => {
+                // Adjust a link address (A) to its load address: `(B + A)`.
+                unsafe {
+                    *((APP_START as u64 + app_rela_dyn.r_offset) as *mut usize) =
+                        APP_START + app_rela_dyn.r_addend as usize;
+                }
+                debug!(
+                    "[App-rela.dyn R_RISCV_RELATIVE] @0x{:x}=0x{:x}",
+                    APP_START as u64 + app_rela_dyn.r_offset,
+                    APP_START + app_rela_dyn.r_addend as usize,
+                );
+            }
+            R_RISCV_64 => {
+                // 64-bit relocation: `S + A`.
+                unsafe {
+                    *((APP_START as u64 + app_rela_dyn.r_offset) as *mut usize) =
+                        APP_START + app_sym.st_value as usize;
+                }
+                debug!(
+                    "[App-rela.dyn R_RISCV_64] @0x{:x}=0x{:x} name {}",
+                    APP_START as u64 + app_rela_dyn.r_offset,
+                    APP_START + app_sym.st_value as usize,
+                    app_rela_name,
+                );
+                if app_sym.st_value == 0 {
+                    // Find symbol in LIB ELF
+                    let lib_sym = lib_dynsym_table
+                        .iter()
+                        .find(|s| {
+                            let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                            name == app_rela_name
+                        })
+                        .expect("Failed to find symbol in LIB dynamic symbol table");
+
+                    unsafe {
+                        *((APP_START as u64 + app_rela_dyn.r_offset) as *mut usize) =
+                            LIB_START + lib_sym.st_value as usize;
+                    }
+                    debug!(
+                        "[App-rela.dyn GLOBAL | WEAK](re) @0x{:x}=0x{:x} name {}",
+                        APP_START as u64 + app_rela_dyn.r_offset,
+                        LIB_START + lib_sym.st_value as usize,
+                        app_rela_name,
+                    );
+
+                    warn!("Bad st_value");
+                }
+            }
+            _ => {
+                panic!("Unknown relocation type: {}", app_rela_type);
             }
         }
     }

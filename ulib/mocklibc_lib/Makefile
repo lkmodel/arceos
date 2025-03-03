@@ -26,6 +26,7 @@ STATIC_LIB = $(LIB_DIR)/libmock.a
 DYNAMIC_LIB = $(LIB_DIR)/libmock.so
 LIBSRC += $(wildcard $(SRC_DIR)/__rt_float/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/__rt_integer/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/__rt_tmp/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/complex/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/conf/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/ctype/*.c)

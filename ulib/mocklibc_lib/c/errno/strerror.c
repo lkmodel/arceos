@@ -34,8 +34,19 @@ char *__strerror_l(int e, locale_t loc)
 	if (e==EDQUOT) e=0;
 	else if (e==EDQUOT_ORIG) e=EDQUOT;
 #endif
+	printf("CHECKADDRESS arg1 @%p=%d\n", &e, e);
+	printf("CHECKADDRESS arg2 @%p\n", &(loc->cat));
+	printf("CHECKADDRESS struct: errmsgidx @%p\n", &errmsgidx);
 	if (e >= sizeof errmsgidx / sizeof *errmsgidx) e = 0;
+	// 取不到cat部分，地址为0
+	printf("CHECK VALUE cat %x\n",  loc->cat[0]);
+	printf("CHECK IN LIB 1\n");
 	s = (char *)&errmsgstr + errmsgidx[e];
+	printf("CHECK IN LIB 2\n");
+	printf("CHECKAT ADDR @%p", &(loc->cat[LC_MESSAGES]));
+	printf("=%x\n",  loc->cat[LC_MESSAGES]);
+	(char *)LCTRANS(s, LC_MESSAGES, loc);
+	printf("CHECK IN LIB 3\n");
 	return (char *)LCTRANS(s, LC_MESSAGES, loc);
 }
 

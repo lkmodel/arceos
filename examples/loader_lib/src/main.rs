@@ -26,6 +26,8 @@ mod syscall;
 
 mod runtime_func;
 
+mod config;
+
 #[unsafe(no_mangle)]
 fn main() {
     init_all();
