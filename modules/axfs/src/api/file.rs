@@ -107,6 +107,11 @@ impl Metadata {
         self.0.perm()
     }
 
+    /// Sets the permissions of the file this metadata is for.
+    pub fn set_permissions(&mut self, perm: Permissions) {
+        self.0.set_perm(perm)
+    }
+
     /// Returns the total size of this file in bytes.
     pub const fn size(&self) -> u64 {
         self.0.size()
@@ -167,6 +172,21 @@ impl File {
     /// Queries metadata about the underlying file.
     pub fn metadata(&self) -> Result<Metadata> {
         self.inner.get_attr().map(Metadata)
+    }
+
+    /// Whether the file is executable.
+    pub fn executable(&self) -> bool {
+        self.inner.executable()
+    }
+
+    /// Get the file attributes.
+    pub fn get_attr(&self) -> Result<fops::FileAttr> {
+        self.inner.get_attr()
+    }
+
+    /// To truncate the file to a specified length.
+    pub fn truncate(&mut self, len: usize) -> Result<()> {
+        self.inner.truncate(len as u64)
     }
 }
 
