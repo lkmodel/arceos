@@ -1,8 +1,8 @@
 use crate::{
     linux_env::{
-        axfs_ext::api::{FileIO, OpenFlags},
+        axfs_ext::api::OpenFlags,
         linux_fs::{
-            fd_manager::{FDM, alloc_fd},
+            api::UNI_API,
             link::{AT_FDCWD, FilePath, deal_with_path},
             utils::{UtilsError, deal_path},
         },
@@ -13,7 +13,7 @@ use crate::{
         syscall_fs::ctype::file::{FileDesc, new_fd},
     },
 };
-use alloc::{string::ToString, sync::Arc, vec};
+use alloc::string::ToString;
 use axerrno::AxError;
 use axfs::api::{
     Permissions, create_dir, metadata, remove_dir, remove_file, rename, set_current_dir,
@@ -36,6 +36,7 @@ pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
     let cwd = axfs::api::current_dir().unwrap();
 
     // TODO: 如果buf为NULL,则系统分配缓存区
+    // ```
     // let process = current_process();
     // let process_inner = process.inner.lock();
     // if buf.is_null() {
@@ -370,7 +371,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let cmd = args[1];
     let arg = args[2];
-    let mut fd_table = FDM.fd_table.lock();
+    let mut fd_table = UNI_API.fd_manager.fd_table.lock();
 
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -384,7 +385,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     info!("fd: {}, cmd: {}", fd, cmd);
     match Fcntl64Cmd::try_from(cmd) {
         Ok(Fcntl64Cmd::F_DUPFD) => {
-            let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+            let new_fd = if let Ok(fd) = UNI_API.alloc_fd(&mut fd_table) {
                 fd
             } else {
                 // 文件描述符达到上限了
@@ -417,7 +418,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
             Err(SyscallError::EINVAL)
         }
         Ok(Fcntl64Cmd::F_DUPFD_CLOEXEC) => {
-            let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+            let new_fd = if let Ok(fd) = UNI_API.alloc_fd(&mut fd_table) {
                 fd
             } else {
                 // 文件描述符达到上限了
@@ -520,7 +521,7 @@ pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
     };
 
     // 获取文件描述符对应的文件
-    let file_io = match FDM.fd_table.lock().get(fd) {
+    let file_io = match UNI_API.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF), // 文件描述符无效
     };
@@ -634,7 +635,7 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let request = args[1];
     let argp = args[2];
-    let fd_table = FDM.fd_table.lock();
+    let fd_table = UNI_API.fd_manager.fd_table.lock();
     warn!("fd: {}, request: {}, argp: {}", fd, request, argp);
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -700,7 +701,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         //     return ErrorNo::EPERM as isize;
         // }
         //        let fd_table = process.fd_manager.fd_table.lock();
-        let fd_table = FDM.fd_table.lock();
+        let fd_table = UNI_API.fd_manager.fd_table.lock();
         if dir_fd > fd_table.len() || fd_table[dir_fd].is_none() {
             return Err(SyscallError::EBADF);
         }

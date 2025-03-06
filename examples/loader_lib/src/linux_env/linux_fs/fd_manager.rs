@@ -14,7 +14,6 @@ use lazyinit::LazyInit;
 
 pub const FD_LIMIT_ORIGIN: usize = 1025;
 /// 通常情况下，一个`FdManager`足以满足单进程多线程的需求。
-pub static FDM: LazyInit<FdManager> = LazyInit::new();
 
 pub struct FdManager {
     /// 保存文件描述符的数组
@@ -24,25 +23,6 @@ pub struct FdManager {
     /// 创建文件时的`mode`的掩码
     umask: AtomicI32,
     pub cwd: Mutex<String>,
-}
-
-pub fn alloc_fd(fd_table: &mut Vec<Option<Arc<dyn FileIO>>>) -> AxResult<usize> {
-    for (i, fd) in fd_table.iter().enumerate() {
-        if fd.is_none() {
-            return Ok(i);
-        }
-    }
-    if fd_table.len() >= FDM.get_limit() as usize {
-        debug!("fd table is full");
-        return Err(AxError::StorageFull);
-    }
-    fd_table.push(None);
-    Ok(fd_table.len() - 1)
-}
-
-/// 获取当前进程的工作目录
-pub fn get_cwd() -> String {
-    FDM.cwd.lock().clone()
 }
 
 impl FdManager {

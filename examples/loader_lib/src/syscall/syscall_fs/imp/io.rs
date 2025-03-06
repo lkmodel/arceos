@@ -2,8 +2,8 @@ use crate::{
     linux_env::{
         axfs_ext::api::{FileIOType, OpenFlags, SeekFrom},
         linux_fs::{
-            fd_manager::{FDM, alloc_fd},
-            link::{create_link, deal_with_path},
+            api::UNI_API,
+            link::{create_link, real_path},
             utils::{UtilsError, deal_path, has_permission},
         },
     },
@@ -80,8 +80,8 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
         },
     };
 
-    let mut fd_table = FDM.fd_table.lock();
-    let fd_num: usize = if let Ok(fd) = alloc_fd(&mut fd_table) {
+    let mut fd_table = UNI_API.fd_manager.fd_table.lock();
+    let fd_num: usize = if let Ok(fd) = UNI_API.alloc_fd(&mut fd_table) {
         debug!("allocated fd_num: {}", fd);
         fd
     } else {
@@ -202,7 +202,7 @@ pub fn syscall_close(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     info!("Into syscall_close. fd: {}", fd);
 
-    let mut fd_table = FDM.fd_table.lock();
+    let mut fd_table = UNI_API.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
         return Err(SyscallError::EPERM);
@@ -262,7 +262,7 @@ pub fn syscall_read(args: [usize; 6]) -> SyscallResult {
     // FIX: 进行检查，这里是不安全
     let buf = unsafe { from_raw_parts_mut(buf, count) };
 
-    let file = match FDM.fd_table.lock().get(fd) {
+    let file = match UNI_API.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF),
     };
@@ -301,7 +301,7 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
     // FIX: 进行地址检查，当超出可访问地址空间的时候，返回错误EFAULT
     let buf = unsafe { from_raw_parts(buf, count) };
 
-    let file = match FDM.fd_table.lock().get(fd) {
+    let file = match UNI_API.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF),
     };
@@ -340,7 +340,7 @@ pub fn syscall_pipe2(_args: [usize; 6]) -> SyscallResult {
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
 pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
-    let mut fd_table = FDM.fd_table.lock();
+    let mut fd_table = UNI_API.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
         return Err(SyscallError::EBADF);
@@ -350,7 +350,7 @@ pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EBADF);
     }
 
-    let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+    let new_fd = if let Ok(fd) = UNI_API.alloc_fd(&mut fd_table) {
         fd
     } else {
         // 文件描述符达到上限了
@@ -371,7 +371,7 @@ pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let new_fd = args[1];
     let flags = args[2];
-    let mut fd_table = FDM.fd_table.lock();
+    let mut fd_table = UNI_API.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
         return Err(SyscallError::EBADF);
@@ -385,7 +385,7 @@ pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EINVAL);
     }
     if new_fd >= fd_table.len() {
-        if new_fd >= (FDM.get_limit() as usize) {
+        if new_fd >= (UNI_API.fd_manager.get_limit() as usize) {
             // 超出了资源限制
             return Err(SyscallError::EBADF);
         }
@@ -464,14 +464,14 @@ pub fn syscall_lseek(args: [usize; 6]) -> SyscallResult {
     let offset = args[1] as isize;
     let whence = args[2];
     info!("fd: {} offset: {} whence: {}", fd, offset, whence);
-    if fd >= FDM.fd_table.lock().len() || fd < 3 {
+    if fd >= UNI_API.fd_manager.fd_table.lock().len() || fd < 3 {
         debug!("fd {} is out of range", fd);
         return Err(SyscallError::EBADF);
     }
     if offset < 0 {
         return Err(SyscallError::EINVAL);
     }
-    let fd_table = FDM.fd_table.lock();
+    let fd_table = UNI_API.fd_manager.fd_table.lock();
     if let Some(file) = fd_table[fd].as_ref() {
         if file.get_type() == FileIOType::DirDesc {
             debug!("fd is a dir");
@@ -513,8 +513,8 @@ pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
     let buf = args[1] as *mut u8;
     let count = args[2];
     let offset = args[3];
-    // todo: 把check fd整合到fd_manager中
-    let file = match FDM.fd_table.lock().get(fd) {
+    // TODO: 把check fd整合到fd_manager中
+    let file = match UNI_API.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF),
     };
@@ -540,61 +540,76 @@ pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
 /// * `path: *const u8`
 /// * `buf: *mut u8`
 /// * `bufsiz: usize`
-pub fn syscall_readlinkat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    // let dir_fd = args[0];
-    //    let path = args[1] as *const u8;
-    //    let buf = args[2] as *mut u8;
-    //    let bufsiz = args[3];
-    //    let process = current_process();
-    //    if process
-    //        .manual_alloc_for_lazy((path as usize).into())
-    //        .is_err()
-    //    {
-    //        return Err(SyscallError::EFAULT);
-    //    }
-    //    if !buf.is_null()
-    //        && process
-    //            .manual_alloc_for_lazy((buf as usize).into())
-    //            .is_err()
-    //    {
-    //        return Err(SyscallError::EFAULT);
-    //    }
+pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
+    let dir_fd = args[0];
+    let path = args[1] as *const u8;
+    let buf = args[2] as *mut u8;
+    let bufsiz = args[3];
+    // ```
+    // if process
+    //     .manual_alloc_for_lazy((path as usize).into())
+    //     .is_err()
+    // {
+    //     return Err(SyscallError::EFAULT);
+    // }
+    // if !buf.is_null()
+    //     && process
+    //         .manual_alloc_for_lazy((buf as usize).into())
+    //         .is_err()
+    // {
+    //     return Err(SyscallError::EFAULT);
+    // }
 
-    //    let path = deal_with_path(dir_fd, Some(path), false);
-    //
-    //    if path.is_none() {
-    //        return Err(SyscallError::ENOENT);
-    //    }
-    //    let path = path.unwrap();
-    //    if path.path() == "proc/self/exe" {
-    //        // 针对lmbench_all特判
-    //        let name = "/lmbench_all";
-    //        let len = bufsiz.min(name.len());
-    //        let slice = unsafe { core::slice::from_raw_parts_mut(buf, bufsiz) };
-    //        slice.copy_from_slice(&name.as_bytes()[..len]);
-    //        return Ok(len as isize);
-    //    }
-    //    // 获取进程自身的符号链接信息
-    //    if path.path() == "/proc/self/exe" {
-    //        // 获取该进程符号链接对应的真正地址
-    //        let file_real_path = process.get_file_path();
-    //        let len = bufsiz.min(file_real_path.len());
-    //        let slice = unsafe { core::slice::from_raw_parts_mut(buf, len) };
-    //        slice.copy_from_slice(&file_real_path.as_bytes()[..len]);
-    //
-    //        return Ok(file_real_path.len() as isize);
-    //    }
-    //
-    //    if *path.path() != real_path(&(path.path().to_string())) {
-    //        // 说明链接存在
-    //        let path = path.path();
-    //        let len = bufsiz.min(path.len());
-    //        let slice = unsafe { core::slice::from_raw_parts_mut(buf, len) };
-    //        slice.copy_from_slice(&path.as_bytes()[..len]);
-    //        return Ok(path.len() as isize);
-    //    }
-    //    Err(SyscallError::EINVAL)
+    if !(bufsiz as isize).is_positive() {
+        return Err(SyscallError::EINVAL);
+    }
+
+    let path = match deal_path(dir_fd, Some(path), false) {
+        Ok(path) => path,
+        Err(e) => match e {
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
+            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
+            UtilsError::PanicMe => {
+                error!("panic me {:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+            _ => {
+                error!("{:?}", e);
+                return Err(SyscallError::EPERM);
+            }
+        },
+    };
+
+    if path.path() == "proc/self/exe" {
+        // 针对`lmbench_all`特判
+        let name = "/lmbench_all";
+        let len = bufsiz.min(name.len());
+        let slice = unsafe { core::slice::from_raw_parts_mut(buf, bufsiz) };
+        slice.copy_from_slice(&name.as_bytes()[..len]);
+        return Ok(len as isize);
+    }
+    // 获取进程自身的符号链接信息
+    if path.path() == "/proc/self/exe" {
+        // 获取该进程符号链接对应的真正地址
+        let file_real_path = UNI_API.get_file_path();
+        let len = bufsiz.min(file_real_path.len());
+        let slice = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+        slice.copy_from_slice(&file_real_path.as_bytes()[..len]);
+
+        return Ok(file_real_path.len() as isize);
+    }
+
+    if *path.path() != real_path(&(path.path().to_string())) {
+        // 说明链接存在
+        let path = path.path();
+        let len = bufsiz.min(path.len());
+        let slice = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+        slice.copy_from_slice(&path.as_bytes()[..len]);
+        return Ok(path.len() as isize);
+    }
+    Err(SyscallError::EINVAL)
 }
 
 /// 68
@@ -611,7 +626,7 @@ pub fn syscall_pwrite64(args: [usize; 6]) -> SyscallResult {
     let count = args[2];
     let offset = args[3];
 
-    let file = match FDM.fd_table.lock().get(fd) {
+    let file = match UNI_API.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF),
     };
@@ -649,8 +664,8 @@ pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
     if (out_fd as isize) < 0 || (in_fd as isize) < 0 {
         return Err(SyscallError::EBADF);
     }
-    let out_file = FDM.fd_table.lock()[out_fd].clone().unwrap();
-    let in_file = FDM.fd_table.lock()[in_fd].clone().unwrap();
+    let out_file = UNI_API.fd_manager.fd_table.lock()[out_fd].clone().unwrap();
+    let in_file = UNI_API.fd_manager.fd_table.lock()[in_fd].clone().unwrap();
     let old_in_offset = in_file.seek(SeekFrom::Current(0)).unwrap();
 
     let mut buf = vec![0u8; count];
@@ -682,8 +697,24 @@ pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
 /// # Arguments
 /// * `fd: usize`
 /// * `len: usize`
-pub fn syscall_ftruncate64(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_ftruncate64(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let len = args[1];
+    info!("fd: {}, len: {}", fd, len);
+    let fd_table = UNI_API.fd_manager.fd_table.lock();
+    if fd >= fd_table.len() {
+        return Err(SyscallError::EINVAL);
+    }
+    if fd_table[fd].is_none() {
+        return Err(SyscallError::EINVAL);
+    }
+
+    if let Some(file) = fd_table[fd].as_ref() {
+        if file.truncate(len).is_err() {
+            return Err(SyscallError::EINVAL);
+        }
+    }
+    Ok(0)
 }
 
 /**
@@ -700,6 +731,69 @@ pub fn syscall_ftruncate64(_args: [usize; 6]) -> SyscallResult {
 /// * `off_out: *mut usize`
 /// * `len: usize`
 /// * `flags: usize`
-pub fn syscall_copyfilerange(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_copyfilerange(args: [usize; 6]) -> SyscallResult {
+    let fd_in = args[0];
+    let off_in = args[1] as *mut usize;
+    let fd_out = args[2];
+    let off_out = args[3] as *mut usize;
+    let len = args[4];
+    let flags = args[5];
+    let in_offset = if off_in.is_null() {
+        -1
+    } else {
+        unsafe { *off_in as isize }
+    };
+    let out_offset = if off_out.is_null() {
+        -1
+    } else {
+        unsafe { *off_out as isize }
+    };
+    if len == 0 {
+        return Ok(0);
+    }
+    info!(
+        "copyfilerange: fd_in: {}, fd_out: {}, off_in: {}, off_out: {}, len: {}, flags: {}",
+        fd_in, fd_out, in_offset, out_offset, len, flags
+    );
+    let fd_table = UNI_API.fd_manager.fd_table.lock();
+    let out_file = fd_table[fd_out].clone().unwrap();
+    let in_file = fd_table[fd_in].clone().unwrap();
+    let old_in_offset = in_file.seek(SeekFrom::Current(0)).unwrap();
+    let old_out_offset = out_file.seek(SeekFrom::Current(0)).unwrap();
+
+    // ```
+    // if in_file.lock().get_stat().unwrap().st_size < (in_offset as u64) + len as u64 {
+    //     return 0;
+    // }
+
+    // set offset
+    if !off_in.is_null() {
+        in_file.seek(SeekFrom::Start(in_offset as u64)).unwrap();
+    }
+
+    if !off_out.is_null() {
+        out_file.seek(SeekFrom::Start(out_offset as u64)).unwrap();
+    }
+
+    // Copy
+    let mut buf = vec![0; len];
+    let read_len = in_file.read(buf.as_mut_slice()).unwrap();
+
+    let write_len = out_file.write(&buf[..read_len]).unwrap();
+
+    // Set offset | modify off_in & off_out
+    if !off_in.is_null() {
+        in_file.seek(SeekFrom::Start(old_in_offset)).unwrap();
+        unsafe {
+            *off_in += read_len;
+        }
+    }
+    if !off_out.is_null() {
+        out_file.seek(SeekFrom::Start(old_out_offset)).unwrap();
+        unsafe {
+            *off_out += write_len;
+        }
+    }
+
+    Ok(write_len as isize)
 }

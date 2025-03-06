@@ -1,4 +1,4 @@
-use crate::linux_env::{axfs_ext::api::FileIOType, linux_fs::fd_manager::FDM};
+use crate::linux_env::{axfs_ext::api::FileIOType, linux_fs::api::UNI_API};
 use alloc::{
     collections::BTreeMap,
     format,
@@ -189,6 +189,7 @@ pub fn get_link_count(src_path: &String) -> usize {
     }
 }
 
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 /// 这个是无涉其他代码的，不需要进行检查
 pub struct FilePath(String);
 impl FilePath {
@@ -359,7 +360,7 @@ pub fn deal_with_path(
             path = String::from(".");
         } else {
             // 直接获取文件描述符表，我们要自行实现有一个全局的 fd_table
-            let fd_table = FDM.fd_table.lock();
+            let fd_table = UNI_API.fd_manager.fd_table.lock();
             if dir_fd >= fd_table.len() {
                 axlog::warn!("fd index out of range");
                 return None;
@@ -377,7 +378,7 @@ pub fn deal_with_path(
         }
     } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
         // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
-        let fd_table = FDM.fd_table.lock();
+        let fd_table = UNI_API.fd_manager.fd_table.lock();
         if dir_fd >= fd_table.len() {
             axlog::warn!("fd index out of range");
             return None;

@@ -2,7 +2,6 @@ use crate::{
     linux_env::{
         axfs_ext::api::{FileIO, FileIOType, Kstat, OpenFlags, SeekFrom},
         linux_fs::{
-            fd_manager::{FDM, alloc_fd},
             link::{FilePath, create_link},
             utils::{UtilsError, deal_path, has_permission},
         },

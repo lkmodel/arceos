@@ -1,26 +1,111 @@
 use crate::{
     linux_env::{
-        axfs_ext::api::{FileIO, FileIOType, Kstat, OpenFlags, SeekFrom},
-        linux_fs::{
-            fd_manager::{FDM, alloc_fd},
-            link::{FilePath, create_link},
-            utils::{UtilsError, deal_path, has_permission},
+        axfs_ext::{
+            self,
+            api::{FileIO, Kstat, OpenFlags},
         },
+        linux_fs::link::FilePath,
     },
     syscall::{
-        IoVec, O_CLOEXEC, StMode, SyscallError, SyscallResult, normal_file_mode,
-        syscall_fs::ctype::{
-            dir::{get_dir_desc, new_dir},
-            epoll::{EpollCtl, EpollEvent, EpollEventType, EpollFile},
-            file::{new_fd, new_inode},
-        },
+        StMode, SyscallError, normal_file_mode,
+        syscall_fs::ctype::{dir::new_dir, file::new_fd},
     },
 };
-use alloc::{string::ToString, sync::Arc, vec};
-use axerrno::AxError;
-use axfs::api::{Permissions, lookup};
-use axlog::{debug, error, info, warn};
-use core::slice::{from_raw_parts, from_raw_parts_mut};
+use alloc::{string::ToString, vec::Vec};
+use axfs::api::{lookup, metadata};
+use axlog::{debug, info};
+use axsync::Mutex;
+
+// FIX: 测试
+/// 挂载的文件系统。
+/// 目前"挂载"的语义是，把一个文件当作文件系统读写
+pub struct MountedFs {
+    pub device: FilePath,
+    pub mnt_dir: FilePath,
+}
+
+// FIX: 测试
+impl MountedFs {
+    pub fn new(device: &FilePath, mnt_dir: &FilePath) -> Self {
+        assert!(
+            device.is_file() && mnt_dir.is_dir(),
+            "device must be a file and mnt_dir must be a dir"
+        );
+        Self {
+            device: device.clone(),
+            mnt_dir: mnt_dir.clone(),
+        }
+    }
+    #[allow(unused)]
+    pub fn device(&self) -> FilePath {
+        self.device.clone()
+    }
+
+    pub fn mnt_dir(&self) -> FilePath {
+        self.mnt_dir.clone()
+    }
+}
+
+// FIX: 测试
+/// 已挂载的文件系统(设备)。
+/// 注意启动时的文件系统不在这个`vec`里，它在`mod.rs`里。
+static MOUNTED: Mutex<Vec<MountedFs>> = Mutex::new(Vec::new());
+
+// FIX: 测试
+/// 挂载一个`fatfs`类型的设备
+pub fn mount_fat_fs(device_path: &FilePath, mount_path: &FilePath) -> bool {
+    // // `device_path`需要链接转换, mount_path不需要, 因为目前目录没有链接
+    // // 暂时只有Open过的文件会加入到链接表，所以这里先不转换
+    // ```
+    // debug!("mounting {} to {}", device_path.path(), mount_path.path());
+    // if let Some(true_device_path) = real_path(device_path) {
+    match metadata(mount_path.path()) {
+        Ok(_) => {
+            MOUNTED.lock().push(MountedFs::new(device_path, mount_path));
+            info!("mounted {} to {}", device_path.path(), mount_path.path());
+            return true;
+        }
+        Err(_) => {
+            info!(
+                "mount failed: {} to {}",
+                device_path.path(),
+                mount_path.path()
+            );
+            false
+        }
+    }
+    // }
+}
+
+// FIX: 测试
+/// 卸载一个`fatfs`类型的设备
+pub fn umount_fat_fs(mount_path: &FilePath) -> bool {
+    let mut mounted = MOUNTED.lock();
+    let mut i = 0;
+    while i < mounted.len() {
+        if mounted[i].mnt_dir().equal_to(mount_path) {
+            mounted.remove(i);
+            info!("umounted {}", mount_path.path());
+            return true;
+        }
+        i += 1;
+    }
+    info!("umount failed: {}", mount_path.path());
+    false
+}
+
+// FIX: 测试
+/// 检查一个路径是否已经被挂载
+pub fn check_mounted(path: &FilePath) -> bool {
+    let mounted = MOUNTED.lock();
+    for m in mounted.iter() {
+        if path.start_with(&m.mnt_dir()) {
+            debug!("{} is mounted", path.path());
+            return true;
+        }
+    }
+    false
+}
 
 // FIX: 快速开发
 /// 根据给定的路径获取对应的文件stat
@@ -46,8 +131,8 @@ pub fn get_stat_in_fs(path: &FilePath) -> Result<Kstat, SyscallError> {
                 st_nlink: 1,
                 ..Kstat::default()
             };
-            // 先检查是否在vfs中存在对应文件
-            // 判断是在哪个vfs中
+            // 先检查是否在`vfs`中存在对应文件
+            // 判断是在哪个`vfs`中
             if node
                 .as_any()
                 .downcast_ref::<axfs::axfs_devfs::DirNode>()
@@ -69,11 +154,10 @@ pub fn get_stat_in_fs(path: &FilePath) -> Result<Kstat, SyscallError> {
                     .as_any()
                     .downcast_ref::<axfs::axfs_devfs::NullDev>()
                     .is_some()
-            // FIX: 这里直接删除了相关逻辑，希望不要出现问题
-            //                || node
-            //                    .as_any()
-            //                    .downcast_ref::<axfs::axfs_devfs::RandomDev>()
-            //                    .is_some()
+                || node
+                    .as_any()
+                    .downcast_ref::<axfs_ext::random::RandomDev>()
+                    .is_some()
             {
                 stat.st_mode = normal_file_mode(StMode::S_IFCHR).bits();
                 return Ok(stat);

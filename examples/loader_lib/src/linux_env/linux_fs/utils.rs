@@ -1,13 +1,14 @@
-use crate::linux_env::{
-    axfs_ext::api::FileIOType,
-    linux_fs::{
-        fd_manager::FDM,
-        link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
-    },
-};
 use alloc::{format, string::ToString};
 use axfs::api::Permissions;
 use axlog::debug;
+
+use crate::linux_env::{
+    axfs_ext::api::FileIOType,
+    linux_fs::{
+        api::UNI_API,
+        link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
+    },
+};
 
 /// The error type used by `utils`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -72,9 +73,16 @@ pub fn deal_path(
         if path_addr.is_null() {
             return Err(UtilsError::NULL);
         }
+
+        // FIX:
+        // if UNI_API
+        //     .manual_alloc_for_lazy((path_addr as usize).into())
+        //     .is_err()
+        // {
+        //     return Err(UtilsError::CannotAcce);
+        // }
         const START_ADDR: usize = 0xffffffc080100000;
-        const END_ADDR: usize = 0xffffffc0ffffffff;
-        // FIX: 检查指针是否被分配，检查是不是在范围内，并返回错误
+        const END_ADDR: usize = 0xffffffc080800000;
         if (path_addr as usize).lt(&START_ADDR) || (path_addr as usize).ge(&END_ADDR) {
             return Err(UtilsError::CannotAcce);
         }
@@ -87,7 +95,7 @@ pub fn deal_path(
         return Err(UtilsError::StrTooLong);
     } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
         // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
-        let fd_table = FDM.fd_table.lock();
+        let fd_table = UNI_API.fd_manager.fd_table.lock();
         if dir_fd >= fd_table.len() {
             debug!(
                 "dir_fd out of the fd_table bound.(pathname is relative but dirfd is neither AT_FDCWD nor a valid file descriptor)return EBADF"

@@ -4,13 +4,13 @@ use axsync::Mutex;
 use crate::linux_env::{
     axfs_ext::api::OpenFlags,
     linux_fs::{
-        fd_manager::{FD_LIMIT_ORIGIN, FDM, FdManager},
+        api::{UNI_API, UniAPI},
         stdio::{Stderr, Stdin, Stdout},
     },
 };
 
 pub fn init_all() {
-    FDM.init_once(FdManager::new(
+    UNI_API.init_once(UniAPI::new(
         vec![
             // 标准输入
             Some(Arc::new(Stdin {
@@ -25,6 +25,7 @@ pub fn init_all() {
                 flags: Mutex::new(OpenFlags::empty()),
             })),
         ],
-        FD_LIMIT_ORIGIN,
+        // FIXME:
+        0,
     ));
 }

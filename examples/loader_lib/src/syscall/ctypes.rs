@@ -3,7 +3,6 @@ use axhal::{
     time::{MICROS_PER_SEC, NANOS_PER_MICROS, NANOS_PER_SEC, monotonic_time_nanos, nanos_to_ticks},
 };
 use bitflags::*;
-use core::panic;
 
 use crate::linux_env::linux_fs::config::TIMER_FREQUENCY;
 
@@ -11,47 +10,24 @@ use crate::linux_env::linux_fs::config::TIMER_FREQUENCY;
 pub const O_CLOEXEC: u32 = 524288;
 /// The nano seconds number per second
 pub const NSEC_PER_SEC: usize = 1_000_000_000;
-// bitflags! {
-//     /// 指定 sys_wait4 的选项
-//     pub struct WaitFlags: u32 {
-//         /// 不挂起当前进程，直接返回
-//         const WNOHANG = 1 << 0;
-//         /// 报告已执行结束的用户进程的状态
-//         const WIMTRACED = 1 << 1;
-//         /// 报告还未结束的用户进程的状态
-//         const WCONTINUED = 1 << 3;
-//     }
-// }
-// /// sys_times 中指定的结构体类型
-// #[repr(C)]
-// pub struct Tms {
-//     /// 进程用户态执行时间，单位为us
-//     pub tms_utime: usize,
-//     /// 进程内核态执行时间，单位为us
-//     pub tms_stime: usize,
-//     /// 子进程用户态执行时间和，单位为us
-//     pub tms_cutime: usize,
-//     /// 子进程内核态执行时间和，单位为us
-//     pub tms_cstime: usize,
-// }
 
 /// `sys_gettimeofday` 中指定的类型
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct TimeVal {
-    /// seconds
+    /// Seconds
     pub sec: usize,
-    /// microseconds
+    /// Microseconds
     pub usec: usize,
 }
 
 impl TimeVal {
-    /// turn the TimeVal to nano seconds
+    /// Turn the TimeVal to nano seconds
     pub fn turn_to_nanos(&self) -> usize {
         self.sec * NANOS_PER_SEC as usize + self.usec * NANOS_PER_MICROS as usize
     }
 
-    /// create a TimeVal from nano seconds
+    /// Create a TimeVal from nano seconds
     pub fn from_micro(micro: usize) -> Self {
         TimeVal {
             sec: micro / (MICROS_PER_SEC as usize),
@@ -59,21 +35,11 @@ impl TimeVal {
         }
     }
 
-    /// turn the TimeVal to cpu ticks, which is related to cpu frequency
+    /// Turn the TimeVal to `cpu` ticks, which is related to `cpu` frequency
     pub fn turn_to_ticks(&self) -> u64 {
         (self.sec * TIMER_FREQUENCY) as u64 + nanos_to_ticks((self.usec as u64) * NANOS_PER_MICROS)
     }
 }
-
-// /// sys_gettimer / sys_settimer 指定的类型，用户输入输出计时器
-// #[repr(C)]
-// #[derive(Debug, Clone, Copy)]
-// pub struct ITimerVal {
-//     /// The cycle of the timer
-//     pub it_interval: TimeVal,
-//     /// The remaining time of the timer
-//     pub it_value: TimeVal,
-// }
 
 /// `sys_nanosleep`指定的结构体类型
 #[repr(C)]
@@ -102,7 +68,7 @@ impl TimeSecs {
         self.tv_sec * NSEC_PER_SEC + self.tv_nsec
     }
 
-    /// turn the TimeSecs to cpu ticks, which is related to cpu frequency
+    /// Turn the TimeSecs to `cpu` ticks, which is related to `cpu` frequency
     pub fn get_ticks(&self) -> usize {
         self.tv_sec * TIMER_FREQUENCY + (nanos_to_ticks(self.tv_nsec as u64) as usize)
     }
@@ -129,19 +95,19 @@ numeric_enum_macro::numeric_enum! {
     #[repr(usize)]
     #[allow(non_camel_case_types)]
     #[derive(Debug)]
-    /// sys_fcntl64 使用的选项
+    /// `sys_fcntl64` 使用的选项
     pub enum Fcntl64Cmd {
-        /// 复制这个 fd，相当于 sys_dup
+        /// 复制这个 `fd`，相当于 `sys_dup`
         F_DUPFD = 0,
-        /// 获取 cloexec 信息，即 exec 成功时是否删除该 fd
+        /// 获取 `cloexec` 信息，即 `exec` 成功时是否删除该 `fd`
         F_GETFD = 1,
-        /// 设置 cloexec 信息，即 exec 成功时删除该 fd
+        /// 设置 `cloexec` 信息，即 `exec` 成功时删除该 `fd`
         F_SETFD = 2,
-        /// 获取 flags 信息
+        /// 获取 `flags` 信息
         F_GETFL = 3,
-        /// 设置 flags 信息
+        /// 设置 `flags` 信息
         F_SETFL = 4,
-        /// 复制 fd，然后设置 cloexec 信息，即 exec 成功时删除该 fd
+        /// 复制 `fd`，然后设置 `cloexec` 信息，即 `exec` 成功时删除该 `fd`
         F_DUPFD_CLOEXEC = 1030,
     }
 }
@@ -170,72 +136,73 @@ bitflags! {
     }
 }
 
-/// readv/writev使用的结构体
+/// `readv/writev`使用的结构体
 #[repr(C)]
 pub struct IoVec {
-    /// base address of the buffer
+    /// Base address of the buffer
     pub base: *mut u8,
-    /// length of the buffer
+    /// Length of the buffer
     pub len: usize,
 }
 
 bitflags! {
     /// 指定 st_mode 的选项
     pub struct StMode: u32 {
-        /// regular file
+        /// Regular file
         const S_IFREG = 1 << 15;
-        /// directory
+        /// Directory
         const S_IFDIR = 1 << 14;
-        /// character device
+        /// Character device
         const S_IFCHR = 1 << 13;
+        // ```
         /// 是否设置 uid/gid/sticky
         //const S_ISUID = 1 << 14;
         //const S_ISGID = 1 << 13;
         //const S_ISVTX = 1 << 12;
-        /// user-read permission
+        /// User-read permission
         const S_IRUSR = 1 << 8;
-        /// user-write permission
+        /// User-write permission
         const S_IWUSR = 1 << 7;
-        /// user-execute permission
+        /// User-execute permission
         const S_IXUSR = 1 << 6;
-        /// group-read permission
+        /// Group-read permission
         const S_IRGRP = 1 << 5;
-        /// group-write permission
+        /// Group-write permission
         const S_IWGRP = 1 << 4;
-        /// group-execute permission
+        /// Group-execute permission
         const S_IXGRP = 1 << 3;
-        /// other-read permission
+        /// Other-read permission
         const S_IROTH = 1 << 2;
-        /// other-write permission
+        /// Other-write permission
         const S_IWOTH = 1 << 1;
-        /// other-execute permission
+        /// Other-execute permission
         const S_IXOTH = 1 << 0;
-        /// exited-user-process status
+        /// Exited-user-process status
         const WIMTRACED = 1 << 1;
-        /// continued-process status
+        /// Continued-process status
         const WCONTINUED = 1 << 3;
     }
 }
-/// 文件类型，输入 IFCHR / IFDIR / IFREG 等具体类型，
-/// 输出这些类型加上普遍的文件属性后得到的 mode 参数
+/// 文件类型，输入`IFCHR`/`IFDIR`/`IFREG`等具体类型，
+/// 输出这些类型加上普遍的文件属性后得到的`mode`参数
 pub fn normal_file_mode(file_type: StMode) -> StMode {
     file_type | StMode::S_IWUSR | StMode::S_IRUSR | StMode::S_IRGRP | StMode::S_IROTH
 }
 
-/// 对 futex 的操作
+/// 对`futex`的操作
 pub enum FutexFlags {
-    /// 检查用户地址 uaddr 处的值。如果不是要求的值则等待 wake
+    /// 检查用户地址`uaddr`处的值。如果不是要求的值则等待`wake`
     Wait,
-    /// 唤醒最多 val 个在等待 uaddr 位置的线程。
+    /// 唤醒最多`val`个在等待`uaddr`位置的线程。
     Wake,
-    /// 将等待 uaddr 的线程移动到 uaddr2
+    /// 将等待`uaddr`的线程移动到`uaddr2`
     Requeue,
     /// 不支持的操作
     Unsupported,
 }
 
 impl FutexFlags {
-    /// Create a FutexFlags from a i32 value
+    /// Create a FutexFlags from an i32 value
     pub fn new(val: i32) -> Self {
         match val & 0x7f {
             0 => FutexFlags::Wait,
@@ -243,5 +210,127 @@ impl FutexFlags {
             3 => FutexFlags::Requeue,
             _ => FutexFlags::Unsupported,
         }
+    }
+}
+
+bitflags! {
+    #[derive(Debug)]
+    /// 指定`mmap`的选项
+    pub struct MMAPPROT: u32 {
+        /// 区域内容可读取
+        const PROT_READ = 1 << 0;
+        /// 区域内容可修改
+        const PROT_WRITE = 1 << 1;
+        /// 区域内容可执行
+        const PROT_EXEC = 1 << 2;
+    }
+}
+
+impl From<MMAPPROT> for MappingFlags {
+    fn from(value: MMAPPROT) -> Self {
+        let mut flags = MappingFlags::USER;
+        if value.contains(MMAPPROT::PROT_READ) {
+            flags |= MappingFlags::READ;
+        }
+        if value.contains(MMAPPROT::PROT_WRITE) {
+            flags |= MappingFlags::WRITE;
+        }
+        if value.contains(MMAPPROT::PROT_EXEC) {
+            flags |= MappingFlags::EXECUTE;
+        }
+        flags
+    }
+}
+
+bitflags! {
+    #[derive(Debug)]
+    /// 指定`mmap`的选项
+    pub struct MMAPFlags: u32 {
+        /// 对这段内存的修改是共享的
+        const MAP_SHARED = 1 << 0;
+        /// 对这段内存的修改是私有的
+        const MAP_PRIVATE = 1 << 1;
+        // 以上两种只能选其一
+
+        /// 取消原来这段位置的映射，即一定要映射到指定位置
+        const MAP_FIXED = 1 << 4;
+        /// 不映射到实际文件
+        const MAP_ANONYMOUS = 1 << 5;
+        /// 映射时不保留空间，即可能在实际使用`mmp`出来的内存时内存溢出
+        const MAP_NORESERVE = 1 << 14;
+    }
+}
+
+bitflags! {
+    #[derive(Debug)]
+    /// 指定`mremap`的选项
+    pub struct MREMAPFlags: u32 {
+        /// 允许将映射重新定位到新地址
+        const MREMAP_MAYMOVE = 1 << 0;
+        /// 指定映射必须移动到的页面对齐地址，必须和`MREMAP_MAYMOVE`一起使用
+        const MREMAP_FIXED = 1 << 1;
+
+        /// 将映射重新映射到新地址，但不会取消旧地址的映射，必须和`MREMAP_MAYMOVE`一起使用
+        const MREMAP_DONTUNMAP = 1 << 2;
+    }
+}
+
+bitflags! {
+    #[derive(Debug)]
+    // FIX:
+    /// 指定`fstatat`的选项
+    pub struct FSTATATFlags: u32 {
+        const FSTATAT_EMPTY_PATH = 1 << 12;
+        const FSTATAT_NO_AUTOMOUNT = 1 << 11;
+        const FSTATAT_SYMLINK_NOFOLLOW = 1 << 8;
+    }
+}
+
+/// 文件系统的属性
+/// 具体参数定义信息来自 `https://man7.org/linux/man-pages/man2/statfs64.2.html`
+#[repr(C)]
+#[derive(Debug)]
+pub struct FsStat {
+    /// 是个`magic number`，每个知名的`fs`都各有定义，但显然我们没有
+    pub f_type: i64,
+    /// 最优传输块大小
+    pub f_bsize: i64,
+    /// 总的块数
+    pub f_blocks: u64,
+    /// 还剩多少块未分配
+    pub f_bfree: u64,
+    /// 对用户来说，还有多少块可用
+    pub f_bavail: u64,
+    /// 总的`inode`数
+    pub f_files: u64,
+    /// 空闲的`inode`数
+    pub f_ffree: u64,
+    /// 文件系统编号，但实际上对于不同的OS差异很大，所以不会特地去用
+    pub f_fsid: [i32; 2],
+    /// 文件名长度限制，这个OS默认FAT已经使用了加长命名
+    pub f_namelen: isize,
+    /// 片大小
+    pub f_frsize: isize,
+    /// 一些选项，但其实也没用到
+    pub f_flags: isize,
+    /// 空余 padding
+    pub f_spare: [isize; 4],
+}
+
+/// 获取一个基础的`fsstat`
+pub fn get_fs_stat() -> FsStat {
+    FsStat {
+        f_type: 0,
+        f_bsize: 1024,
+        f_blocks: 0x4000_0000 / 512,
+        f_bfree: 1,
+        f_bavail: 1,
+        f_files: 1,
+        f_ffree: 1,
+        f_fsid: [0, 0],
+        f_namelen: 256,
+        f_frsize: 0x1000,
+        f_flags: 0,
+        f_spare: [0, 0, 0, 0],
     }
 }
