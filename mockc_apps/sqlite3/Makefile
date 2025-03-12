@@ -34,4 +34,7 @@ dynamic:
 	$(CC) $(SRC_F) $(DEFINE_FLAGS) -o $(SRC_BIN) -I./
 	$(STRIP) -s $(SRC_BIN)
 
+gcc: 
+	gcc $(SRC_F) $(DEFINE_FLAGS) -o gcc.out -I./
+
 .PHONY: all build

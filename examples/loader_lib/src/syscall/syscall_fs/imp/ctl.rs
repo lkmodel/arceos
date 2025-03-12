@@ -2,10 +2,10 @@ use crate::{
     linux_env::{
         axfs_ext::api::OpenFlags,
         linux_fs::{
-            api::UNI_API,
             link::{AT_FDCWD, FilePath, deal_with_path},
             utils::{UtilsError, deal_path},
         },
+        process_ext::api::current_process,
     },
     syscall::{
         SyscallError, SyscallResult, TimeSecs,
@@ -371,7 +371,8 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let cmd = args[1];
     let arg = args[2];
-    let mut fd_table = UNI_API.fd_manager.fd_table.lock();
+    let process = current_process();
+    let mut fd_table = process.fd_manager.fd_table.lock();
 
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -385,7 +386,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     info!("fd: {}, cmd: {}", fd, cmd);
     match Fcntl64Cmd::try_from(cmd) {
         Ok(Fcntl64Cmd::F_DUPFD) => {
-            let new_fd = if let Ok(fd) = UNI_API.alloc_fd(&mut fd_table) {
+            let new_fd = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
                 fd
             } else {
                 // 文件描述符达到上限了
@@ -418,7 +419,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
             Err(SyscallError::EINVAL)
         }
         Ok(Fcntl64Cmd::F_DUPFD_CLOEXEC) => {
-            let new_fd = if let Ok(fd) = UNI_API.alloc_fd(&mut fd_table) {
+            let new_fd = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
                 fd
             } else {
                 // 文件描述符达到上限了
@@ -436,7 +437,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     }
 }
 
-// FIXME: fatfs文件系统不支持设置权限，会直接当作0o755返回。
+// FIX: `fatfs`文件系统不支持设置权限，会直接当作0o755返回。
 /// 53
 /// 修改文件权限
 /// mode: 0o777, 3位八进制数字
@@ -512,6 +513,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let mode = args[1];
+    let process = current_process();
 
     // 将模式转换为 Permissions 类型
     let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
@@ -521,7 +523,7 @@ pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
     };
 
     // 获取文件描述符对应的文件
-    let file_io = match UNI_API.fd_manager.fd_table.lock().get(fd) {
+    let file_io = match process.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF), // 文件描述符无效
     };
@@ -635,7 +637,8 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let request = args[1];
     let argp = args[2];
-    let fd_table = UNI_API.fd_manager.fd_table.lock();
+    let process = current_process();
+    let fd_table = process.fd_manager.fd_table.lock();
     warn!("fd: {}, request: {}, argp: {}", fd, request, argp);
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -671,8 +674,8 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let times = args[2] as *const TimeSecs;
     let _flags = args[3];
-    //    let process = current_process();
-    // info!("dir_fd: {}, path: {}", dir_fd as usize, path as usize);
+    let process = current_process();
+    info!("dir_fd: {}, path: {}", dir_fd as usize, path as usize);
     if dir_fd != AT_FDCWD && (dir_fd as isize) < 0 {
         return Err(SyscallError::EBADF); // 错误的文件描述符
     }
@@ -700,8 +703,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         //     error!("Set time failed: unknown reason.");
         //     return ErrorNo::EPERM as isize;
         // }
-        //        let fd_table = process.fd_manager.fd_table.lock();
-        let fd_table = UNI_API.fd_manager.fd_table.lock();
+        let fd_table = process.fd_manager.fd_table.lock();
         if dir_fd > fd_table.len() || fd_table[dir_fd].is_none() {
             return Err(SyscallError::EBADF);
         }

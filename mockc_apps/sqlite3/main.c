@@ -78,7 +78,7 @@ void file()
     printf("sqlite open /file.sqlite status %d \n", ret);
 
     if (ret != 0) {
-        printf("sqlite open error");
+        printf("sqlite open error\n");
         return;
     }
 

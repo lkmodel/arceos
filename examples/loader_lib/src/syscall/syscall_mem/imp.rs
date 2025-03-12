@@ -11,11 +11,8 @@ use axhal::{arch::flush_tlb, mem::VirtAddr, paging::MappingFlags};
 use axlog::debug;
 use bitflags::bitflags;
 
-use crate::{
-    linux_env::linux_fs::api::UNI_API,
-    syscall::{
-        MMAPFlags, MMAPPROT, SyscallError, SyscallResult, syscall_fs::ctype::file::FileDesc,
-    },
+use crate::syscall::{
+    MMAPFlags, MMAPPROT, SyscallError, SyscallResult, syscall_fs::ctype::file::FileDesc,
 };
 
 const MAX_HEAP_SIZE: usize = 0x20000;

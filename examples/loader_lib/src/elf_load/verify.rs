@@ -46,15 +46,20 @@ pub fn verify_elf_header(elf: &ElfBytes<LittleEndian>) -> Result<(), LoadError> 
 // 扩展错误类型
 #[derive(Debug)]
 pub enum LoadError {
+    #[allow(unused)]
     InvalidMagic,
+    #[allow(unused)]
     NotExecutable,
     WrongArchitecture,
     NoSegments,
     InvalidVersion,
     InvalidEntryPoint,
     InvalidProgramHeaderOffset,
+    #[allow(unused)]
     SegmentOutOfBounds,
+    #[allow(unused)]
     BadAlignment,
+    #[allow(unused)]
     RelocationError,
 }
 
@@ -76,8 +81,12 @@ impl fmt::Display for LoadError {
 }
 
 // ELF 常量定义（如果需要）
+#[allow(unused)]
 const ELFMAG0: u8 = 0x7f;
+#[allow(unused)]
 const ELFMAG1: u8 = b'E';
+#[allow(unused)]
 const ELFMAG2: u8 = b'L';
+#[allow(unused)]
 const ELFMAG3: u8 = b'F';
 const EV_CURRENT: u32 = 1;

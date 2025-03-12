@@ -1,4 +1,3 @@
-use crate::linux_env::{axfs_ext::api::FileIOType, linux_fs::api::UNI_API};
 use alloc::{
     collections::BTreeMap,
     format,
@@ -8,6 +7,8 @@ use axerrno::{AxError, AxResult};
 use axfs::api::{canonicalize, metadata, remove_file};
 use axlog::{debug, info, trace, warn};
 use axsync::Mutex;
+
+use crate::linux_env::{axfs_ext::api::FileIOType, process_ext::api::current_process};
 
 pub const AT_FDCWD: usize = -100isize as usize;
 
@@ -340,6 +341,7 @@ pub fn deal_with_path(
     force_dir: bool,
 ) -> Option<FilePath> {
     let mut path = "".to_string();
+    let process = current_process();
 
     if let Some(path_addr) = path_addr {
         if path_addr.is_null() {
@@ -360,7 +362,7 @@ pub fn deal_with_path(
             path = String::from(".");
         } else {
             // 直接获取文件描述符表，我们要自行实现有一个全局的 fd_table
-            let fd_table = UNI_API.fd_manager.fd_table.lock();
+            let fd_table = process.fd_manager.fd_table.lock();
             if dir_fd >= fd_table.len() {
                 axlog::warn!("fd index out of range");
                 return None;
@@ -378,7 +380,7 @@ pub fn deal_with_path(
         }
     } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
         // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
-        let fd_table = UNI_API.fd_manager.fd_table.lock();
+        let fd_table = process.fd_manager.fd_table.lock();
         if dir_fd >= fd_table.len() {
             axlog::warn!("fd index out of range");
             return None;

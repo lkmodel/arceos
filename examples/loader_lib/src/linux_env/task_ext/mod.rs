@@ -16,22 +16,22 @@ impl TaskExt {
         }
     }
 
-    /// get the process ID of the task
+    /// Get the process ID of the task
     pub fn get_process_id(&self) -> u64 {
         self.process_id.load(Ordering::Acquire)
     }
 
-    /// set the process ID of the task
+    /// Set the process ID of the task
     pub fn set_process_id(&self, process_id: u64) {
         self.process_id.store(process_id, Ordering::Release);
     }
 
-    /// set the flag whether the task is the main thread of the process
+    /// Set the flag whether the task is the main thread of the process
     pub fn set_leader(&self, is_lead: bool) {
         self.is_leader.store(is_lead, Ordering::Release);
     }
 
-    /// whether the task is the main thread of the process
+    /// Whether the task is the main thread of the process
     pub fn is_leader(&self) -> bool {
         self.is_leader.load(Ordering::Acquire)
     }

@@ -9,23 +9,14 @@ use axlog::{debug, warn};
 
 use elf::{
     ElfBytes,
-    abi::{
-        PT_LOAD, R_RISCV_64, R_RISCV_JUMP_SLOT, R_RISCV_RELATIVE, STB_GLOBAL, STB_LOCAL, STB_WEAK,
-        STT_FUNC, STT_OBJECT, STT_TLS,
-    },
+    abi::{PT_LOAD, R_RISCV_64, R_RISCV_JUMP_SLOT, R_RISCV_RELATIVE},
     endian::LittleEndian,
 };
 
-use crate::elf::{LoadError, verify_elf_header};
-
-/// `bin`的开始位置
-const PLASH_START: usize = 0xffff_ffc0_2200_0000;
-// STATIC
-
-const MAX_APP_SIZE: usize = 0x20_0000;
-const APP_START: usize = 0xffff_ffc0_8060_0000;
-const MAX_LIB_SIZE: usize = 0x08_0000;
-const LIB_START: usize = 0xffff_ffc0_8010_0000;
+use crate::{
+    config::{APP_START, LIB_START, MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_START},
+    elf_load::verify::{LoadError, verify_elf_header},
+};
 
 pub fn load_elf() -> u64 {
     debug!("Load payload ...");
@@ -279,9 +270,7 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                             lib_sym.st_symtype(),
                             lib_rela_name,
                         );
-                        if app_sym.st_value == 0 {
-                            panic!("Bad st_value");
-                        }
+                        app_sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
                     }
                 } else {
                     unsafe {
@@ -293,9 +282,7 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                             LIB_START + lib_sym.st_value as usize,
                             lib_rela_name,
                         );
-                        if lib_sym.st_value == 0 {
-                            panic!("Bad st_value");
-                        }
+                        lib_sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
                     }
                 }
             }
@@ -354,9 +341,7 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                     LIB_START + lib_sym.st_value as usize,
                     lib_rela_name,
                 );
-                if lib_sym.st_value == 0 {
-                    panic!("Bad st_value");
-                }
+                lib_sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
             }
             _ => {
                 panic!("Unknown relocation type: {}", lib_rela_type);
@@ -366,19 +351,6 @@ fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
 }
 
 fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<LittleEndian>) {
-    // RISC-V relocation types
-    //
-    // `A` Addend field in the relocation entry associated with the symbol.
-    // `B` Base address of a shared object loaded into memory.
-    // `G` Offset of the symbol into the GOT (Global Offset Table).
-    // `GOT` Address of the GOT (Global Offset Table).
-    // `P` Position of the relocation.
-    // `S` Value of the symbol in the symbol table.
-    // `V` Value at the position of the relocation.
-    // `GP` Value of __global_pointer$ symbol.
-    // `TLSMODULE` TLS module index for the object containing the symbol.
-    // `TLSOFFSET` TLS static block offset (relative to `tp`) for the object containing the symbol.
-
     let (app_dynsym_table, app_dynstr_table) = app_elf
         .dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")
@@ -428,9 +400,7 @@ fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
 
             *((APP_START as u64 + app_rela_plt.r_offset) as *mut usize) =
                 LIB_START + lib_sym.st_value as usize;
-            if lib_sym.st_value == 0 {
-                panic!("Bad st_value");
-            }
+            lib_sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
         }
     }
 

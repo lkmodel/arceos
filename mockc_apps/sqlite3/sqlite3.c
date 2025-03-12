@@ -29766,16 +29766,11 @@ static int pthreadMutexNotheld(sqlite3_mutex *p){
 ** where SQLite is compiled without mutexes.
 */
 SQLITE_PRIVATE void sqlite3MemoryBarrier(void){
-  printf("CHECKPOINT 1.2_1.1\n");
 #if defined(SQLITE_MEMORY_BARRIER)
-  printf("CHECKPOINT 1.2_1.2\n");
   SQLITE_MEMORY_BARRIER;
 #elif defined(__GNUC__) && GCC_VERSION>=4001000
-  printf("CHECKPOINT 1.2_1.3\n");
   __sync_synchronize();
-  printf("CHECKPOINT 1.2_1.ret\n");
 #endif
-  printf("CHECKPOINT 1.2_1.ret2\n");
 }
 
 /*
@@ -30254,21 +30249,15 @@ static int winMutexNotheld(sqlite3_mutex *p){
 ** compiled without mutexes (SQLITE_THREADSAFE=0).
 */
 SQLITE_PRIVATE void sqlite3MemoryBarrier(void){
-  printf("CHECKPOINT func2 1.2_1.1\n");
 #if defined(SQLITE_MEMORY_BARRIER)
-  printf("CHECKPOINT func2 1.2_1.2\n");
   SQLITE_MEMORY_BARRIER;
 #elif defined(__GNUC__)
-  printf("CHECKPOINT func2 1.2_1.3\n");
   __sync_synchronize();
 #elif MSVC_VERSION>=1400
-  printf("CHECKPOINT func2 1.2_1.4\n");
   _ReadWriteBarrier();
 #elif defined(MemoryBarrier)
-  printf("CHECKPOINT func2 1.2_1.5\n");
   MemoryBarrier();
 #endif
-  printf("CHECKPOINT func2 1.2_1.ret\n");
 }
 
 /*
@@ -30736,24 +30725,18 @@ SQLITE_API sqlite3_int64 sqlite3_hard_heap_limit64(sqlite3_int64 n){
 ** Initialize the memory allocation subsystem.
 */
 SQLITE_PRIVATE int sqlite3MallocInit(void){
-  printf("CHECKPOINT 1.6_1.1");
   int rc;
-  printf("CHECKPOINT 1.6_1.2");
   if( sqlite3GlobalConfig.m.xMalloc==0 ){
     sqlite3MemSetDefault();
   }
-  printf("CHECKPOINT 1.6_1.3");
   mem0.mutex = sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MEM);
   if( sqlite3GlobalConfig.pPage==0 || sqlite3GlobalConfig.szPage<512
       || sqlite3GlobalConfig.nPage<=0 ){
     sqlite3GlobalConfig.pPage = 0;
     sqlite3GlobalConfig.szPage = 0;
   }
-  printf("CHECKPOINT 1.6_1.4");
   rc = sqlite3GlobalConfig.m.xInit(sqlite3GlobalConfig.m.pAppData);
-  printf("CHECKPOINT 1.6_1.5");
   if( rc!=SQLITE_OK ) memset(&mem0, 0, sizeof(mem0));
-  printf("CHECKPOINT 1.6_1.6");
   return rc;
 }
 
@@ -39923,7 +39906,6 @@ static int unixLogErrorAtLine(
   zErr = "";
 #else
   /* Non-threadsafe build, use strerror(). */
-  printf("CHECKPOINT B 1\n");
   zErr = strerror(iErrno);
 #endif
 
@@ -41463,7 +41445,6 @@ static int afpSetLock(
   if ( err==-1 ) {
     int rc;
     int tErrno = errno;
-  printf("CHECKPOINT B 2\n");
     OSTRACE(("AFPSETLOCK failed to fsctl() '%s' %d %s\n",
              path, tErrno, strerror(tErrno)));
 #ifdef SQLITE_IGNORE_AFP_LOCK_ERRORS
@@ -45791,7 +45772,6 @@ static int proxyCreateLockPath(const char *lockPath){
         if( osMkdir(buf, SQLITE_DEFAULT_PROXYDIR_PERMISSIONS) ){
           int err=errno;
           if( err!=EEXIST ) {
-  printf("CHECKPOINT B 3\n");
             OSTRACE(("CREATELOCKPATH  FAILED creating %s, "
                      "'%s' proxy lock path=%s pid=%d\n",
                      buf, strerror(err), lockPath, osGetpid(0)));
@@ -46234,7 +46214,6 @@ static int proxyTakeConch(unixFile *pFile){
             }while( rc==(-1) && errno==EINTR );
             if( rc!=0 ){
               int code = errno;
-  printf("CHECKPOINT B 4\n");
               fprintf(stderr, "fchmod %o FAILED with %d %s\n",
                       cmode, code, strerror(code));
             } else {
@@ -46242,7 +46221,6 @@ static int proxyTakeConch(unixFile *pFile){
             }
           }else{
             int code = errno;
-  printf("CHECKPOINT B 5\n");
             fprintf(stderr, "STAT FAILED[%d] with %d %s\n",
                     err, code, strerror(code));
 #endif
@@ -181751,7 +181729,6 @@ SQLITE_API char *sqlite3_data_directory = 0;
 **       without blocking.
 */
 SQLITE_API int sqlite3_initialize(void){
-  printf("CHECKPOINT 1.0\n");
   MUTEX_LOGIC( sqlite3_mutex *pMainMtx; )      /* The main static mutex */
   int rc;                                      /* Result code */
 #ifdef SQLITE_EXTRA_INIT
@@ -181759,7 +181736,6 @@ SQLITE_API int sqlite3_initialize(void){
 #endif
 
 #ifdef SQLITE_OMIT_WSD
-  printf("CHECKPOINT 1.1\n");
   rc = sqlite3_wsd_init(4096, 24);
   if( rc!=SQLITE_OK ){
     return rc;
@@ -181776,9 +181752,7 @@ SQLITE_API int sqlite3_initialize(void){
   ** must be complete.  So isInit must not be set until the very end
   ** of this routine.
   */
-  printf("CHECKPOINT 1.2\n");
   if( sqlite3GlobalConfig.isInit ){
-  printf("CHECKPOINT 1.2_1\n");
     sqlite3MemoryBarrier();
     return SQLITE_OK;
   }
@@ -181791,7 +181765,6 @@ SQLITE_API int sqlite3_initialize(void){
   ** The mutex subsystem must take care of serializing its own
   ** initialization.
   */
-  printf("CHECKPOINT 1.3\n");
   rc = sqlite3MutexInit();
   if( rc ) return rc;
 
@@ -181801,18 +181774,12 @@ SQLITE_API int sqlite3_initialize(void){
   ** malloc subsystem - this implies that the allocation of a static
   ** mutex must not require support from the malloc subsystem.
   */
-  printf("CHECKPOINT 1.4\n");
   MUTEX_LOGIC( pMainMtx = sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MAIN); )
-  printf("CHECKPOINT 1.5\n");
   sqlite3_mutex_enter(pMainMtx);
-  printf("CHECKPOINT 1.6\n");
   sqlite3GlobalConfig.isMutexInit = 1;
   if( !sqlite3GlobalConfig.isMallocInit ){
-  printf("CHECKPOINT 1.6_1\n");
     rc = sqlite3MallocInit();
-  printf("CHECKPOINT 1.6_2\n");
   }
-  printf("CHECKPOINT 1.7\n");
   if( rc==SQLITE_OK ){
     sqlite3GlobalConfig.isMallocInit = 1;
     if( !sqlite3GlobalConfig.pInitMutex ){
@@ -181823,11 +181790,9 @@ SQLITE_API int sqlite3_initialize(void){
       }
     }
   }
-  printf("CHECKPOINT 1.8\n");
   if( rc==SQLITE_OK ){
     sqlite3GlobalConfig.nRefInitMutex++;
   }
-  printf("CHECKPOINT 1.9\n");
   sqlite3_mutex_leave(pMainMtx);
 
   /* If rc is not SQLITE_OK at this point, then either the malloc
@@ -181850,7 +181815,6 @@ SQLITE_API int sqlite3_initialize(void){
   ** methods.  The sqlite3_pcache_methods.xInit() all is embedded in the
   ** call to sqlite3PcacheInitialize().
   */
-  printf("CHECKPOINT 1.10\n");
   sqlite3_mutex_enter(sqlite3GlobalConfig.pInitMutex);
   if( sqlite3GlobalConfig.isInit==0 && sqlite3GlobalConfig.inProgress==0 ){
     sqlite3GlobalConfig.inProgress = 1;
@@ -181980,7 +181944,6 @@ SQLITE_API int sqlite3_shutdown(void){
     sqlite3GlobalConfig.isMutexInit = 0;
   }
 
-  printf("CHECKPOINT 1.ret\n");
   return SQLITE_OK;
 }
 
@@ -184807,7 +184770,6 @@ static int openDatabase(
   char *zErrMsg = 0;              /* Error message from sqlite3ParseUri() */
   int i;                          /* Loop counter */
 
-  printf("CHECKPOINT 1\n");
 #ifdef SQLITE_ENABLE_API_ARMOR
   if( ppDb==0 ) return SQLITE_MISUSE_BKPT;
 #endif
@@ -184816,7 +184778,6 @@ static int openDatabase(
   rc = sqlite3_initialize();
   if( rc ) return rc;
 #endif
-  printf("CHECKPOINT 2\n");
 
   if( sqlite3GlobalConfig.bCoreMutex==0 ){
     isThreadsafe = 0;
@@ -184899,7 +184860,6 @@ static int openDatabase(
   ** SQLITE_TESTCTRL_SORTER_MMAP test-control at runtime. */
   db->nMaxSorterMmap = 0x7FFFFFFF;
 #endif
-
   db->flags |= SQLITE_ShortColNames
                  | SQLITE_EnableTrigger
                  | SQLITE_EnableView
@@ -184910,7 +184870,6 @@ static int openDatabase(
 #if !defined(SQLITE_TRUSTED_SCHEMA) || SQLITE_TRUSTED_SCHEMA+0!=0
                  | SQLITE_TrustedSchema
 #endif
-
 /* The SQLITE_DQS compile-time option determines the default settings
 ** for SQLITE_DBCONFIG_DQS_DDL and SQLITE_DBCONFIG_DQS_DML.
 **
@@ -184976,7 +184935,6 @@ static int openDatabase(
                  | SQLITE_StmtScanStatus
 #endif
       ;
-
   sqlite3HashInit(&db->aCollSeq);
 #ifndef SQLITE_OMIT_VIRTUALTABLE
   sqlite3HashInit(&db->aModule);

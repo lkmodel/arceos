@@ -6,10 +6,10 @@ use crate::{
     linux_env::{
         axfs_ext::api::{FileIOType, Kstat},
         linux_fs::{
-            api::UNI_API,
             link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
             utils::{UtilsError, deal_path},
         },
+        process_ext::api::current_process,
     },
     syscall::{
         FSTATATFlags, FsStat, SyscallError, SyscallResult, get_fs_stat,
@@ -25,7 +25,8 @@ use crate::{
 pub fn syscall_fstat(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let kst = args[1] as *mut Kstat;
-    let fd_table = UNI_API.fd_manager.fd_table.lock();
+    let process = current_process();
+    let fd_table = process.fd_manager.fd_table.lock();
 
     if fd >= fd_table.len() || fd < 3 {
         debug!("fd {} is out of range", fd);

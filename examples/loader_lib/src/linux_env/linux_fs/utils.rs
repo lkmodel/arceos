@@ -4,10 +4,8 @@ use axlog::debug;
 
 use crate::linux_env::{
     axfs_ext::api::FileIOType,
-    linux_fs::{
-        api::UNI_API,
-        link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
-    },
+    linux_fs::link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
+    process_ext::api::current_process,
 };
 
 /// The error type used by `utils`.
@@ -69,6 +67,7 @@ pub fn deal_path(
     force_dir: bool,
 ) -> UtilsResult<FilePath> {
     let mut path = "".to_string();
+    let process = current_process();
     if let Some(path_addr) = path_addr {
         if path_addr.is_null() {
             return Err(UtilsError::NULL);
@@ -95,7 +94,7 @@ pub fn deal_path(
         return Err(UtilsError::StrTooLong);
     } else if !path.starts_with('/') && dir_fd != AT_FDCWD && dir_fd as u32 != AT_FDCWD as u32 {
         // 如果不是绝对路径, 且dir_fd不是AT_FDCWD, 则需要将dir_fd和path拼接起来
-        let fd_table = UNI_API.fd_manager.fd_table.lock();
+        let fd_table = process.fd_manager.fd_table.lock();
         if dir_fd >= fd_table.len() {
             debug!(
                 "dir_fd out of the fd_table bound.(pathname is relative but dirfd is neither AT_FDCWD nor a valid file descriptor)return EBADF"

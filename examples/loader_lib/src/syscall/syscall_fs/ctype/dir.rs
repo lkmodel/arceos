@@ -1,11 +1,12 @@
-// use crate::{normal_file_mode, StMode};
-// extern crate alloc;
-use crate::linux_env::axfs_ext::api::{self, FileIO, FileIOType, Kstat, OpenFlags, SeekFrom};
 use alloc::string::{String, ToString};
 use axerrno::{AxError, AxResult};
-// use axfs::api::{self, FileIO, FileIOType, Kstat, OpenFlags, SeekFrom};
 use axfs::api::{create_dir, metadata};
 use axlog::debug;
+
+use crate::{
+    linux_env::axfs_ext::api::{FileIO, FileIOType, Kstat, OpenFlags, SeekFrom},
+    syscall::{StMode, normal_file_mode},
+};
 
 /// 目录描述符
 pub struct DirDesc {
@@ -51,29 +52,29 @@ impl FileIO for DirDesc {
         self.dir_path.to_string().clone()
     }
 
-    //    fn get_stat(&self) -> AxResult<Kstat> {
-    //        let kstat = Kstat {
-    //            st_dev: 1,
-    //            st_ino: 0,
-    //            st_mode: normal_file_mode(StMode::S_IFDIR).bits(),
-    //            st_nlink: 1,
-    //            st_uid: 0,
-    //            st_gid: 0,
-    //            st_rdev: 0,
-    //            _pad0: 0,
-    //            st_size: 0,
-    //            st_blksize: 0,
-    //            _pad1: 0,
-    //            st_blocks: 0,
-    //            st_atime_sec: 0,
-    //            st_atime_nsec: 0,
-    //            st_mtime_sec: 0,
-    //            st_mtime_nsec: 0,
-    //            st_ctime_sec: 0,
-    //            st_ctime_nsec: 0,
-    //        };
-    //        Ok(kstat)
-    //    }
+    fn get_stat(&self) -> AxResult<Kstat> {
+        let kstat = Kstat {
+            st_dev: 1,
+            st_ino: 0,
+            st_mode: normal_file_mode(StMode::S_IFDIR).bits(),
+            st_nlink: 1,
+            st_uid: 0,
+            st_gid: 0,
+            st_rdev: 0,
+            _pad0: 0,
+            st_size: 0,
+            st_blksize: 0,
+            _pad1: 0,
+            st_blocks: 0,
+            st_atime_sec: 0,
+            st_atime_nsec: 0,
+            st_mtime_sec: 0,
+            st_mtime_nsec: 0,
+            st_ctime_sec: 0,
+            st_ctime_nsec: 0,
+        };
+        Ok(kstat)
+    }
 }
 
 pub fn new_dir(dir_path: String, _flags: OpenFlags) -> AxResult<DirDesc> {

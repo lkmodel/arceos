@@ -10,11 +10,10 @@ default = ["fs", "driver-ramdisk"]
 # 真正的可选项目
 multiprocess = []
 
-fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
+fs = ["alloc", "paging", "axruntime/fs", "axruntime/multitask", "axdriver/virtio-blk"]
 alloc = ["axalloc", "axruntime/alloc"]
-# TODO: 添加"axruntime/paging", 修正PAGE_FAULT
-# paging = ["alloc", "axhal/paging", "axruntime/paging"]
-paging = ["alloc", "axhal/paging"]
+# TODO: 修正PAGE_FAULT
+paging = ["alloc", "axhal/paging", "axruntime/paging"]
 
 driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
 
@@ -28,22 +27,22 @@ axsync = { workspace = true, features = ["multitask"] }
 axfs = { workspace = true, features = ["default"] }
 arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
 axruntime = { workspace = true }
-# axconfig = { workspace = true }
-
+axmm = { workspace = true }
 axdriver = { workspace = true, optional = true }
 axalloc = { workspace = true , optional = true }
 
 # Other crates
+kernel-elf-parser = "0.1"
 kspin = "0.1"
 axfs_vfs = "0.1"
 elf = { version = "0.7.4", default-features = false }
-# printf-compat = { version = "0.1.1", default-features = false }
 axio = { version = "0.1", features = ["alloc"] }
 cty = "0.2.2"
 axerrno = "0.1.0"
 numeric-enum-macro = "0.2.0"
 bitflags = "2.0"
 lazyinit = "0.2"
+memory_addr = "0.3"
 rand = { version = "0.8.5" , default-features = false, features = [
     "small_rng",
 ]}
