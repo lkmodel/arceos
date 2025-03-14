@@ -5,10 +5,12 @@ authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
 [features]
-default = ["fs", "driver-ramdisk"]
+default = ["fs", "driver-ramdisk", "unikernel"]
 
 # 真正的可选项目
-multiprocess = []
+
+unikernel = [] # 单进程模式
+pseudo_multi_process = [] # 无特权级的多进程模式
 
 fs = ["alloc", "paging", "axruntime/fs", "axruntime/multitask", "axdriver/virtio-blk"]
 alloc = ["axalloc", "axruntime/alloc"]

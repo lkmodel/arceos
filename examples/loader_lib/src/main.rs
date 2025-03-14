@@ -46,6 +46,14 @@ use crate::{
 
 #[unsafe(no_mangle)]
 fn main() {
+    #[cfg(not(any(feature = "unikernel", feature = "pseudo_multi_process")))]
+    compile_error!("You must enable exactly one of `unikernel` or `multi_process_unchecked`.");
+
+    #[cfg(all(feature = "unikernel", feature = "pseudo_multi_process"))]
+    compile_error!(
+        "You cannot enable both `unikernel` and `multi_process_unchecked` at the same time."
+    );
+
     info!("Load payload ...");
     init_abis();
     // Load X out file

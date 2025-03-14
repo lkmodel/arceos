@@ -1,19 +1,23 @@
-// use alloc::{
-//     collections::BTreeMap,
-//     string::{String, ToString},
-//     sync::Arc,
-//     vec,
-//     vec::Vec,
-// };
-// use axerrno::{AxError, AxResult};
-// use axlog::{debug, info};
-// use axmm::{AddrSpace, new_kernel_aspace, new_user_aspace};
-// use axsync::Mutex;
-// use axtask::{AxTaskRef, TaskInner, WaitQueue, spawn_task};
-// use core::sync::atomic::{AtomicU64, Ordering};
-// use lazyinit::LazyInit;
-// use memory_addr::VirtAddr;
-//
+use alloc::{string::String, sync::Arc};
+use lazyinit::LazyInit;
+
+#[cfg(feature = "pseudo_multi_process")]
+use crate::linux_env::process_ext::api::current_process;
+use crate::linux_env::process_ext::process::Process;
+
+#[cfg(feature = "unikernel")]
+pub static UNI_API: LazyInit<Arc<Process>> = LazyInit::new();
+
+#[cfg(feature = "unikernel")]
+pub fn process_api() -> Arc<Process> {
+    UNI_API.get().unwrap().clone()
+}
+
+#[cfg(feature = "pseudo_multi_process")]
+pub fn process_api() -> Arc<Process> {
+    current_process()
+}
+
 // use crate::{
 //     abi::ABI_TABLE,
 //     config::TASK_STACK_SIZE,

@@ -4,7 +4,7 @@ use axhal::{
 };
 use bitflags::*;
 
-use crate::linux_env::linux_fs::config::TIMER_FREQUENCY;
+use crate::linux_env::linux_api::config::TIMER_FREQUENCY;
 
 /// A flag used in `sys_dup3`
 pub const O_CLOEXEC: u32 = 524288;

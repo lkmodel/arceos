@@ -1,11 +1,11 @@
 use crate::{
     linux_env::{
         axfs_ext::api::OpenFlags,
-        linux_fs::{
+        linux_api::{
+            api::process_api,
             link::{AT_FDCWD, FilePath, deal_with_path},
             utils::{UtilsError, deal_path},
         },
-        process_ext::api::current_process,
     },
     syscall::{
         SyscallError, SyscallResult, TimeSecs,
@@ -371,7 +371,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let cmd = args[1];
     let arg = args[2];
-    let process = current_process();
+    let process = process_api();
     let mut fd_table = process.fd_manager.fd_table.lock();
 
     if fd >= fd_table.len() {
@@ -513,7 +513,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let mode = args[1];
-    let process = current_process();
+    let process = process_api();
 
     // 将模式转换为 Permissions 类型
     let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
@@ -637,7 +637,7 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let request = args[1];
     let argp = args[2];
-    let process = current_process();
+    let process = process_api();
     let fd_table = process.fd_manager.fd_table.lock();
     warn!("fd: {}, request: {}, argp: {}", fd, request, argp);
     if fd >= fd_table.len() {
@@ -674,7 +674,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let times = args[2] as *const TimeSecs;
     let _flags = args[3];
-    let process = current_process();
+    let process = process_api();
     info!("dir_fd: {}, path: {}", dir_fd as usize, path as usize);
     if dir_fd != AT_FDCWD && (dir_fd as isize) < 0 {
         return Err(SyscallError::EBADF); // 错误的文件描述符

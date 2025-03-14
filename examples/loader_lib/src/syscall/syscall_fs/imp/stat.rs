@@ -5,7 +5,7 @@ use axlog::{debug, error, info};
 use crate::{
     linux_env::{
         axfs_ext::api::{FileIOType, Kstat},
-        linux_fs::{
+        linux_api::{
             link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
             utils::{UtilsError, deal_path},
         },

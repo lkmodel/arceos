@@ -2,7 +2,7 @@
 extern crate alloc;
 use crate::linux_env::{
     axfs_ext::api::{FileIO, OpenFlags},
-    linux_fs::stdio::{Stdin, Stdout},
+    linux_api::stdio::{Stdin, Stdout},
 };
 use alloc::{string::String, sync::Arc, vec::Vec};
 use axerrno::{AxError, AxResult};

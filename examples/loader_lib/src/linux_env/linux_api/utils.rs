@@ -4,7 +4,7 @@ use axlog::debug;
 
 use crate::linux_env::{
     axfs_ext::api::FileIOType,
-    linux_fs::link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
+    linux_api::link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
     process_ext::api::current_process,
 };
 

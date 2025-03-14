@@ -1,7 +1,7 @@
 use crate::{
     linux_env::{
         axfs_ext::api::{FileIO, FileIOType, Kstat, OpenFlags, Read, Seek, SeekFrom, Write},
-        linux_fs::link::get_link_count,
+        linux_api::link::get_link_count,
     },
     syscall::{StMode, TimeSecs, ctypes::normal_file_mode, new_file},
 };

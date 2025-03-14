@@ -4,7 +4,7 @@ use crate::{
             self,
             api::{FileIO, Kstat, OpenFlags},
         },
-        linux_fs::link::FilePath,
+        linux_api::link::FilePath,
     },
     syscall::{
         StMode, SyscallError, normal_file_mode,

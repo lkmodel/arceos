@@ -1,7 +1,7 @@
 use axstd::string::ToString;
 
 use crate::{
-    linux_env::linux_fs::{
+    linux_env::linux_api::{
         link::{FilePath, new_link, remove_link},
         utils::{UtilsError, deal_path},
     },
