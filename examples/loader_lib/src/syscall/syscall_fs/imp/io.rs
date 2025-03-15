@@ -2,10 +2,10 @@ use crate::{
     linux_env::{
         axfs_ext::api::{FileIOType, OpenFlags, SeekFrom},
         linux_api::{
+            api::process_api,
             link::{create_link, real_path},
             utils::{UtilsError, deal_path, has_permission},
         },
-        process_ext::api::current_process,
     },
     syscall::{
         IoVec, O_CLOEXEC, SyscallError, SyscallResult,
@@ -37,7 +37,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let flags = args[2];
     let mode = args[3] as u8;
-    let process = current_process();
+    let process = process_api();
 
     // 这些东西是常见的操作
     let flags = if let Some(ans) = OpenFlags::from_bits(flags as u32) {
@@ -203,7 +203,7 @@ pub fn syscall_close(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     info!("Into syscall_close. fd: {}", fd);
 
-    let process = current_process();
+    let process = process_api();
     let mut fd_table = process.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -261,7 +261,7 @@ pub fn syscall_read(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EFAULT);
     }
 
-    let process = current_process();
+    let process = process_api();
 
     // FIX: 进行检查，这里是不安全
     let buf = unsafe { from_raw_parts_mut(buf, count) };
@@ -302,7 +302,9 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EFAULT);
     }
 
-    let process = current_process();
+    info!("TEST");
+    let process = process_api();
+    info!("TEST2");
 
     // FIX: 进行地址检查，当超出可访问地址空间的时候，返回错误EFAULT
     let buf = unsafe { from_raw_parts(buf, count) };
@@ -346,7 +348,7 @@ pub fn syscall_pipe2(_args: [usize; 6]) -> SyscallResult {
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
 pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
-    let process = current_process();
+    let process = process_api();
     let mut fd_table = process.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -378,7 +380,7 @@ pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let new_fd = args[1];
     let flags = args[2];
-    let process = current_process();
+    let process = process_api();
     let mut fd_table = process.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -471,7 +473,7 @@ pub fn syscall_lseek(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let offset = args[1] as isize;
     let whence = args[2];
-    let process = current_process();
+    let process = process_api();
     info!("fd: {} offset: {} whence: {}", fd, offset, whence);
     if fd >= process.fd_manager.fd_table.lock().len() || fd < 3 {
         debug!("fd {} is out of range", fd);
@@ -522,7 +524,7 @@ pub fn syscall_pread64(args: [usize; 6]) -> SyscallResult {
     let buf = args[1] as *mut u8;
     let count = args[2];
     let offset = args[3];
-    let process = current_process();
+    let process = process_api();
     // TODO: 把check fd整合到fd_manager中
     let file = match process.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
@@ -555,7 +557,7 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let buf = args[2] as *mut u8;
     let bufsiz = args[3];
-    let process = current_process();
+    let process = process_api();
     // ```
     // if process
     //     .manual_alloc_for_lazy((path as usize).into())
@@ -636,7 +638,7 @@ pub fn syscall_pwrite64(args: [usize; 6]) -> SyscallResult {
     let buf = args[1] as *const u8;
     let count = args[2];
     let offset = args[3];
-    let process = current_process();
+    let process = process_api();
 
     let file = match process.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
@@ -676,7 +678,7 @@ pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
     if (out_fd as isize) < 0 || (in_fd as isize) < 0 {
         return Err(SyscallError::EBADF);
     }
-    let process = current_process();
+    let process = process_api();
     let out_file = process.fd_manager.fd_table.lock()[out_fd].clone().unwrap();
     let in_file = process.fd_manager.fd_table.lock()[in_fd].clone().unwrap();
     let old_in_offset = in_file.seek(SeekFrom::Current(0)).unwrap();
@@ -714,7 +716,7 @@ pub fn syscall_ftruncate64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let len = args[1];
     info!("fd: {}, len: {}", fd, len);
-    let process = current_process();
+    let process = process_api();
     let fd_table = process.fd_manager.fd_table.lock();
     if fd >= fd_table.len() {
         return Err(SyscallError::EINVAL);
@@ -769,7 +771,7 @@ pub fn syscall_copyfilerange(args: [usize; 6]) -> SyscallResult {
         "copyfilerange: fd_in: {}, fd_out: {}, off_in: {}, off_out: {}, len: {}, flags: {}",
         fd_in, fd_out, in_offset, out_offset, len, flags
     );
-    let process = current_process();
+    let process = process_api();
     let fd_table = process.fd_manager.fd_table.lock();
     let out_file = fd_table[fd_out].clone().unwrap();
     let in_file = fd_table[fd_in].clone().unwrap();

@@ -11,7 +11,7 @@ use core::{
 
 use axerrno::AxResult;
 use axhal::paging::MappingFlags;
-use axlog::{debug, info};
+use axlog::{debug, info, warn};
 use axmm::AddrSpace;
 use axstd::format;
 use elf::{
@@ -59,274 +59,150 @@ pub struct ELFInfo {
 /// - The second return value is the top of the user stack.
 /// - The third return value is the address space of the user app.
 pub fn load_user_app(
-    memory_set: Option<&mut AddrSpace>,
+    memory_set: &mut AddrSpace,
     app_name: &str,
     app_elf_file: &'static [u8],
     lib_elf_file: Option<&'static [u8]>,
 ) -> AxResult<(VirtAddr, VirtAddr)> {
-    match memory_set {
-        Some(memory_set) => {
-            match lib_elf_file {
-                Some(lib_elf_file) => {
-                    info!("Load lib");
-                    let main_entry = get_func_sym(app_elf_file, "main")
-                        .expect("Failed to find symbol in APP dynamic symol table")
-                        .st_value as usize;
-                    let lib_info = load_lib(
-                        VirtAddr::from(LIB_START),
-                        lib_elf_file,
-                        APP_START
-                            + main_entry
-                                .ne(&0)
-                                .then(|| main_entry)
-                                .expect("Bad st_value(main)"),
-                    );
-                    for segment in lib_info.segments {
-                        debug!(
-                            "Mapping LIB ELF segment: [{:#x?}, {:#x?}) flags: {:#x?}",
-                            segment.start_vaddr,
-                            segment.start_vaddr + segment.size,
-                            segment.flags
-                        );
-                        memory_set.map_alloc(
-                            segment.start_vaddr,
-                            segment.size,
-                            segment.flags,
-                            true,
-                        )?;
+    match lib_elf_file {
+        Some(lib_elf_file) => {
+            info!("Load lib");
+            let main_entry = get_func_sym(app_elf_file, "main")
+                .expect("Failed to find symbol in APP dynamic symol table")
+                .st_value as usize;
+            let lib_info = load_lib(
+                VirtAddr::from(LIB_START),
+                lib_elf_file,
+                APP_START
+                    + main_entry
+                        .ne(&0)
+                        .then(|| main_entry)
+                        .expect("Bad st_value(main)"),
+            );
+            for segment in lib_info.segments {
+                debug!(
+                    "Mapping LIB ELF segment: [{:#x?}, {:#x?}) flags: {:#x?}",
+                    segment.start_vaddr,
+                    segment.start_vaddr + segment.size,
+                    segment.flags
+                );
+                memory_set.map_alloc(segment.start_vaddr, segment.size, segment.flags, true)?;
 
-                        if segment.data.is_empty() {
-                            continue;
-                        }
-
-                        memory_set.write(segment.start_vaddr + segment.offset, &segment.data)?;
-                    }
-                    info!("Mapping user lib stack {:?}", memory_set);
-
-                    // The user stack is divided into two parts:
-                    // `ustack_start` -> `ustack_pointer`: It is the stack space that users actually read and write.
-                    // `ustack_pointer` -> `ustack_end`: It is the space that contains the arguments, environment variables and auxv passed to the app.
-                    //  When the app starts running, the stack pointer points to `ustack_pointer`.
-
-                    let lib_ustack_end = VirtAddr::from_usize(LIB_START);
-                    let lib_ustack_size = MAX_LIB_SIZE;
-                    let lib_ustack_start = lib_ustack_end - lib_ustack_size;
-                    debug!(
-                        "Mapping user lib stack: {:#x?} -> {:#x?}",
-                        lib_ustack_start, lib_ustack_end
-                    );
-
-                    // `user-heap-base` = `"0x3FA0_0000"`
-                    // # The base address of the user stack. And the stack bottom is `user-stack-top + max-user-stack-size`.
-                    // `user-stack-top` = `"0x3FE0_0000"`
-                    // # The size of the user heap.
-                    // `max-user-heap-size` = `"0x40_0000"`
-
-                    // FIX: Add more arguments and environment variables
-                    let (lib_stack_data, lib_ustack_pointer) = get_app_stack_region(
-                        &[],
-                        &[],
-                        &lib_info.auxv,
-                        lib_ustack_start,
-                        lib_ustack_size,
-                    );
-
-                    info!("Mapping user lib stack data: {:#x?}", lib_ustack_pointer);
-
-                    memory_set.map_alloc(
-                        lib_ustack_start,
-                        lib_ustack_size,
-                        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
-                        true,
-                    )?;
-
-                    info!("Writing user lib stack data");
-
-                    memory_set.write(
-                        VirtAddr::from_usize(lib_ustack_pointer),
-                        lib_stack_data.as_slice(),
-                    )?;
-                    // ``` TODO:
-                    // Ok((lib_info.entry, VirtAddr::from(lib_ustack_pointer)))
-
-                    info!("Load app");
-                    let app_info = load_app(
-                        VirtAddr::from(APP_START),
-                        app_elf_file,
-                        VirtAddr::from(LIB_START),
-                        lib_elf_file,
-                    );
-
-                    for segment in app_info.segments {
-                        debug!(
-                            "Mapping APP ELF segment: [{:#x?}, {:#x?}) flags: {:#x?}",
-                            segment.start_vaddr,
-                            segment.start_vaddr + segment.size,
-                            segment.flags
-                        );
-                        // NOTE: 将之前的那个map先取消
-                        memory_set.unmap(segment.start_vaddr, segment.size)?;
-                        memory_set.map_alloc(
-                            segment.start_vaddr,
-                            segment.size,
-                            segment.flags,
-                            true,
-                        )?;
-
-                        if segment.data.is_empty() {
-                            continue;
-                        }
-
-                        memory_set.write(segment.start_vaddr + segment.offset, &segment.data)?;
-                    }
-                    info!("Mapping user app stack {:?}", memory_set);
-
-                    let app_ustack_end = VirtAddr::from_usize(APP_START);
-                    let app_ustack_size = MAX_APP_SIZE;
-                    let app_ustack_start = app_ustack_end - app_ustack_size;
-                    debug!(
-                        "Mapping user app stack: {:#x?} -> {:#x?}",
-                        app_ustack_start, app_ustack_end
-                    );
-
-                    // FIX: Add more arguments and environment variables
-                    let (app_stack_data, app_ustack_pointer) = get_app_stack_region(
-                        &[app_name.to_string()],
-                        &[],
-                        &app_info.auxv,
-                        app_ustack_start,
-                        app_ustack_size,
-                    );
-
-                    info!("Mapping user app stack data: {:#x?}", app_ustack_pointer);
-
-                    // NOTE: 将之前的那个map先取消
-                    memory_set.unmap(app_ustack_start, app_ustack_size)?;
-                    memory_set.map_alloc(
-                        app_ustack_start,
-                        app_ustack_size,
-                        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
-                        true,
-                    )?;
-
-                    info!("Writing user app stack data");
-
-                    memory_set.write(
-                        VirtAddr::from_usize(app_ustack_pointer),
-                        app_stack_data.as_slice(),
-                    )?;
-
-                    Ok((lib_info.entry, VirtAddr::from(app_ustack_pointer)))
+                if segment.data.is_empty() {
+                    continue;
                 }
-                None => {
-                    todo!();
-                }
+
+                memory_set.write(segment.start_vaddr + segment.offset, &segment.data)?;
             }
+            info!("Mapping user lib stack {:?}", memory_set);
+
+            // The user stack is divided into two parts:
+            // `ustack_start` -> `ustack_pointer`: It is the stack space that users actually read and write.
+            // `ustack_pointer` -> `ustack_end`: It is the space that contains the arguments, environment variables and auxv passed to the app.
+            //  When the app starts running, the stack pointer points to `ustack_pointer`.
+
+            let lib_ustack_end = VirtAddr::from_usize(LIB_START);
+            let lib_ustack_size = MAX_LIB_SIZE;
+            let lib_ustack_start = lib_ustack_end - lib_ustack_size;
+            debug!(
+                "Mapping user lib stack: {:#x?} -> {:#x?}",
+                lib_ustack_start, lib_ustack_end
+            );
+
+            // `user-heap-base` = `"0x3FA0_0000"`
+            // # The base address of the user stack. And the stack bottom is `user-stack-top + max-user-stack-size`.
+            // `user-stack-top` = `"0x3FE0_0000"`
+            // # The size of the user heap.
+            // `max-user-heap-size` = `"0x40_0000"`
+
+            // FIX: Add more arguments and environment variables
+            let (lib_stack_data, lib_ustack_pointer) =
+                get_app_stack_region(&[], &[], &lib_info.auxv, lib_ustack_start, lib_ustack_size);
+
+            info!("Mapping user lib stack data: {:#x?}", lib_ustack_pointer);
+
+            memory_set.map_alloc(
+                lib_ustack_start,
+                lib_ustack_size,
+                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+                true,
+            )?;
+
+            info!("Writing user lib stack data");
+
+            memory_set.write(
+                VirtAddr::from_usize(lib_ustack_pointer),
+                lib_stack_data.as_slice(),
+            )?;
+            // ``` TODO:
+            // Ok((lib_info.entry, VirtAddr::from(lib_ustack_pointer)))
+
+            info!("Load app");
+            let app_info = load_app(
+                VirtAddr::from(APP_START),
+                app_elf_file,
+                VirtAddr::from(LIB_START),
+                lib_elf_file,
+            );
+
+            for segment in app_info.segments {
+                debug!(
+                    "Mapping APP ELF segment: [{:#x?}, {:#x?}) flags: {:#x?}",
+                    segment.start_vaddr,
+                    segment.start_vaddr + segment.size,
+                    segment.flags
+                );
+                // NOTE: 将之前的那个map先取消
+                memory_set.unmap(segment.start_vaddr, segment.size)?;
+                memory_set.map_alloc(segment.start_vaddr, segment.size, segment.flags, true)?;
+
+                if segment.data.is_empty() {
+                    continue;
+                }
+
+                memory_set.write(segment.start_vaddr + segment.offset, &segment.data)?;
+            }
+            info!("Mapping user app stack {:?}", memory_set);
+
+            let app_ustack_end = VirtAddr::from_usize(APP_START);
+            let app_ustack_size = MAX_APP_SIZE;
+            let app_ustack_start = app_ustack_end - app_ustack_size;
+            debug!(
+                "Mapping user app stack: {:#x?} -> {:#x?}",
+                app_ustack_start, app_ustack_end
+            );
+
+            // FIX: Add more arguments and environment variables
+            let (app_stack_data, app_ustack_pointer) = get_app_stack_region(
+                &[app_name.to_string()],
+                &[],
+                &app_info.auxv,
+                app_ustack_start,
+                app_ustack_size,
+            );
+
+            info!("Mapping user app stack data: {:#x?}", app_ustack_pointer);
+
+            // NOTE: 将之前的那个map先取消
+            memory_set.unmap(app_ustack_start, app_ustack_size)?;
+            memory_set.map_alloc(
+                app_ustack_start,
+                app_ustack_size,
+                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+                true,
+            )?;
+
+            info!("Writing user app stack data");
+
+            memory_set.write(
+                VirtAddr::from_usize(app_ustack_pointer),
+                app_stack_data.as_slice(),
+            )?;
+
+            Ok((lib_info.entry, VirtAddr::from(app_ustack_pointer)))
         }
         None => {
-            match lib_elf_file {
-                Some(lib_elf_file) => {
-                    info!("Load lib");
-                    let main_entry = get_func_sym(app_elf_file, "main")
-                        .expect("Failed to find symbol in APP dynamic symol table")
-                        .st_value as usize;
-                    let lib_elf: ElfBytes<'_, LittleEndian> =
-                        ElfBytes::<LittleEndian>::minimal_parse(lib_elf_file)
-                            .expect("Failed to parse ELF at LIB file");
-                    let app_elf: ElfBytes<'_, LittleEndian> =
-                        ElfBytes::<LittleEndian>::minimal_parse(app_elf_file)
-                            .expect("Failed to parse ELF");
-
-                    let lib_code =
-                        unsafe { from_raw_parts_mut((LIB_START) as *mut u8, MAX_LIB_SIZE) };
-
-                    let app_code =
-                        unsafe { from_raw_parts_mut((APP_START) as *mut u8, MAX_APP_SIZE) };
-                    debug!("Load lib to mem space");
-                    load_old::load_dyn(&lib_elf, lib_elf_file, lib_code, 0);
-                    debug!("Load app to mem space");
-                    load_old::load_dyn(&app_elf, app_elf_file, app_code, 0);
-
-                    load_old::modify_plt_for_app(&app_elf, &lib_elf);
-                    load_old::modify_plt_for_lib(&app_elf, &lib_elf);
-
-                    // let lib_info = load_lib(
-                    //     VirtAddr::from(LIB_START),
-                    //     lib_elf_file,
-                    //     APP_START
-                    //         + main_entry
-                    //             .ne(&0)
-                    //             .then(|| main_entry)
-                    //             .expect("Bad st_value(main)"),
-                    // );
-                    // for segment in lib_info.segments {
-                    //     debug!(
-                    //         "Load LIB ELF segment: [{:#x?}, {:#x?}) offset {}",
-                    //         segment.start_vaddr,
-                    //         segment.start_vaddr + segment.size,
-                    //         segment.offset
-                    //     );
-
-                    //     if segment.data.is_empty() {
-                    //         continue;
-                    //     }
-
-                    //     // In `unikernel`, `paddr` == `vaddr`
-                    //     load_segment(
-                    //         lib_code,
-                    //         &segment.data,
-                    //         segment.start_vaddr.as_usize(),
-                    //         segment.offset,
-                    //         segment.size,
-                    //         LIB_START,
-                    //     );
-                    // }
-
-                    // info!("Load app");
-                    // let app_info = load_app(
-                    //     VirtAddr::from(APP_START),
-                    //     app_elf_file,
-                    //     VirtAddr::from(LIB_START),
-                    //     lib_elf_file,
-                    // );
-
-                    // for segment in app_info.segments {
-                    //     debug!(
-                    //         "Mapping APP ELF segment: [{:#x?}, {:#x?}) flags: {:#x?}",
-                    //         segment.start_vaddr,
-                    //         segment.start_vaddr + segment.size,
-                    //         segment.flags
-                    //     );
-
-                    //     if segment.data.is_empty() {
-                    //         continue;
-                    //     }
-
-                    //     // In `unikernel`, `paddr` == `vaddr`
-                    //     load_segment(
-                    //         app_code,
-                    //         &segment.data,
-                    //         segment.start_vaddr.as_usize(),
-                    //         segment.offset,
-                    //         segment.size,
-                    //         APP_START,
-                    //     );
-                    // }
-
-                    debug!(
-                        "ELF Headers App: 0x{:x}, Lib: 0x{:x}",
-                        app_elf.ehdr.e_ehsize, lib_elf.ehdr.e_ehsize
-                    );
-
-                    Ok((
-                        VirtAddr::from(LIB_START + lib_elf.ehdr.e_entry as usize),
-                        VirtAddr::from(0),
-                    ))
-                }
-                None => {
-                    todo!();
-                }
-            }
+            todo!();
         }
     }
 }

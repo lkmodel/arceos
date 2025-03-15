@@ -12,7 +12,7 @@ use bitflags::bitflags;
 use crate::{
     linux_env::{
         axfs_ext::api::{FileIO, FileIOType, SeekFrom},
-        process_ext::api::current_process,
+        linux_api::api::process_api,
     },
     syscall::SyscallError,
 };
@@ -164,9 +164,9 @@ impl EpollFile {
         let events = self.get_events();
         let mut ret_events = Vec::new();
         loop {
-            let current_process = current_process();
+            let process_api = process_api();
             for req_event in events.iter() {
-                let fd_table = current_process.fd_manager.fd_table.lock();
+                let fd_table = process_api.fd_manager.fd_table.lock();
                 if let Some(file) = &fd_table[req_event.data as usize] {
                     let mut ret_event_type = EpollEventType::empty();
                     if file.is_hang_up() {
@@ -211,7 +211,7 @@ impl EpollFile {
 
             // ```
             // #[cfg(feature = "signal")]
-            // if current_process.have_signals().is_some() {
+            // if process_api.have_signals().is_some() {
             //     return Err(AxError::Timeout);
             // }
         }
@@ -248,7 +248,7 @@ impl FileIO for EpollFile {
     fn ready_to_read(&self) -> bool {
         // 如果当前`epoll`事件确实正在等待事件响应，那么可以认为事件准备好read，尽管无法读到实际内容
         let events = self.get_events();
-        let process = current_process();
+        let process = process_api();
         let fd_table = process.fd_manager.fd_table.lock();
         for req_event in events.iter() {
             if let Some(file) = fd_table[req_event.data as usize].as_ref() {

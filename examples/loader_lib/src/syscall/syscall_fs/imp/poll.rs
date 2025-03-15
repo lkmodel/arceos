@@ -3,7 +3,7 @@ use axtask::yield_now;
 use bitflags::bitflags;
 
 use crate::{
-    linux_env::{axfs_ext::api::FileIO, process_ext::api::current_process},
+    linux_env::{axfs_ext::api::FileIO, linux_api::api::process_api},
     syscall::{SyscallError, SyscallResult, TimeSecs},
 };
 
@@ -20,7 +20,7 @@ fn ppoll(mut fds: Vec<PollFd>, expire_time: usize) -> (isize, Vec<PollFd>) {
     loop {
         // 满足事件要求而被触发的事件描述符数量
         let mut set: isize = 0;
-        let process = current_process();
+        let process = process_api();
         for poll_fd in &mut fds {
             let fd_table = process.fd_manager.fd_table.lock();
             if let Some(file) = fd_table[poll_fd.fd as usize].as_ref() {
@@ -207,7 +207,7 @@ pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
 
 /// 根据给定的地址和长度新建一个fd set,包括文件描述符指针数组,文件描述符数值数组,以及一个`bitset`
 fn init_fd_set(addr: *mut usize, len: usize) -> Result<PpollFdSet, SyscallError> {
-    let process = current_process();
+    let process = process_api();
     if len >= process.fd_manager.get_limit() as usize {
         axlog::error!(
             "[pselect6()] len {len} >= limit {}",
