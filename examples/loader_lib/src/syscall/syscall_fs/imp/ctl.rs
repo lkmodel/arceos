@@ -32,7 +32,7 @@ use axlog::{debug, error, info, warn};
 pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
     let buf = args[0] as *mut u8;
     let len = args[1];
-    debug!("Into syscall_getcwd. buf: {}, len: {}", buf as usize, len);
+    info!("Into syscall_getcwd. buf: {}, len: {}", buf as usize, len);
     let cwd = axfs::api::current_dir().unwrap();
 
     // TODO: 如果buf为NULL,则系统分配缓存区
@@ -52,6 +52,7 @@ pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
         }
         Ok(buf as isize)
     } else {
+        info!("getcwd: buf size is too small");
         Err(SyscallError::ERANGE)
     }
 }
@@ -639,7 +640,7 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
     let argp = args[2];
     let process = process_api();
     let fd_table = process.fd_manager.fd_table.lock();
-    warn!("fd: {}, request: {}, argp: {}", fd, request, argp);
+    debug!("fd: {}, request: {}, argp: {}", fd, request, argp);
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
         return Err(SyscallError::EBADF);

@@ -7,13 +7,17 @@ mod syscall_task;
 
 pub use api::*;
 use axerrno::{self, LinuxError};
+use axlog::warn;
 pub use ctypes::*;
 
 /// Accept the result of a syscall, and return the `isize` to the user
 pub(crate) fn deal_result(result: SyscallResult) -> isize {
     match result {
         Ok(x) => x,
-        Err(error) => -(error.code() as isize),
+        Err(error) => {
+            warn!("Syscall Error: {:?}", error);
+            -(error.code() as isize)
+        }
     }
 }
 

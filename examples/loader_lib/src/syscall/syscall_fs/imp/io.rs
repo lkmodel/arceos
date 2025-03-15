@@ -299,25 +299,29 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
 
     info!("[write()] fd: {}, buf: {buf:?}, len: {count}", fd as i32);
     if buf.is_null() {
+        info!("EFAULT buf is outside your accessible address space.");
         return Err(SyscallError::EFAULT);
     }
 
-    info!("TEST");
     let process = process_api();
-    info!("TEST2");
 
-    // FIX: 进行地址检查，当超出可访问地址空间的时候，返回错误EFAULT
+    // FIX: 在多进程时，进行地址检查，当超出可访问地址空间的时候，返回错误EFAULT
     let buf = unsafe { from_raw_parts(buf, count) };
 
     let file = match process.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
-        _ => return Err(SyscallError::EBADF),
+        _ => {
+            info!("EBADF fd is not a valid file descriptor or is not open for writing.");
+            return Err(SyscallError::EBADF);
+        }
     };
 
     if file.get_type() == FileIOType::DirDesc {
+        info!("EBADF fd is not a valid file descriptor or is not open for writing.");
         return Err(SyscallError::EBADF);
     }
     if !file.writable() {
+        info!("EBADF fd is not a valid file descriptor or is not open for writing.");
         return Err(SyscallError::EBADF);
     }
 
@@ -326,8 +330,16 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
         // TODO: Send a `SIGPIPE` signal to the process
         Err(AxError::ConnectionReset) => Err(SyscallError::EPIPE),
         Err(AxError::WouldBlock) => Err(SyscallError::EAGAIN),
-        Err(AxError::InvalidInput) => Err(SyscallError::EINVAL),
-        Err(_) => Err(SyscallError::EPERM),
+        Err(AxError::InvalidInput) => {
+            info!("EINVAL fd is attached to an object which is unsuitable for writing; or  the  file  was  opened  with  the
+              O_DIRECT  flag, and either the address specified in buf, the value specified in count, or the file
+              offset is not suitably aligned.");
+            Err(SyscallError::EINVAL)
+        }
+        Err(_) => {
+            info!("Unexpected");
+            Err(SyscallError::EPERM)
+        }
     }
 }
 
