@@ -76,7 +76,7 @@ int ftruncate(int, off_t);
 
 int access(const char *, int);
 // int faccessat(int, const char *, int, int);
-//
+
 int chdir(const char *);
 // int fchdir(int);
 char *getcwd(char *, size_t);
@@ -84,7 +84,7 @@ char *getcwd(char *, size_t);
 // unsigned alarm(unsigned);
 unsigned sleep(unsigned);
 // int pause(void);
-//
+
 // pid_t fork(void);
 // pid_t _Fork(void);
 // int execve(const char *, char *const[], char *const[]);
@@ -94,7 +94,7 @@ unsigned sleep(unsigned);
 // int execvp(const char *, char *const[]);
 // int execlp(const char *, const char *, ...);
 // int fexecve(int, char *const[], char *const[]);
-// _Noreturn void _exit(int);
+_Noreturn void _exit(int);
 
 pid_t getpid(void);
 // pid_t getppid(void);

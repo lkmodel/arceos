@@ -44,7 +44,6 @@ pub static PID2PC: Mutex<BTreeMap<u64, Arc<Process>>> = Mutex::new(BTreeMap::new
 /// The process control block
 pub struct Process {
     /// 进程号
-    #[cfg(feature = "pseudo_multi_process")]
     pub pid: AtomicU64,
     /// 父进程号
     #[cfg(feature = "pseudo_multi_process")]
@@ -73,7 +72,6 @@ pub struct Process {
 }
 impl Process {
     /// Get the process ID
-    #[cfg(feature = "pseudo_multi_process")]
     pub fn pid(&self) -> u64 {
         self.pid.load(Ordering::Acquire)
     }
@@ -152,7 +150,6 @@ impl Process {
         };
 
         Self {
-            #[cfg(feature = "pseudo_multi_process")]
             pid: AtomicU64::new(0),
             #[cfg(feature = "pseudo_multi_process")]
             parent: AtomicU64::new(parent),

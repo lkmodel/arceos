@@ -1,4 +1,7 @@
-use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use core::{
+    alloc::Layout,
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+};
 
 use axtask::def_task_ext;
 
@@ -9,6 +12,18 @@ pub struct TaskExt {
 }
 
 impl TaskExt {
+    /// Returns the expected size of the task extended structure.
+    pub fn size() -> usize {
+        // 使用 size_of 来获取 TaskExt 类型的大小
+        size_of::<TaskExt>()
+    }
+
+    /// Returns the expected alignment of the task extended structure.
+    pub fn align() -> usize {
+        // 使用 align_of 来获取 TaskExt 类型的对齐要求
+        align_of::<TaskExt>()
+    }
+
     pub const fn init(process_id: u64, is_leader: bool) -> Self {
         Self {
             process_id: AtomicU64::new(process_id),

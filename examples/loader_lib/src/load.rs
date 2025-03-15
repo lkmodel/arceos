@@ -379,6 +379,7 @@ fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
             .expect("Failed to get symbol name");
 
         // Find symbol in LIB ELF
+        debug!("Finding symbol {}", app_rela_name);
         let lib_sym = lib_dynsym_table
             .iter()
             .find(|s| {
@@ -473,8 +474,6 @@ fn modify_plt_for_app(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<Littl
                         LIB_START + lib_sym.st_value as usize,
                         app_rela_name,
                     );
-
-                    warn!("Bad st_value");
                 }
             }
             _ => {

@@ -1,4 +1,4 @@
-use crate::syscall::SyscallResult;
+use crate::{linux_env::linux_api::api::process_api, syscall::SyscallResult};
 
 /// # Arguments
 /// * `exit_code` - i32
@@ -82,8 +82,7 @@ pub fn syscall_prlimit64(args: [usize; 6]) -> SyscallResult {
 
 /// 当前不涉及多核情况
 pub fn syscall_getpid() -> SyscallResult {
-    unimplemented!();
-    //    Ok(current_process().pid() as isize)
+    Ok(process_api().pid() as isize)
 }
 
 /// 获取有效用户 id，即相当于哪个用户的权限。在实现多用户权限前默认为最高权限
