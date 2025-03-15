@@ -97,9 +97,12 @@ pub struct TaskContext {
 
 impl TaskContext {
     /// Creates a new default context for a new task.
-    // pub const fn new() -> Self {
-    //     unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
-    // }
+    #[cfg(not(feature = "pseudo_multi_process"))] // 无特权级的多进程模式
+    pub const fn new() -> Self {
+        unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
+    }
+
+    #[cfg(feature = "pseudo_multi_process")] // 无特权级的多进程模式
     pub fn new() -> Self {
         let satp = crate::paging::kernel_page_table_root();
         Self {

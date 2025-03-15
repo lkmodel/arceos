@@ -1,3 +1,17 @@
+// use crate::{
+//     abi::ABI_TABLE,
+//     config::TASK_STACK_SIZE,
+//     elf_load::load::load_user_app,
+//     linux_env::{
+//         axfs_ext::api::{FileIO, OpenFlags},
+//         linux_fs::{
+//             fd_manager::{FD_LIMIT_ORIGIN, FdManager},
+//             stdio::{Stderr, Stdin, Stdout},
+//         },
+//         task_ext::TaskExt,
+//     },
+// };
+
 use alloc::{string::String, sync::Arc};
 use lazyinit::LazyInit;
 
@@ -18,20 +32,6 @@ pub fn process_api() -> Arc<Process> {
     current_process()
 }
 
-// use crate::{
-//     abi::ABI_TABLE,
-//     config::TASK_STACK_SIZE,
-//     elf_load::load::load_user_app,
-//     linux_env::{
-//         axfs_ext::api::{FileIO, OpenFlags},
-//         linux_fs::{
-//             fd_manager::{FD_LIMIT_ORIGIN, FdManager},
-//             stdio::{Stderr, Stdin, Stdout},
-//         },
-//         task_ext::TaskExt,
-//     },
-// };
-//
 // /// `main`线程等待所有进程结束
 // pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new();
 // /// Map from task id to arc pointer of task

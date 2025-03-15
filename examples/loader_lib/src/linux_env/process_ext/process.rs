@@ -17,6 +17,8 @@ use axtask::{AxTaskRef, TaskInner, current, spawn_task};
 use core::sync::atomic::{AtomicU64, Ordering};
 use memory_addr::{PAGE_SIZE_4K, PhysAddr, VirtAddr};
 
+#[cfg(feature = "unikernel")]
+use crate::linux_env::linux_api::api::UNI_API;
 use crate::{
     abi::ABI_TABLE,
     config::TASK_STACK_SIZE,
@@ -152,7 +154,10 @@ impl Process {
             file_path: Mutex::new(String::new()),
         }
     }
+}
 
+#[cfg(feature = "pseudo_multi_process")]
+impl Process {
     /// 根据给定参数创建一个新的进程
     #[allow(unused)]
     pub fn init(
@@ -167,7 +172,7 @@ impl Process {
         info!("page_table_token: 0x{:x}", page_table_token);
 
         let (entry, usp) =
-            match load_user_app(&mut memory_set, "sqlite", app_elf_file, lib_elf_file) {
+            match load_user_app(Some(&mut memory_set), "sqlite", app_elf_file, lib_elf_file) {
                 Ok(t) => t,
                 Err(e) => {
                     panic!("{:?}", e);
@@ -404,6 +409,113 @@ impl Process {
         FORK_WAIT.wait();
 
         Ok(child_pid)
+    }
+}
+
+#[cfg(feature = "unikernel")]
+impl Process {
+    /// 根据给定参数创建一个新的进程
+    #[allow(unused)]
+    pub fn init(
+        mut path: String,
+        app_elf_file: &'static [u8],
+        lib_elf_file: Option<&'static [u8]>,
+    ) {
+        let (entry, usp) = match load_user_app(None, "sqlite", app_elf_file, lib_elf_file) {
+            Ok(t) => t,
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
+
+        UNI_API.init_once(Arc::new(Process::new(
+            0,
+            Mutex::new(Arc::new(Mutex::new(
+                AddrSpace::new_empty(VirtAddr::from_usize(0), 0).unwrap(),
+            ))),
+            0,
+            vec![
+                // 标准输入
+                Some(Arc::new(Stdin {
+                    flags: Mutex::new(OpenFlags::empty()),
+                })),
+                // 标准输出
+                Some(Arc::new(Stdout {
+                    flags: Mutex::new(OpenFlags::empty()),
+                })),
+                // 标准错误
+                Some(Arc::new(Stderr {
+                    flags: Mutex::new(OpenFlags::empty()),
+                })),
+            ],
+        )));
+
+        info!("ENTRY: {:x}", entry.as_usize());
+
+        unsafe {
+            core::arch::asm!("
+                // 保存更多上下文信息
+                addi    sp, sp, -128 // 增加栈空间以存储额外的寄存器
+                // 保存CPU相关的寄存器
+                mv      t0, tp          // 保存CPU_ID
+                sd      t0, 0(sp)
+                csrr    t0, sstatus     // 保存系统状态
+                sd      t0, 8(sp)
+
+                // 保存通用寄存器
+                sd      ra, 0(sp)
+                sd      a7, 8(sp)
+                sd      a6, 16(sp)
+                sd      a5, 24(sp)
+                sd      a4, 32(sp)
+                sd      a3, 40(sp)
+                sd      a2, 48(sp)
+                sd      a1, 56(sp)
+                sd      a0, 64(sp)
+                sd      t6, 72(sp)
+                sd      t5, 80(sp)
+                sd      t4, 88(sp)
+                sd      t3, 96(sp)
+                sd      t2, 104(sp)
+                sd      t1, 112(sp)
+                sd      t0, 128(sp)
+
+                la      a7, {abi_table}
+                mv      t2, {entry}
+                jalr    t2
+
+                ld      ra, 0(sp)
+                ld      a7, 8(sp)
+                ld      a6, 16(sp)
+                ld      a5, 24(sp)
+                ld      a4, 32(sp)
+                ld      a3, 40(sp)
+                ld      a2, 48(sp)
+                ld      a1, 56(sp)
+                ld      a0, 64(sp)
+                ld      t6, 72(sp)
+                ld      t5, 80(sp)
+                ld      t4, 88(sp)
+                ld      t3, 96(sp)
+                ld      t2, 104(sp)
+                ld      t1, 112(sp)
+                ld      t0, 120(sp)
+
+                addi    sp, sp, 128
+                ",
+                abi_table = sym ABI_TABLE,
+                entry = in(reg) entry.as_usize(),
+                options(nostack)
+            )
+        }
+    }
+
+    pub fn fork(
+        &self,
+        stack_data: &'static [u8],
+        #[allow(unused)] user_ctx: UserContext,
+    ) -> AxResult<u64> {
+        unreachable!()
     }
 }
 
