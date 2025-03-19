@@ -61,7 +61,7 @@ char *strerror(int);
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE) || \
     defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 char *strtok_r(char *__restrict, const char *__restrict, char **__restrict);
-// int strerror_r(int, char *, size_t);
+int strerror_r(int, char *, size_t);
 char *stpcpy(char *__restrict, const char *__restrict);
 char *stpncpy(char *__restrict, const char *__restrict, size_t);
 size_t strnlen(const char *, size_t);

@@ -307,8 +307,7 @@ const _ABI_RT_MULBITINT3: usize = 287;
 
 const _ABI_RT_DIVMODBITINT4: usize = 288;
 
-/// 当访问到没有被绑定的`ABI`时，将会使用`ABI_NOIMPL`
-pub static mut ABI_TABLE: [usize; 300] = [0; 300];
+pub static mut ABI_TABLE: [usize; 300] = [ABI_NOIMPL; 300];
 
 pub fn init_abis() {
     register_abi("noimpl", ABI_NOIMPL, abi_noimpl as usize);

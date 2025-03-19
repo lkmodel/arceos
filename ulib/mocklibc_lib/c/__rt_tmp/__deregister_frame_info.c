@@ -3,5 +3,5 @@
 
 void __deregister_frame_info()
 {
-    NOIMPL
+    NOIMPL_STR("__deregister_frame_info\n")
 }

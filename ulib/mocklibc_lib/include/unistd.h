@@ -164,7 +164,7 @@ long sysconf(int);
 // void *sbrk(intptr_t);
 // pid_t vfork(void);
 // int vhangup(void);
-// int chroot(const char *);
+int chroot(const char *);
 // int getpagesize(void);
 // int getdtablesize(void);
 // int sethostname(const char *, size_t);

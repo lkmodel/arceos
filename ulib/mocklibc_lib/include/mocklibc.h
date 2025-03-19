@@ -70,7 +70,18 @@
 
 extern unsigned long volatile abi_entry;
 
-#define NOIMPL                                            \
+#define __DEBUG__
+
+// 调试程序的可变参数宏定义
+#ifdef __DEBUG__
+#include <stdio.h>
+#define DEBUG_PRINT(...) printf(__VA_ARGS__);
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+#define NOIMPL_STR(str)                                   \
+    DEBUG_PRINT(str)                                      \
     typedef int (*FnABI)();                               \
     long *abi_ptr = (long *)(abi_entry + 8 * ABI_NOIMPL); \
     FnABI func = (FnABI)(*abi_ptr);                       \

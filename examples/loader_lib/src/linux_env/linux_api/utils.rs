@@ -1,11 +1,13 @@
 use alloc::{format, string::ToString};
 use axfs::api::Permissions;
-use axlog::debug;
+use axlog::{debug, warn};
 
 use crate::linux_env::{
     axfs_ext::api::FileIOType,
-    linux_api::link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
-    process_ext::api::current_process,
+    linux_api::{
+        api::process_api,
+        link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
+    },
 };
 
 /// The error type used by `utils`.
@@ -67,7 +69,8 @@ pub fn deal_path(
     force_dir: bool,
 ) -> UtilsResult<FilePath> {
     let mut path = "".to_string();
-    let process = current_process();
+
+    let process = process_api();
     if let Some(path_addr) = path_addr {
         if path_addr.is_null() {
             return Err(UtilsError::NULL);

@@ -1,21 +1,17 @@
-use crate::{linux_env::linux_api::api::process_api, syscall::SyscallResult};
+use axlog::info;
+
+use crate::{
+    linux_env::linux_api::api::{exit_current_task, process_api},
+    syscall::SyscallResult,
+};
 
 /// # Arguments
 /// * `exit_code` - i32
-pub fn syscall_exit(_args: [usize; 6]) -> ! {
-    unimplemented!();
-    //    let exit_code = args[0] as i32;
-    //    info!("exit: exit_code = {}", exit_code);
-    // let cases = ["fcanf", "fgetwc_buffering", "lat_pipe"];
-    // let mut test_filter = TEST_FILTER.lock();
-    // for case in cases {
-    //     let case = case.to_string();
-    //     if test_filter.contains_key(&case) {
-    //         test_filter.remove(&case);
-    //     }
-    // }
-    // drop(test_filter);
-    //    exit_current_task(exit_code)
+pub fn syscall_exit(args: [usize; 6]) -> ! {
+    let exit_code = args[0] as i32;
+    info!("exit: exit_code = {}", exit_code);
+
+    exit_current_task(exit_code);
 }
 
 /// 设置任务资源限制
@@ -27,7 +23,7 @@ pub fn syscall_exit(_args: [usize; 6]) -> ! {
 /// * `resource - i32`
 /// * `new_limit - *const RLimit`
 /// * `old_limit - *mut RLimit`
-pub fn syscall_prlimit64(args: [usize; 6]) -> SyscallResult {
+pub fn syscall_prlimit64(_args: [usize; 6]) -> SyscallResult {
     unimplemented!();
     //    let pid = args[0];
     //    let resource = args[1] as i32;

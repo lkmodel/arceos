@@ -4,6 +4,5 @@
 
 _Complex double __muldc3(double, double, double, double)
 {
-    printf("in: __muldc3\n");
-    NOIMPL
+    NOIMPL_STR("__muldc3")
 }

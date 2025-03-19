@@ -3,9 +3,34 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
-
-int main()
+// int yes_main(int argc UNUSED_PARAM, char **argv)
+// {
+// 	char **pp;
+//
+// 	argv[0] = (char*)"y";
+// 	if (argv[1])
+// 		++argv;
+//
+// 	do {
+// 		pp = argv;
+// 		while (1) {
+// 			fputs_stdout(*pp);
+// 			if (!*++pp)
+// 				break;
+// 			putchar(' ');
+// 		}
+// 	} while (putchar('\n') != EOF);
+//
+// 	bb_perror_nomsg_and_die();
+// }
+int main(int argc, char **argv)
 {
+    char **pp;
+
+    argv[0] = (char *)"y";
+    if (argv[1])
+        ++argv;
+
     puts("[test puts] Hello world\n");
     int a = 1;
     int b = 2;

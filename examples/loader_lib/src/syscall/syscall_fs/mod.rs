@@ -30,6 +30,7 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         FCNTL64 => syscall_fcntl64(args),
         FSTATAT => syscall_fstatat(args),
         STATFS => syscall_statfs(args),
+        CHROOT => unimplemented!(),
         FCHMOD => syscall_fchmod(args),
         FCHMODAT => syscall_fchmodat(args),
         FCHOWNAT => syscall_fchownat(args),

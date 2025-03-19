@@ -334,3 +334,16 @@ pub fn get_fs_stat() -> FsStat {
         f_spare: [0, 0, 0, 0],
     }
 }
+
+numeric_enum_macro::numeric_enum! {
+    #[repr(usize)]
+    #[allow(non_camel_case_types)]
+    #[derive(PartialEq,Eq)]
+    /// sys_fcntl64 使用的选项
+    pub enum ClockId {
+        /// real-time clock
+        CLOCK_REALTIME = 0,
+        /// monotonic clock
+        CLOCK_MONOTONIC = 1,
+    }
+}

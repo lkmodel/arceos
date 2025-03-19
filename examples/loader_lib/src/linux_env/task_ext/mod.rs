@@ -1,7 +1,4 @@
-use core::{
-    alloc::Layout,
-    sync::atomic::{AtomicBool, AtomicU64, Ordering},
-};
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use axtask::def_task_ext;
 

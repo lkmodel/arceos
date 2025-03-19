@@ -8,7 +8,9 @@ use axfs::api::{canonicalize, metadata, remove_file};
 use axlog::{debug, info, trace, warn};
 use axsync::Mutex;
 
-use crate::linux_env::{axfs_ext::api::FileIOType, process_ext::api::current_process};
+use crate::linux_env::axfs_ext::api::FileIOType;
+
+use super::api::process_api;
 
 pub const AT_FDCWD: usize = -100isize as usize;
 
@@ -341,7 +343,7 @@ pub fn deal_with_path(
     force_dir: bool,
 ) -> Option<FilePath> {
     let mut path = "".to_string();
-    let process = current_process();
+    let process = process_api();
 
     if let Some(path_addr) = path_addr {
         if path_addr.is_null() {

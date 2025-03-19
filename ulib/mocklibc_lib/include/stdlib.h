@@ -103,8 +103,8 @@ size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
 #define WIFSIGNALED(s) (((s) & 0xffff) - 1U < 0xffu)
 
 // int posix_memalign(void **, size_t, size_t);
-// int setenv(const char *, const char *, int);
-// int unsetenv(const char *);
+int setenv(const char *, const char *, int);
+int unsetenv(const char *);
 // int mkstemp(char *);
 // int mkostemp(char *, int);
 // char *mkdtemp(char *);
@@ -119,7 +119,7 @@ long int random(void);
 void srandom(unsigned int);
 // char *initstate(unsigned int, char *, size_t);
 // char *setstate(char *);
-// int putenv(char *);
+int putenv(char *);
 // int posix_openpt(int);
 // int grantpt(int);
 // int unlockpt(int);

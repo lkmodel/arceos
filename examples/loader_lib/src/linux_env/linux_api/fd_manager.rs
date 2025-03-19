@@ -5,12 +5,9 @@ use crate::linux_env::{
     linux_api::stdio::{Stdin, Stdout},
 };
 use alloc::{string::String, sync::Arc, vec::Vec};
-use axerrno::{AxError, AxResult};
-use axlog::debug;
 use axlog::info;
 use axsync::Mutex;
 use core::sync::atomic::{AtomicI32, AtomicU64};
-use lazyinit::LazyInit;
 
 pub const FD_LIMIT_ORIGIN: usize = 1025;
 /// 通常情况下，一个`FdManager`足以满足单进程多线程的需求。

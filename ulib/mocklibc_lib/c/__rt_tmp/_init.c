@@ -3,5 +3,5 @@
 
 void _init(void)
 {
-    NOIMPL
+    NOIMPL_STR("_init\n")
 }

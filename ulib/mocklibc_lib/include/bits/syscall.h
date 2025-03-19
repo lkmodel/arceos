@@ -347,7 +347,7 @@
 #define SYS_faccessat 48
 #define SYS_chdir     49
 // #define SYS_fchdir 50
-// #define SYS_chroot 51
+#define SYS_chroot 51
 #define SYS_fchmod   52
 #define SYS_fchmodat 53
 #define SYS_fchownat 54

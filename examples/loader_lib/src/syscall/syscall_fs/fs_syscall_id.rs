@@ -27,6 +27,7 @@ pub enum FsSyscallId {
     FTRUNCATE64 = 46,
     FACCESSAT = 48,
     CHDIR = 49,
+    CHROOT = 51,
     FCHMOD = 52,
     FCHMODAT = 53,
     FCHOWNAT = 54,

@@ -3,5 +3,5 @@
 
 void _ITM_registerTMCloneTable()
 {
-    NOIMPL
+    NOIMPL_STR("_ITM_registerTMCloneTable\n")
 }

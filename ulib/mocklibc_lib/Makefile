@@ -10,8 +10,6 @@ STRIP=$(PLATFORM)-strip
 OBJCOPY=$(PLATFORM)-objcopy
 
 CFLAGS += -nostartfiles -ffreestanding -nostdlib -nostdinc -mcmodel=medany $(INTERNAL_INCLUDE) -fPIC -pie
-CFLAGS += # -Wno-builtin-macro-redefined
-CFLAGS += # -L./rela/libgcc.c -lgcc
 # CFLAGS += -fvisibility=hidden # 尝试修正compile-rt被-nolib屏蔽的问题，也就是__getf2符号没有的问题。
 ASFLAGS = 
 LDFLAGS := #"$($(CC) -print-libgcc-file-name)"# -T link.ld
@@ -50,8 +48,11 @@ LIBSRC += $(wildcard $(SRC_DIR)/mman/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/multibyte/*.c)
 LIBSRC += # $(wildcard $(SRC_DIR)/network/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/prng/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/process/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/select/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/setjmp_riscv64/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/signal/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/signal_riscv64/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stat/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stdio/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stdlib/*.c)

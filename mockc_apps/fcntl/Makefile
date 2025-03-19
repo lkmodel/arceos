@@ -5,6 +5,7 @@ LD=$(PLATFORM)-ld
 STRIP=$(PLATFORM)-strip
 OBJCOPY=$(PLATFORM)-objcopy
 
+APP_CHOICE?=
 READELF := riscv64-unknown-elf-readelf
 HEADER_FILE=header.bin
 OUTPUT_BIN?=apps.bin

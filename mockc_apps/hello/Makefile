@@ -5,6 +5,7 @@ LD=$(PLATFORM)-ld
 STRIP=$(PLATFORM)-strip
 OBJCOPY=$(PLATFORM)-objcopy
 
+APP_CHOICE?=
 READELF := riscv64-unknown-elf-readelf
 HEADER_FILE=header.bin
 OUTPUT_BIN?=apps.bin
@@ -15,7 +16,7 @@ SRC_O=$(SRC).o
 SRC_BIN=$(OUTPUT_BIN)
 SRC_DIR=$(SRC)_apps
 
-CFLAGS := -nostdlib -nodefaultlibs -ffreestanding -O0 -mcmodel=medany -nostartfiles
+CFLAGS := -nostdinc -nostdlib -nodefaultlibs -ffreestanding -O0 -mcmodel=medany -nostartfiles
 STATIC_CFLAGS := -static -no-pie
 LINK_FLAGS := # -T$(ARCEOS_HOME)/mockc_apps/link.ld
 

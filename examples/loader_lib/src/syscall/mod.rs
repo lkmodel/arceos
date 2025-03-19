@@ -15,7 +15,7 @@ pub(crate) fn deal_result(result: SyscallResult) -> isize {
     match result {
         Ok(x) => x,
         Err(error) => {
-            warn!("Syscall Error: {:?}", error);
+            warn!("Syscall Error: {:?}", error.code());
             -(error.code() as isize)
         }
     }

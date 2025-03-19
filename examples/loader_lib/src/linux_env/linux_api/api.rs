@@ -13,6 +13,7 @@
 // };
 
 use alloc::{string::String, sync::Arc};
+use axstd::process::exit;
 use lazyinit::LazyInit;
 
 #[cfg(feature = "pseudo_multi_process")]
@@ -30,6 +31,16 @@ pub fn process_api() -> Arc<Process> {
 #[cfg(feature = "pseudo_multi_process")]
 pub fn process_api() -> Arc<Process> {
     current_process()
+}
+
+#[cfg(feature = "pseudo_multi_process")]
+pub fn exit_current_task(exit_code: i32) -> ! {
+    unimplemented!();
+}
+
+#[cfg(feature = "unikernel")]
+pub fn exit_current_task(exit_code: i32) -> ! {
+    exit(exit_code);
 }
 
 // /// `main`线程等待所有进程结束
