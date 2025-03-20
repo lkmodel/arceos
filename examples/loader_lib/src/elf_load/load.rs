@@ -11,7 +11,7 @@ use core::{
 
 use axerrno::AxResult;
 use axhal::paging::MappingFlags;
-use axlog::{debug, info, warn};
+use axlog::{debug, info};
 use axmm::AddrSpace;
 use axstd::format;
 use elf::{
@@ -25,7 +25,7 @@ use memory_addr::{MemoryAddr, VirtAddr};
 
 use crate::{
     config::{APP_START, LIB_START, MAX_APP_SIZE, MAX_LIB_SIZE},
-    elf_load::{auxv::get_auxv_vector, load_old, verify::verify_elf_header},
+    elf_load::{auxv::get_auxv_vector, uni_load, verify::verify_elf_header},
 };
 
 /// The segment of the elf file, which is used to map the elf file to the memory space
@@ -199,6 +199,7 @@ pub fn load_user_app(
                 app_stack_data.as_slice(),
             )?;
 
+            // FIX: 可能需要由App部分开始执行，那边的entry就是start,然后它会调libc_start_main。
             Ok((lib_info.entry, VirtAddr::from(app_ustack_pointer)))
         }
         None => {
@@ -579,6 +580,8 @@ fn modify_app_segment(
                         })
                         .expect("Failed to find symbol in LIB dynamic symbol table");
 
+                    // FIX: 可能是错误的, 与uni_load不一致, 考虑采用注释的
+                    // let new_value = (lib_elf_offset + lib_sym.st_value as usize) as u64;
                     let new_value = (app_elf_offset + lib_sym.st_value as usize) as u64;
                     segment_data[relative_offset..relative_offset + 8]
                         .copy_from_slice(&new_value.to_ne_bytes());

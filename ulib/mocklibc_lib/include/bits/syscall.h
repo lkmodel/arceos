@@ -166,7 +166,7 @@
 // #define __NR_umask 166
 // #define __NR_prctl 167
 // #define __NR_getcpu 168
-#define __NR_gettimeofday 169
+// #define __NR_gettimeofday 169
 // #define __NR_settimeofday 170
 // #define __NR_adjtimex 171
 // #define __NR_getpid 172
@@ -347,7 +347,7 @@
 #define SYS_faccessat 48
 #define SYS_chdir     49
 // #define SYS_fchdir 50
-#define SYS_chroot 51
+#define SYS_chroot   51
 #define SYS_fchmod   52
 #define SYS_fchmodat 53
 #define SYS_fchownat 54
@@ -357,14 +357,14 @@
 // #define SYS_vhangup 58
 // #define SYS_pipe2 59
 // #define SYS_quotactl 60
-// #define SYS_getdents64 61
-#define SYS_lseek    62
-#define SYS_read     63
-#define SYS_write    64
-#define SYS_readv    65
-#define SYS_writev   66
-#define SYS_pread64  67
-#define SYS_pwrite64 68
+#define SYS_getdents64 61
+#define SYS_lseek      62
+#define SYS_read       63
+#define SYS_write      64
+#define SYS_readv      65
+#define SYS_writev     66
+#define SYS_pread64    67
+#define SYS_pwrite64   68
 // #define SYS_preadv 69
 // #define SYS_pwritev 70
 #define SYS_sendfile 71
@@ -408,7 +408,7 @@
 // #define SYS_timer_getoverrun 109
 // #define SYS_timer_settime 110
 // #define SYS_timer_delete 111
-// #define SYS_clock_settime 112
+#define SYS_clock_settime 112
 #define SYS_clock_gettime 113
 // #define SYS_clock_getres 114
 #define SYS_clock_nanosleep 115
@@ -449,7 +449,7 @@
 // #define SYS_getresgid 150
 // #define SYS_setfsuid 151
 // #define SYS_setfsgid 152
-// #define SYS_times 153
+#define SYS_times 153
 // #define SYS_setpgid 154
 // #define SYS_getpgid 155
 // #define SYS_getsid 156
@@ -465,16 +465,16 @@
 // #define SYS_umask 166
 // #define SYS_prctl 167
 // #define SYS_getcpu 168
-// #define SYS_gettimeofday 169
+#define SYS_gettimeofday 169
 // #define SYS_settimeofday 170
 // #define SYS_adjtimex 171
 #define SYS_getpid 172
 // #define SYS_getppid 173
 // #define SYS_getuid 174
 #define SYS_geteuid 175
-// #define SYS_getgid 176
-// #define SYS_getegid 177
-// #define SYS_gettid 178
+#define SYS_getgid  176
+#define SYS_getegid 177
+#define SYS_gettid  178
 #define SYS_sysinfo 179
 // #define SYS_mq_open 180
 // #define SYS_mq_unlink 181
@@ -517,8 +517,8 @@
 // #define SYS_request_key 218
 // #define SYS_keyctl 219
 // #define SYS_clone 220
-// #define SYS_execve 221
-#define SYS_mmap 222
+#define SYS_execve 221
+#define SYS_mmap   222
 // #define SYS_fadvise64 223
 // #define SYS_swapon 224
 // #define SYS_swapoff 225
@@ -541,7 +541,7 @@
 // #define SYS_accept4 242
 // #define SYS_recvmmsg 243
 // #define SYS_arch_specific_syscall 244
-// #define SYS_wait4 260
+#define SYS_wait4     260
 #define SYS_prlimit64 261
 // #define SYS_fanotify_init 262
 // #define SYS_fanotify_mark 263

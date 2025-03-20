@@ -55,7 +55,7 @@ char *getenv(const char *);
 // int system(const char *);
 
 // void *bsearch(const void *, const void *, size_t, size_t, int (*)(const void *, const void *));
-// void qsort(void *, size_t, size_t, int (*)(const void *, const void *));
+void qsort(void *, size_t, size_t, int (*)(const void *, const void *));
 
 int abs(int);
 long labs(long);
@@ -146,7 +146,7 @@ void lcong48(unsigned short[7]);
 // void *valloc(size_t);
 // void *memalign(size_t, size_t);
 // int getloadavg(double *, int);
-// int clearenv(void);
+int clearenv(void);
 #define WCOREDUMP(s)    ((s) & 0x80)
 #define WIFCONTINUED(s) ((s) == 0xffff)
 // void *reallocarray(void *, size_t, size_t);

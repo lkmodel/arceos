@@ -1,6 +1,6 @@
 #include <setjmp.h>
 
-void _longjmp(jmp_buf env, int val)
+_Noreturn void _longjmp(jmp_buf env, int val)
 {
     __asm__ volatile("ld s0,    0(%0)  \n"
                      "ld s1,    8(%0)  \n"
@@ -36,6 +36,7 @@ void _longjmp(jmp_buf env, int val)
                      : /* No output operands */
                      : "r"(env), "r"(val)
                      : "memory");
+    while (1) {}
 }
 
 weak_alias(_longjmp, longjmp);

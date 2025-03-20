@@ -16,14 +16,13 @@ mod config;
 mod elf_load;
 mod init;
 mod linux_env;
-mod load;
 mod runtime_func;
 mod syscall;
 
 use alloc::string::ToString;
 use axlog::info;
 use axstd::{println, process::exit};
-use axtask::current;
+use axtask::{current, init_scheduler};
 use core::{
     slice::{from_raw_parts, from_raw_parts_mut},
     sync::atomic::{AtomicUsize, Ordering},
@@ -39,10 +38,13 @@ use crate::{
     abi::{ABI_TABLE, ABI_TERMINATE, init_abis},
     config::{MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_START},
     elf_load::load::load_user_app,
+    elf_load::uni_load::load_elf,
     init::init_all,
     // linux_env::linux_fs::api::UniAPI,
-    load::load_elf,
 };
+
+// 准备参数 p，这里我们直接在代码中指定参数
+static mut PARAMS: [u64; 10] = [0; 10];
 
 #[unsafe(no_mangle)]
 fn main() {
@@ -114,6 +116,12 @@ fn main() {
         init_all();
         init_abis();
         let run_entry = load_elf();
+
+        unsafe {
+            PARAMS[0] = 0;
+            PARAMS[1] = "arg1\0".as_ptr() as u64;
+        }
+
         println!("Entry: 0x{:x} and RUN", run_entry);
         unsafe {
             core::arch::asm!("
@@ -143,8 +151,9 @@ fn main() {
             sd      t1, 128(sp)
             sd      t0, 136(sp)
 
-            la      a7, {abi_table}
             mv      t2, {entry}
+            la      a0, {param}     // 将参数p的地址加载到a0
+            la      a7, {abi_table}
             jalr    t2
 
             // 恢复所有寄存器
@@ -173,6 +182,7 @@ fn main() {
             addi    sp, sp, 144
             ",
                 abi_table = sym ABI_TABLE,
+                param = sym PARAMS,
                 entry = in(reg) run_entry,
                 options(nostack)
             )

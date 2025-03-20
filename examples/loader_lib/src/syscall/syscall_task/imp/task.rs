@@ -1,7 +1,10 @@
 use axlog::info;
 
 use crate::{
-    linux_env::linux_api::api::{exit_current_task, process_api},
+    linux_env::{
+        linux_api::api::{exit_current_task, process_api},
+        process_ext::api::current_task,
+    },
     syscall::SyscallResult,
 };
 
@@ -84,4 +87,135 @@ pub fn syscall_getpid() -> SyscallResult {
 /// 获取有效用户 id，即相当于哪个用户的权限。在实现多用户权限前默认为最高权限
 pub fn syscall_geteuid() -> SyscallResult {
     Ok(0)
+}
+
+/// 等待子进程完成任务，若子进程没有完成，则自身yield
+/// 当前仅支持WNOHANG选项，即若未完成时则不予等待，直接返回0
+/// # Arguments
+/// * `pid` - isize
+/// * `exit_code_ptr` - *mut i32
+/// * `option` - WaitFlags
+pub fn syscall_wait4(args: [usize; 6]) -> SyscallResult {
+    unimplemented!();
+    //     let pid = args[0] as isize;
+    //     let exit_code_ptr = args[1] as *mut i32;
+    //     let option = WaitFlags::from_bits(args[2] as u32).unwrap();
+    //     loop {
+    //         let answer = unsafe { wait_pid(pid, exit_code_ptr) };
+    //         match answer {
+    //             Ok(pid) => {
+    //                 return Ok(pid as isize);
+    //             }
+    //             Err(status) => {
+    //                 match status {
+    //                     WaitStatus::NotExist => {
+    //                         return Err(SyscallError::EPERM);
+    //                     }
+    //                     WaitStatus::Running => {
+    //                         if option.contains(WaitFlags::WNOHANG) {
+    //                             // 不予等待，直接返回0
+    //                             return Ok(0);
+    //                         } else {
+    //                             // wait回来之后，如果还需要wait，先检查是否有信号未处理
+    //                             #[cfg(feature = "signal")]
+    //                             if current_process().have_signals().is_some() {
+    //                                 return Err(SyscallError::EINTR);
+    //                             }
+    //                             // 执行yield操作，切换任务
+    //                             yield_now_task();
+    //                         }
+    //                     }
+    //                     _ => {
+    //                         panic!("Shouldn't reach here!");
+    //                     }
+    //                 }
+    //             }
+    //         };
+    //     }
+}
+
+/// 获取用户组 id。在实现多用户权限前默认为最高权限
+pub fn syscall_getgid() -> SyscallResult {
+    Ok(0)
+}
+
+/// 获取有效用户组 id，即相当于哪个用户的权限。在实现多用户权限前默认为最高权限
+pub fn syscall_getegid() -> SyscallResult {
+    Ok(0)
+}
+
+/// 获取当前任务的线程 id
+pub fn syscall_gettid() -> SyscallResult {
+    Ok(current_task().id().as_u64() as isize)
+}
+
+/// # Arguments
+/// * `path` - *const u8
+/// * `argv` - *const usize
+/// * `envp` - *const usize
+pub fn syscall_exec(args: [usize; 6]) -> SyscallResult {
+    unimplemented!();
+    //     let path = args[0] as *const u8;
+    //     let mut argv = args[1] as *const usize;
+    //     let mut envp = args[2] as *const usize;
+    //     let path = deal_with_path(AT_FDCWD, Some(path), false);
+    //     if path.is_none() {
+    //         return Err(SyscallError::EINVAL);
+    //     }
+    //     let path = path.unwrap();
+    //     if path.is_dir() {
+    //         return Err(SyscallError::EISDIR);
+    //     }
+    //     let path = path.path().to_string();
+    //
+    //     let mut args_vec = Vec::new();
+    //     // args相当于argv，指向了参数所在的地址
+    //     loop {
+    //         let args_str_ptr = unsafe { *argv };
+    //         if args_str_ptr == 0 {
+    //             break;
+    //         }
+    //         args_vec.push(unsafe { raw_ptr_to_ref_str(args_str_ptr as *const u8) }.to_string());
+    //         unsafe {
+    //             argv = argv.add(1);
+    //         }
+    //     }
+    //     let mut envs_vec = Vec::new();
+    //     if envp as usize != 0 {
+    //         loop {
+    //             let envp_str_ptr = unsafe { *envp };
+    //             if envp_str_ptr == 0 {
+    //                 break;
+    //             }
+    //             envs_vec.push(unsafe { raw_ptr_to_ref_str(envp_str_ptr as *const u8) }.to_string());
+    //             unsafe {
+    //                 envp = envp.add(1);
+    //             }
+    //         }
+    //     }
+    //     // let testcase = if args_vec[0] == "./busybox".to_string()
+    //     //     || args_vec[0] == "busybox".to_string()
+    //     //     || args_vec[0] == "entry-static.exe".to_string()
+    //     //     || args_vec[0] == "entry-dynamic.exe".to_string()
+    //     //     || args_vec[0] == "lmbench_all".to_string()
+    //     // {
+    //     //     args_vec[1].clone()
+    //     // } else {
+    //     //     args_vec[0].clone()
+    //     // };
+    //     // if filter(testcase) == false {
+    //     //     return -1;
+    //     // }
+    //     let curr_process = current_process();
+    //
+    //     // 设置 file_path
+    //     curr_process.set_file_path(path.clone());
+    //
+    //     // 清空futex信号列表
+    //     clear_wait(curr_process.pid(), true);
+    //     let argc = args_vec.len();
+    //     if curr_process.exec(path, args_vec, &envs_vec).is_err() {
+    //         exit_current_task(0);
+    //     }
+    //     Ok(argc as isize)
 }

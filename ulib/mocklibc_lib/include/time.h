@@ -52,12 +52,12 @@ struct tm {
 clock_t clock(void);
 time_t time(time_t *);
 double difftime(time_t, time_t);
-// time_t mktime(struct tm *);
+time_t mktime(struct tm *);
 size_t strftime(char *__restrict, size_t, const char *__restrict, const struct tm *__restrict);
 struct tm *gmtime(const time_t *);
-// struct tm *localtime(const time_t *);
-// char *asctime(const struct tm *);
-// char *ctime(const time_t *);
+struct tm *localtime(const time_t *);
+char *asctime(const struct tm *);
+char *ctime(const time_t *);
 // int timespec_get(struct timespec *, int);
 
 #define CLOCKS_PER_SEC 1000000L
@@ -100,7 +100,7 @@ struct itimerspec {
 int nanosleep(const struct timespec *, struct timespec *);
 // int clock_getres(clockid_t, struct timespec *);
 int clock_gettime(clockid_t, struct timespec *);
-// int clock_settime(clockid_t, const struct timespec *);
+int clock_settime(clockid_t, const struct timespec *);
 int clock_nanosleep(clockid_t, int, const struct timespec *, struct timespec *);
 // int clock_getcpuclockid(pid_t, clockid_t *);
 //
@@ -115,7 +115,7 @@ int clock_nanosleep(clockid_t, int, const struct timespec *, struct timespec *);
 #endif
 
 #if defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
-// char *strptime(const char *__restrict, const char *__restrict, struct tm *__restrict);
+char *strptime(const char *__restrict, const char *__restrict, struct tm *__restrict);
 // extern int daylight;
 // extern long timezone;
 // extern int getdate_err;
@@ -124,7 +124,7 @@ int clock_nanosleep(clockid_t, int, const struct timespec *, struct timespec *);
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 // int stime(const time_t *);
-// time_t timegm(struct tm *);
+time_t timegm(struct tm *);
 #endif
 
 #if _REDIR_TIME64

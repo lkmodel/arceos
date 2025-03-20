@@ -1,8 +1,8 @@
 use crate::{
-    linux_env::process_ext::api::sleep_now_task,
-    syscall::{ClockId, SyscallError, SyscallResult, TimeSecs, TimeVal},
+    linux_env::{linux_api::api::time_stat_output, process_ext::api::sleep_now_task},
+    syscall::{ClockId, SyscallError, SyscallResult, TimeSecs, TimeVal, Tms},
 };
-use axhal::time::{monotonic_time_nanos, wall_time};
+use axhal::time::{current_ticks, monotonic_time_nanos, nanos_to_ticks, wall_time};
 use core::time::Duration;
 
 /// 返回值为当前经过的时钟中断数
@@ -141,4 +141,23 @@ pub fn syscall_clock_nanosleep(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EINTR);
     }
     Ok(0)
+}
+
+/// 返回值为当前经过的时钟中断数
+/// # Arguments
+/// * `tms - *mut Tms`
+pub fn syscall_time(args: [usize; 6]) -> SyscallResult {
+    let tms = args[0] as *mut Tms;
+    // FIXME: The function `time_stat_output` is unimplemented!();
+    let (_, utime_us, _, stime_us) = time_stat_output();
+    unsafe {
+        *tms = Tms {
+            tms_utime: utime_us,
+            tms_stime: stime_us,
+            tms_cutime: utime_us,
+            tms_cstime: stime_us,
+        }
+    }
+
+    Ok(nanos_to_ticks(monotonic_time_nanos()) as isize)
 }

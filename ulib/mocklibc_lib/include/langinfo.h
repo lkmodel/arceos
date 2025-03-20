@@ -88,8 +88,8 @@ extern "C" {
 #define NOSTR 0x50003
 #endif
 
-// char *nl_langinfo(nl_item);
-// char *nl_langinfo_l(nl_item, locale_t);
+char *nl_langinfo(nl_item);
+char *nl_langinfo_l(nl_item, locale_t);
 
 #ifdef __cplusplus
 }

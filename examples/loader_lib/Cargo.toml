@@ -10,12 +10,12 @@ default = ["fs", "driver-ramdisk", "unikernel"]
 # 真正的可选项目
 
 unikernel = [] # 单进程模式
-pseudo_multi_process = ["axruntime/multitask", "axruntime/paging", "axhal/paging", "axhal/pseudo_multi_process"] # 无特权级的多进程模式
+pseudo_multi_process = ["axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process"] # 无特权级的多进程模式
 
 fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
 alloc = ["axalloc", "axruntime/alloc"]
 # TODO: 修正PAGE_FAULT
-paging = ["alloc"]
+paging = ["alloc", "axhal/paging"]
 
 driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
 

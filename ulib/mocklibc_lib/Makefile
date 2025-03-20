@@ -28,6 +28,7 @@ LIBSRC += $(wildcard $(SRC_DIR)/__rt_tmp/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/complex/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/conf/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/ctype/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/dirent/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/env/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/errno/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/exit/*.c)
@@ -87,11 +88,11 @@ else
 	CFLAGS += -Os
 endif
 
-all: clean makedir $(STATIC_LIB) $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
+all: makedir $(STATIC_LIB) $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
 
-static: clean makedir $(STATIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
+static: makedir $(STATIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
 
-dynamic: clean makedir $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
+dynamic: makedir $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
 
 $(LIB_OBJ): | $(dir $(LIB_OBJ))
 $(CRT_OBJ): | $(dir $(CRT_OBJ))

@@ -14,6 +14,7 @@
 
 use alloc::{string::String, sync::Arc};
 use axstd::process::exit;
+use axtask::current;
 use lazyinit::LazyInit;
 
 #[cfg(feature = "pseudo_multi_process")]
@@ -271,8 +272,12 @@ pub fn exit_current_task(exit_code: i32) -> ! {
 //         )
 //     }
 // }
-//
-// // pub fn time_stat_output() -> (usize, usize, usize, usize) {
-// //     let curr_task = current();
-// //     curr_task.time_stat_output()
-// // }
+
+/// 统计时间输出
+/// (用户态秒，用户态微妙，内核态秒，内核态微妙)
+pub fn time_stat_output() -> (usize, usize, usize, usize) {
+    let curr_task = current();
+    unimplemented!();
+    // FIXME: 这里还需进一步实现，在starry中，这个是一个monotonic的
+    // curr_task.time_stat_output()
+}
