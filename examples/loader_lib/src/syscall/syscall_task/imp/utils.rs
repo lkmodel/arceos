@@ -1,6 +1,6 @@
 use crate::{
     linux_env::{linux_api::api::time_stat_output, process_ext::api::sleep_now_task},
-    syscall::{ClockId, SyscallError, SyscallResult, TimeSecs, TimeVal, Tms},
+    syscall::{ClockId, SyscallError, SyscallResult, TimeSecs, TimeVal, Tms, UtsName},
 };
 use axhal::time::{current_ticks, monotonic_time_nanos, nanos_to_ticks, wall_time};
 use core::time::Duration;
@@ -160,4 +160,15 @@ pub fn syscall_time(args: [usize; 6]) -> SyscallResult {
     }
 
     Ok(nanos_to_ticks(monotonic_time_nanos()) as isize)
+}
+
+/// 获取系统信息
+/// # Arguments
+/// * `uts - *mut UtsName`
+pub fn syscall_uname(args: [usize; 6]) -> SyscallResult {
+    let uts = args[0] as *mut UtsName;
+    unsafe {
+        *uts = UtsName::default();
+    }
+    Ok(0)
 }

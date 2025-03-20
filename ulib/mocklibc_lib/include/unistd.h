@@ -109,7 +109,7 @@ int isatty(int);
 // pid_t tcgetpgrp(int);
 // int tcsetpgrp(int, pid_t);
 
-// uid_t getuid(void);
+uid_t getuid(void);
 uid_t geteuid(void);
 gid_t getgid(void);
 gid_t getegid(void);

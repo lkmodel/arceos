@@ -328,7 +328,6 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
         Err(AxError::WouldBlock) => Err(SyscallError::EAGAIN),
         Err(AxError::InvalidInput) => Err(SyscallError::EINVAL),
         Err(_) => Err(SyscallError::EPERM),
-        Err(AxError::WouldBlock) => Err(SyscallError::EAGAIN),
     }
 }
 

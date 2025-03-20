@@ -34,7 +34,7 @@ struct pollfd {
     short revents;
 };
 
-// int poll(struct pollfd *, nfds_t, int);
+int poll(struct pollfd *, nfds_t, int);
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 #define __NEED_time_t

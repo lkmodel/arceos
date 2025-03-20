@@ -360,3 +360,41 @@ pub struct Tms {
     /// 子进程内核态执行时间和，单位为us
     pub tms_cstime: usize,
 }
+
+/// sys_uname 中指定的结构体类型
+#[repr(C)]
+pub struct UtsName {
+    /// 系统名称
+    pub sysname: [u8; 65],
+    /// 网络上的主机名称
+    pub nodename: [u8; 65],
+    /// 发行编号
+    pub release: [u8; 65],
+    /// 版本
+    pub version: [u8; 65],
+    /// 硬件类型
+    pub machine: [u8; 65],
+    /// 域名
+    pub domainname: [u8; 65],
+}
+
+impl Default for UtsName {
+    fn default() -> Self {
+        Self {
+            sysname: Self::from_str("LK_ArceOS"),
+            nodename: Self::from_str("LK_ArceOS - machine[0]"),
+            release: Self::from_str("100"),
+            version: Self::from_str("1.0"),
+            machine: Self::from_str("RISC-V 64 on SIFIVE FU740"),
+            domainname: Self::from_str("https://github.com/Azure-stars/arceos"),
+        }
+    }
+}
+
+impl UtsName {
+    fn from_str(info: &str) -> [u8; 65] {
+        let mut data: [u8; 65] = [0; 65];
+        data[..info.len()].copy_from_slice(info.as_bytes());
+        data
+    }
+}

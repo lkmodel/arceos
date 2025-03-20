@@ -369,7 +369,7 @@
 // #define SYS_pwritev 70
 #define SYS_sendfile 71
 #define SYS_pselect6 72
-// #define SYS_ppoll 73
+#define SYS_ppoll 73
 // #define SYS_signalfd4 74
 // #define SYS_vmsplice 75
 // #define SYS_splice 76
@@ -456,7 +456,7 @@
 // #define SYS_setsid 157
 // #define SYS_getgroups 158
 // #define SYS_setgroups 159
-// #define SYS_uname 160
+#define SYS_uname 160
 // #define SYS_sethostname 161
 // #define SYS_setdomainname 162
 // #define SYS_getrlimit 163
@@ -470,7 +470,7 @@
 // #define SYS_adjtimex 171
 #define SYS_getpid 172
 // #define SYS_getppid 173
-// #define SYS_getuid 174
+#define SYS_getuid 174
 #define SYS_geteuid 175
 #define SYS_getgid  176
 #define SYS_getegid 177

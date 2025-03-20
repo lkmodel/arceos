@@ -15,4 +15,4 @@ struct k_sigaction {
 #endif
 };
 
-// hidden void __restore(), __restore_rt();
+hidden void __restore(), __restore_rt();

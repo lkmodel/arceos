@@ -26,7 +26,14 @@ use core::slice::{from_raw_parts, from_raw_parts_mut};
 /// * `action` - *const SigAction
 /// * `old_action` - *mut SigAction
 pub fn syscall_sigaction(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+    #[cfg(feature = "unikernel")]
+    {
+        unreachable!();
+    }
+    #[cfg(feature = "pseudo_multi_process")]
+    {
+        unimplemented!();
+    }
     //    let signum = args[0];
     //    let action = args[1] as *const SigAction;
     //    let old_action = args[2] as *mut SigAction;
@@ -85,7 +92,15 @@ pub fn syscall_sigaction(_args: [usize; 6]) -> SyscallResult {
 /// * `old_mask` - *mut usize
 /// * `sigsetsize` - usize, specifies the size in bytes of the signal sets in set and oldset, which is equal to sizeof(kernel_sigset_t)
 pub fn syscall_sigprocmask(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+    #[cfg(feature = "unikernel")]
+    {
+        unreachable!();
+    }
+    #[cfg(feature = "pseudo_multi_process")]
+    {
+        unimplemented!();
+    }
+
     //    let flag = SigMaskFlag::from(args[0]);
     //    let new_mask = args[1] as *const usize;
     //    let old_mask = args[2] as *mut usize;
@@ -143,7 +158,15 @@ pub fn syscall_sigprocmask(_args: [usize; 6]) -> SyscallResult {
 /// * `tid` - isize
 /// * `signum` - isize
 pub fn syscall_tkill(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+    #[cfg(feature = "unikernel")]
+    {
+        unreachable!();
+    }
+    #[cfg(feature = "pseudo_multi_process")]
+    {
+        unimplemented!();
+    }
+
     //    let tid = args[0] as isize;
     //    let signum = args[1] as isize;
     //    debug!(

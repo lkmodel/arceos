@@ -219,3 +219,8 @@ pub fn syscall_exec(args: [usize; 6]) -> SyscallResult {
     //     }
     //     Ok(argc as isize)
 }
+
+/// 获取用户 id。在实现多用户权限前默认为最高权限
+pub fn syscall_getuid() -> SyscallResult {
+    Ok(0)
+}
