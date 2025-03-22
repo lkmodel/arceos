@@ -41,7 +41,7 @@ extern "C" {
 int close(int);
 // int posix_close(int, int);
 int dup(int);
-// int dup2(int, int);
+int dup2(int, int);
 int dup3(int, int, int);
 off_t lseek(int, off_t, int);
 int fsync(int);
@@ -52,14 +52,14 @@ ssize_t write(int, const void *, size_t);
 ssize_t pread(int, void *, size_t, off_t);
 ssize_t pwrite(int, const void *, size_t, off_t);
 
-// int chown(const char *, uid_t, gid_t);
+int chown(const char *, uid_t, gid_t);
 int fchown(int, uid_t, gid_t);
-// int lchown(const char *, uid_t, gid_t);
+int lchown(const char *, uid_t, gid_t);
 int fchownat(int, const char *, uid_t, gid_t, int);
 
-// int link(const char *, const char *);
+int link(const char *, const char *);
 int linkat(int, const char *, int, const char *, int);
-// int symlink(const char *, const char *);
+int symlink(const char *, const char *);
 // int symlinkat(const char *, int, const char *);
 ssize_t readlink(const char *__restrict, char *__restrict, size_t);
 ssize_t readlinkat(int, const char *__restrict, char *__restrict, size_t);
@@ -100,8 +100,8 @@ pid_t getpid(void);
 // pid_t getppid(void);
 // pid_t getpgrp(void);
 // pid_t getpgid(pid_t);
-// int setpgid(pid_t, pid_t);
-// pid_t setsid(void);
+int setpgid(pid_t, pid_t);
+pid_t setsid(void);
 // pid_t getsid(pid_t);
 // char *ttyname(int);
 // int ttyname_r(int, char *, size_t);
@@ -114,10 +114,10 @@ uid_t geteuid(void);
 gid_t getgid(void);
 gid_t getegid(void);
 // int getgroups(int, gid_t[]);
-// int setuid(uid_t);
-// int seteuid(uid_t);
-// int setgid(gid_t);
-// int setegid(gid_t);
+int setuid(uid_t);
+int seteuid(uid_t);
+int setgid(gid_t);
+int setegid(gid_t);
 
 // char *getlogin(void);
 // int getlogin_r(char *, size_t);
@@ -138,13 +138,13 @@ long sysconf(int);
 #define F_LOCK  1
 #define F_TLOCK 2
 #define F_TEST  3
-// int setreuid(uid_t, uid_t);
-// int setregid(gid_t, gid_t);
+int setreuid(uid_t, uid_t);
+int setregid(gid_t, gid_t);
 // int lockf(int, int, off_t);
 // long gethostid(void);
 // int nice(int);
 // void sync(void);
-// pid_t setpgrp(void);
+pid_t setpgrp(void);
 // char *crypt(const char *, const char *);
 // void encrypt(char *, int);
 // void swab(const void *__restrict, void *__restrict, ssize_t);
@@ -186,10 +186,10 @@ long syscall(long, ...);
 
 #ifdef _GNU_SOURCE
 // extern char **environ;
-// int setresuid(uid_t, uid_t, uid_t);
-// int setresgid(gid_t, gid_t, gid_t);
-// int getresuid(uid_t *, uid_t *, uid_t *);
-// int getresgid(gid_t *, gid_t *, gid_t *);
+int setresuid(uid_t, uid_t, uid_t);
+int setresgid(gid_t, gid_t, gid_t);
+int getresuid(uid_t *, uid_t *, uid_t *);
+int getresgid(gid_t *, gid_t *, gid_t *);
 // char *get_current_dir_name(void);
 // int syncfs(int);
 // int euidaccess(const char *, int);

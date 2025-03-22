@@ -61,46 +61,5 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         PPOLL => syscall_ppoll(args),
         PSELECT6 => syscall_pselect6(args),
         EVENTFD => syscall_eventfd(args),
-        //        #[cfg(not(target_arch = "x86_64"))]
-        //        EVENTFD => syscall_eventfd(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        // eventfd syscall in x86_64 does not support flags, use 0 instead
-        //        EVENTFD => syscall_eventfd([args[0], 0, 0, 0, 0, 0]),
-        //        #[cfg(target_arch = "x86_64")]
-        //        EVENTFD2 => syscall_eventfd(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        DUP2 => syscall_dup2(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        LSTAT => syscall_lstat(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        OPEN => syscall_open(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        PIPE => syscall_pipe(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        POLL => syscall_poll(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        STAT => syscall_stat(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        UNLINK => syscall_unlink(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        ACCESS => syscall_access(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        MKDIR => syscall_mkdir(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        RENAME => syscall_rename(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        RMDIR => syscall_rmdir(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        SELECT => syscall_select(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        READLINK => syscall_readlink(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        CREAT => Err(axerrno::LinuxError::EPERM),
-        //        #[cfg(target_arch = "x86_64")]
-        //        EPOLL_CREATE1 => unimplemented!("epoll_create1"),
-        //        #[cfg(target_arch = "x86_64")]
-        //        EPOLL_PWAIT => unimplemented!("epoll_ctl"),
-        //        #[cfg(target_arch = "x86_64")]
-        //        CHMOD => Ok(0),
     }
 }

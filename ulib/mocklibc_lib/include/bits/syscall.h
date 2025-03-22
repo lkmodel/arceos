@@ -330,10 +330,10 @@
 // #define SYS_ioprio_set 30
 // #define SYS_ioprio_get 31
 // #define SYS_flock 32
-// #define SYS_mknodat 33
+#define SYS_mknodat 33
 #define SYS_mkdirat  34
 #define SYS_unlinkat 35
-// #define SYS_symlinkat 36
+#define SYS_symlinkat 36
 #define SYS_linkat 37
 // #define SYS_umount2 39
 // #define SYS_mount 40
@@ -369,7 +369,7 @@
 // #define SYS_pwritev 70
 #define SYS_sendfile 71
 #define SYS_pselect6 72
-#define SYS_ppoll 73
+#define SYS_ppoll    73
 // #define SYS_signalfd4 74
 // #define SYS_vmsplice 75
 // #define SYS_splice 76
@@ -425,7 +425,7 @@
 // #define SYS_sched_get_priority_min 126
 // #define SYS_sched_rr_get_interval 127
 // #define SYS_restart_syscall 128
-// #define SYS_kill 129
+#define SYS_kill  129
 #define SYS_tkill 130
 // #define SYS_tgkill 131
 // #define SYS_sigaltstack 132
@@ -439,21 +439,21 @@
 // #define SYS_setpriority 140
 // #define SYS_getpriority 141
 // #define SYS_reboot 142
-// #define SYS_setregid 143
-// #define SYS_setgid 144
-// #define SYS_setreuid 145
-// #define SYS_setuid 146
-// #define SYS_setresuid 147
+#define SYS_setregid  143
+#define SYS_setgid    144
+#define SYS_setreuid  145
+#define SYS_setuid    146
+#define SYS_setresuid 147
 // #define SYS_getresuid 148
-// #define SYS_setresgid 149
+#define SYS_setresgid 149
 // #define SYS_getresgid 150
-// #define SYS_setfsuid 151
-// #define SYS_setfsgid 152
-#define SYS_times 153
-// #define SYS_setpgid 154
+#define SYS_setfsuid 151
+#define SYS_setfsgid 152
+#define SYS_times    153
+#define SYS_setpgid  154
 // #define SYS_getpgid 155
 // #define SYS_getsid 156
-// #define SYS_setsid 157
+#define SYS_setsid 157
 // #define SYS_getgroups 158
 // #define SYS_setgroups 159
 #define SYS_uname 160
@@ -462,7 +462,7 @@
 // #define SYS_getrlimit 163
 // #define SYS_setrlimit 164
 // #define SYS_getrusage 165
-// #define SYS_umask 166
+#define SYS_umask 166
 // #define SYS_prctl 167
 // #define SYS_getcpu 168
 #define SYS_gettimeofday 169
@@ -470,7 +470,7 @@
 // #define SYS_adjtimex 171
 #define SYS_getpid 172
 // #define SYS_getppid 173
-#define SYS_getuid 174
+#define SYS_getuid  174
 #define SYS_geteuid 175
 #define SYS_getgid  176
 #define SYS_getegid 177

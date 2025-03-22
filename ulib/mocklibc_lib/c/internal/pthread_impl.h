@@ -168,11 +168,11 @@ pthread_t __pthread_self_impl();
 //
 // hidden int __clone(int (*)(void *), void *, int, void *, ...);
 // hidden int __set_thread_area(void *);
-// hidden int __libc_sigaction(int, const struct sigaction *, struct sigaction *);
+hidden int __libc_sigaction(int, const struct sigaction *, struct sigaction *);
 // hidden void __unmapself(void *, size_t);
 //
 // hidden int __timedwait(volatile int *, int, clockid_t, const struct timespec *, int);
-// hidden int __timedwait_cp(volatile int *, int, clockid_t, const struct timespec *, int);
+hidden int __timedwait_cp(volatile int *, int, clockid_t, const struct timespec *, int);
 // hidden void __wait(volatile int *, volatile int *, int, int);
 static inline void __wake(volatile void *addr, int cnt, int priv)
 {

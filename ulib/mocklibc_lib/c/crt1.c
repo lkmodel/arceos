@@ -10,8 +10,6 @@ __attribute__((visibility("hidden"))) void _start(long *p)
     char **argv = (void *)(p + 1);
 
     main(argc, argv);
-
-    terminate();
 }
 
 /// void mock_start_main(long *p)
@@ -22,8 +20,6 @@ void __libc_start_main(long *p)
     char **argv = (void *)(p + 1);
 
     main(argc, argv);
-
-    terminate();
 }
 
 void terminate()

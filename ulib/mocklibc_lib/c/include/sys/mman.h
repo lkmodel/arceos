@@ -15,6 +15,6 @@ hidden int __munmap(void *, size_t);
 
 hidden const unsigned char *__map_file(const char *, size_t *);
 
-// hidden char *__shm_mapname(const char *, char *);
+hidden char *__shm_mapname(const char *, char *);
 
 #endif

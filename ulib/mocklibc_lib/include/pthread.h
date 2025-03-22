@@ -98,11 +98,11 @@ pthread_self(void);
 #define pthread_equal(x, y) ((x) == (y))
 #endif
 
-// int pthread_setcancelstate(int, int *);
+int pthread_setcancelstate(int, int *);
 // int pthread_setcanceltype(int, int *);
-// void pthread_testcancel(void);
-// int pthread_cancel(pthread_t);
-//
+void pthread_testcancel(void);
+int pthread_cancel(pthread_t);
+
 // int pthread_getschedparam(pthread_t, int *__restrict, struct sched_param *__restrict);
 // int pthread_setschedparam(pthread_t, int, const struct sched_param *);
 // int pthread_setschedprio(pthread_t, int);
@@ -216,8 +216,8 @@ struct __ptcb {
     struct __ptcb *__next;
 };
 
-// void _pthread_cleanup_push(struct __ptcb *, void (*)(void *), void *);
-// void _pthread_cleanup_pop(struct __ptcb *, int);
+void _pthread_cleanup_push(struct __ptcb *, void (*)(void *), void *);
+void _pthread_cleanup_pop(struct __ptcb *, int);
 
 #define pthread_cleanup_push(f, x) \
     do {                           \

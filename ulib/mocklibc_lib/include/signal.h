@@ -204,14 +204,14 @@ struct sigevent {
 #define SIGEV_THREAD 2
 #define SIGEV_THREAD_ID 4
 
-// int __libc_current_sigrtmin(void);
-// int __libc_current_sigrtmax(void);
-// 
-// #define SIGRTMIN  (__libc_current_sigrtmin())
-// #define SIGRTMAX  (__libc_current_sigrtmax())
+int __libc_current_sigrtmin(void);
+int __libc_current_sigrtmax(void);
+
+#define SIGRTMIN  (__libc_current_sigrtmin())
+#define SIGRTMAX  (__libc_current_sigrtmax())
 
 // int kill(pid_t, int);
-// 
+
 // int sigemptyset(sigset_t *);
 // int sigfillset(sigset_t *);
 // int sigaddset(sigset_t *, int);
@@ -228,8 +228,8 @@ struct sigevent {
 // int sigqueue(pid_t, int, union sigval);
 // 
 // int pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
-// int pthread_kill(pthread_t, int);
-// 
+int pthread_kill(pthread_t, int);
+
 // void psiginfo(const siginfo_t *, const char *);
 // void psignal(int, const char *);
 

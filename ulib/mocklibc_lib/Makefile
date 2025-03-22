@@ -60,6 +60,7 @@ LIBSRC += $(wildcard $(SRC_DIR)/stdlib/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/string/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/termios/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/thread/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/thread_riscv64/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/time/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/unistd/*.c)
 

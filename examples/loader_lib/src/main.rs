@@ -19,14 +19,16 @@ mod linux_env;
 mod runtime_func;
 mod syscall;
 
-use alloc::string::ToString;
+use alloc::{ffi::CString, string::ToString, vec::Vec};
 use axlog::info;
 use axstd::{println, process::exit};
 use axtask::{current, init_scheduler};
 use core::{
+    ptr,
     slice::{from_raw_parts, from_raw_parts_mut},
     sync::atomic::{AtomicUsize, Ordering},
 };
+use cty::{c_int, c_long, uintptr_t};
 use elf::{
     ElfBytes,
     abi::{ET_DYN, ET_EXEC},
@@ -45,6 +47,40 @@ use crate::{
 
 // 准备参数 p，这里我们直接在代码中指定参数
 static mut PARAMS: [u64; 10] = [0; 10];
+
+// fn call_c_start(args: &[&str], entry: usize) {
+//     let argc = args.len() as c_int;
+//     let mut argv_pointers = Vec::new();
+//     let mut arg_strings = Vec::new();
+//
+//     for arg in args {
+//         match CString::new(*arg) {
+//             Ok(c_str) => {
+//                 argv_pointers.push(c_str.as_ptr() as uintptr_t);
+//                 arg_strings.push(c_str);
+//             }
+//             Err(e) => {
+//                 panic!("Error creating CString: {}", e);
+//             }
+//         }
+//     }
+//
+//     let mut params: Vec<c_long> = Vec::new();
+//     params.push(argc as c_long);
+//     for ptr in argv_pointers {
+//         params.push(ptr as c_long);
+//     }
+//     params.push(ptr::null() as c_long); // Optional null terminator for `argv`
+//
+//     unsafe {
+//         // 这里entry就是执行函数的地址
+//         let func: extern "C" fn(*const c_long) = axstd::mem::transmute(entry);
+//         func(params.as_ptr());
+//     }
+//
+//     // 'arg_strings' Vec 在此处被 drop，这将释放 CString 实例。
+//     // 只要 C 代码不需要保留这些字符串，这就是安全的。
+// }
 
 #[unsafe(no_mangle)]
 fn main() {
@@ -126,60 +162,49 @@ fn main() {
         unsafe {
             core::arch::asm!("
             // 保存更多上下文信息
-            addi    sp, sp, -144 // 增加栈空间以存储额外的寄存器
-            // 保存CPU相关的寄存器
-            mv      t0, tp          // 保存CPU_ID
-            sd      t0, 0(sp)
-            csrr    t0, sstatus     // 保存系统状态
-            sd      t0, 8(sp)
+            addi    sp, sp, -128
 
             // 保存通用寄存器
-            sd      ra, 16(sp)
-            sd      a7, 24(sp)
-            sd      a6, 32(sp)
-            sd      a5, 40(sp)
-            sd      a4, 48(sp)
-            sd      a3, 56(sp)
-            sd      a2, 64(sp)
-            sd      a1, 72(sp)
-            sd      a0, 80(sp)
-            sd      t6, 88(sp)
-            sd      t5, 96(sp)
-            sd      t4, 104(sp)
-            sd      t3, 112(sp)
-            sd      t2, 120(sp)
-            sd      t1, 128(sp)
-            sd      t0, 136(sp)
+            sd      ra, 0(sp)
+            sd      a7, 8(sp)
+            sd      a6, 16(sp)
+            sd      a5, 24(sp)
+            sd      a4, 32(sp)
+            sd      a3, 40(sp)
+            sd      a2, 48(sp)
+            sd      a1, 56(sp)
+            sd      a0, 64(sp)
+            sd      t6, 72(sp)
+            sd      t5, 80(sp)
+            sd      t4, 88(sp)
+            sd      t3, 96(sp)
+            sd      t2, 104(sp)
+            sd      t1, 112(sp)
+            sd      t0, 120(sp)
 
             mv      t2, {entry}
             la      a0, {param}     // 将参数p的地址加载到a0
             la      a7, {abi_table}
             jalr    t2
 
-            // 恢复所有寄存器
-            ld      t0, 0(sp)       // 恢复CPU ID
-            mv      tp, t0
-            ld      t0, 8(sp)       // 恢复系统状态
-            csrw    sstatus, t0
+            ld      ra, 0(sp)
+            ld      a7, 8(sp)
+            ld      a6, 16(sp)
+            ld      a5, 24(sp)
+            ld      a4, 32(sp)
+            ld      a3, 40(sp)
+            ld      a2, 48(sp)
+            ld      a1, 56(sp)
+            ld      a0, 64(sp)
+            ld      t6, 72(sp)
+            ld      t5, 80(sp)
+            ld      t4, 88(sp)
+            ld      t3, 96(sp)
+            ld      t2, 104(sp)
+            ld      t1, 112(sp)
+            ld      t0, 120(sp)
 
-            ld      ra, 16(sp)
-            ld      a7, 24(sp)
-            ld      a6, 32(sp)
-            ld      a5, 40(sp)
-            ld      a4, 48(sp)
-            ld      a3, 56(sp)
-            ld      a2, 64(sp)
-            ld      a1, 72(sp)
-            ld      a0, 80(sp)
-            ld      t6, 88(sp)
-            ld      t5, 96(sp)
-            ld      t4, 104(sp)
-            ld      t3, 112(sp)
-            ld      t2, 120(sp)
-            ld      t1, 128(sp)
-            ld      t0, 136(sp)
-
-            addi    sp, sp, 144
+            addi    sp, sp, 128
             ",
                 abi_table = sym ABI_TABLE,
                 param = sym PARAMS,

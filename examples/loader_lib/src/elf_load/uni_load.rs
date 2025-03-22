@@ -5,7 +5,7 @@ use core::{
 
 use axstd::{format, println};
 
-use axlog::{debug, warn};
+use axlog::debug;
 
 use elf::{
     ElfBytes,
@@ -320,20 +320,20 @@ pub fn modify_plt_for_lib(app_elf: &ElfBytes<LittleEndian>, lib_elf: &ElfBytes<L
         let lib_rela_type = lib_rela_dyn.r_type;
 
         match lib_rela_type {
+            // Adjust a link address (A) to its load address: `(B + A)`.
             R_RISCV_RELATIVE => {
-                // Adjust a link address (A) to its load address: `(B + A)`.
                 unsafe {
                     *((LIB_START as u64 + lib_rela_dyn.r_offset) as *mut usize) =
-                        LIB_START + lib_rela_dyn.r_addend as usize; //  + lib_sym.st_value as usize;
+                        LIB_START + lib_rela_dyn.r_addend as usize;
                 }
                 debug!(
                     "[Lib-rela.dyn R_RISCV_RELATIVE] @0x{:x}=0x{:x}",
                     LIB_START as u64 + lib_rela_dyn.r_offset,
-                    LIB_START + lib_rela_dyn.r_addend as usize, // + lib_sym.st_value as usize,
+                    LIB_START + lib_rela_dyn.r_addend as usize,
                 );
             }
+            // 64-bit relocation: `S + A`.
             R_RISCV_64 => {
-                // 64-bit relocation: `S + A`.
                 unsafe {
                     *((LIB_START as u64 + lib_rela_dyn.r_offset) as *mut usize) =
                         LIB_START + lib_sym.st_value as usize;
