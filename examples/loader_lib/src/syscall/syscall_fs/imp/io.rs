@@ -301,10 +301,7 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
     if buf.is_null() {
         return Err(SyscallError::EFAULT);
     }
-
-    info!("TEST");
     let process = process_api();
-    info!("TEST2");
 
     // FIX: 进行地址检查，当超出可访问地址空间的时候，返回错误EFAULT
     let buf = unsafe { from_raw_parts(buf, count) };

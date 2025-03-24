@@ -20,6 +20,9 @@ void __syscall_cp_asm(uintptr_t *arg0, uintptr_t arg1, uintptr_t arg2, uintptr_t
                       uintptr_t arg4, uintptr_t arg5)
 {
 
+    if (*arg0 != 0) {
+        __cp_cancel();
+    }
     NOIMPL_STR("__syscall_cp_asm\n");
     //    uintptr_t t0;
     //

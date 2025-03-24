@@ -8,3 +8,5 @@ void *calloc(size_t m, size_t n)
     FnABI func = (FnABI)(*abi_ptr);
     return func(m, n);
 }
+
+weak_alias(calloc, __libc_calloc);
