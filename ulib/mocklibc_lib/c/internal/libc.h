@@ -51,8 +51,8 @@ extern hidden struct __libc __libc;
 // extern char *__progname, *__progname_full;
 //
 // extern hidden const char __libc_version[];
-//
-// hidden void __synccall(void (*)(void *), void *);
+
+hidden void __synccall(void (*)(void *), void *);
 hidden int __setxid(int, int, int, int);
 
 #endif
