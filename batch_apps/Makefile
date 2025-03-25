@@ -57,7 +57,7 @@ toplash:
 	dd if=/dev/zero bs=1 count=0 seek=32M of=$(OUTPUT)
 
 	# 将最终文件移动到 `payload` 目录
-	cp $(OUTPUT) $(PAYLOAD_DIR)/$(OUTPUT)
+	cp $(OUTPUT) $(PAYLOAD_DIR)/apps.bin
 
 # 清理生成的所有中间文件
 clean:
