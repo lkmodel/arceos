@@ -1,0 +1,4 @@
+busybox_LS -la
+busybox_TOUCH test.txt
+busybox_LS
+busybox_CAT test.txt
