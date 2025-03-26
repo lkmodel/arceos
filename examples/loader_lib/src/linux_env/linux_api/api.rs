@@ -21,12 +21,22 @@ use lazyinit::LazyInit;
 use crate::linux_env::process_ext::api::current_process;
 use crate::linux_env::process_ext::process::Process;
 
-#[cfg(feature = "unikernel")]
+#[cfg(any(feature = "unikernel", feature = "batch"))]
 pub static UNI_API: LazyInit<Arc<Process>> = LazyInit::new();
 
-#[cfg(feature = "unikernel")]
+#[cfg(any(feature = "unikernel", feature = "batch"))]
 pub fn process_api() -> Arc<Process> {
     UNI_API.get().unwrap().clone()
+}
+
+#[cfg(feature = "unikernel")]
+pub fn exit_current_task(exit_code: i32) -> ! {
+    exit(exit_code);
+}
+
+#[cfg(feature = "batch")]
+pub fn exit_current_task(exit_code: i32) -> ! {
+    unimplemented!() // 这里应该回到OS
 }
 
 #[cfg(feature = "pseudo_multi_process")]
@@ -37,11 +47,6 @@ pub fn process_api() -> Arc<Process> {
 #[cfg(feature = "pseudo_multi_process")]
 pub fn exit_current_task(exit_code: i32) -> ! {
     unimplemented!();
-}
-
-#[cfg(feature = "unikernel")]
-pub fn exit_current_task(exit_code: i32) -> ! {
-    exit(exit_code);
 }
 
 // /// `main`线程等待所有进程结束

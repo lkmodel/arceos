@@ -5,21 +5,22 @@ authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
 [features]
-default = ["fs", "driver-ramdisk", "unikernel"]
+default = ["fs", "driver-ramdisk", "batch"]
 
 # 真正的可选项目
 
 unikernel = [] # 单进程模式
-# 「WIP」不要使用，正在开发！
+batch = [] # `WIP` 单进程，但是批处理模式
+# `WIP` 不要使用，正在开发！
 pseudo_multi_process = ["axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process", "signal"] # 无特权级的多进程模式
 
 fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
-alloc = ["axalloc", "axruntime/alloc"]
-# TODO: 修正PAGE_FAULT
-paging = ["alloc", "axhal/paging"]
-signal = []
-
 driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
+
+# 不应该直接被指定到 `default` 中
+alloc = ["axalloc", "axruntime/alloc"]
+paging = ["alloc", "axhal/paging"] # TODO: 修正PAGE_FAULT
+signal = []
 
 [dependencies]
 # `ArceOS` modules

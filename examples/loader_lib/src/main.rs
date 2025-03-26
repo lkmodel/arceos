@@ -34,6 +34,7 @@ use elf::{
     abi::{ET_DYN, ET_EXEC},
     endian::LittleEndian,
 };
+use elf_load::batch::run_loop;
 use linux_env::process_ext::{KERNEL_GP, context::save_gp, process::Process};
 
 use crate::{
@@ -84,12 +85,22 @@ static mut PARAMS: [u64; 10] = [0; 10];
 
 #[unsafe(no_mangle)]
 fn main() {
-    #[cfg(not(any(feature = "unikernel", feature = "pseudo_multi_process")))]
-    compile_error!("You must enable exactly one of `unikernel` or `multi_process_unchecked`.");
-
-    #[cfg(all(feature = "unikernel", feature = "pseudo_multi_process"))]
+    #[cfg(not(any(
+        feature = "unikernel",
+        feature = "batch",
+        feature = "pseudo_multi_process"
+    )))]
     compile_error!(
-        "You cannot enable both `unikernel` and `multi_process_unchecked` at the same time."
+        "You must enable exactly one of `unikernel`, `batch` or `multi_process_unchecked`."
+    );
+
+    #[cfg(all(
+        feature = "unikernel",
+        feature = "batch",
+        feature = "pseudo_multi_process"
+    ))]
+    compile_error!(
+        "You cannot enable both `unikernel`, `batch` and `multi_process_unchecked` at the same time."
     );
 
     #[cfg(feature = "pseudo_multi_process")]
@@ -213,6 +224,14 @@ fn main() {
             )
         }
     }
+
+    #[cfg(feature = "batch")]
+    {
+        init_all();
+        init_abis();
+        run_loop();
+    }
+
     bye();
 }
 

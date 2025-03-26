@@ -17,8 +17,6 @@ use axtask::{AxTaskRef, TaskInner, current, spawn_task};
 use core::sync::atomic::{AtomicU64, Ordering};
 use memory_addr::{PAGE_SIZE_4K, PhysAddr, VirtAddr};
 
-#[cfg(feature = "unikernel")]
-use crate::linux_env::linux_api::api::UNI_API;
 use crate::{
     abi::ABI_TABLE,
     config::TASK_STACK_SIZE,
