@@ -1,7 +1,10 @@
 use alloc::ffi::CString;
 use axstd::string::{String, ToString};
 
+use axlog::{debug, info};
+
 /// 通用解码器模板
+#[derive(Debug)]
 pub struct Decoder<'a> {
     data: &'a [u8],  // 输入的二进制脚本数据
     position: usize, // 当前读取偏移
@@ -14,8 +17,11 @@ impl<'a> Decoder<'a> {
 
     /// 读取一个 `u64`
     pub fn read_u64(&mut self) -> Result<u64, String> {
-        self.read_bytes(8)
-            .map(|b| u64::from_le_bytes(b.try_into().unwrap()))
+        debug!("CHECKPOINT");
+        self.read_bytes(8).map(|b| {
+            debug!("CHECK {:?}", b);
+            u64::from_le_bytes(b.try_into().unwrap())
+        })
     }
 
     /// 读取一个 `u32`

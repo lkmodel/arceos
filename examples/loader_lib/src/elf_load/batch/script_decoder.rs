@@ -5,7 +5,7 @@ use core::{
 };
 
 use alloc::{alloc::alloc_zeroed, ffi::CString, vec::Vec};
-use axlog::info;
+use axlog::{debug, info};
 use axstd::string::{String, ToString};
 
 use crate::elf_load::decoder::Decoder;
@@ -14,6 +14,7 @@ const MAGIC: u64 = 0x5F7470697263735F; // 魔数 `_script_`
 const HEADER_MARKER: u8 = 0xFF; // 每行开头的验证字节
 
 /// 解码器，用于从二进制数据中解析出指令行列表
+#[derive(Debug)]
 pub struct ScriptDecoder<'a> {
     decoder: Decoder<'a>,
 }
@@ -27,10 +28,14 @@ impl<'a> ScriptDecoder<'a> {
 
     /// 从头部解析魔术和行数
     fn parse_header(&mut self) -> Result<(u64, u32), String> {
+        debug!("CHECKPOINT");
         let magic = self.decoder.read_u64()?;
+        debug!("CHECKPOINT");
         if magic != MAGIC {
+            debug!("CHECKPOINT");
             return Err("Invalid magic number!".to_string());
         }
+        debug!("CHECKPOINT");
         let num_lines = self.decoder.read_u32()?;
         Ok((magic, num_lines))
     }
@@ -94,10 +99,13 @@ impl ParameterSetup {
 /// 0: `Vec<CString>` 的直接命令名字，方便查找
 /// 1: 在 `mem` 中，存放 `argc` 地址的 `Vec<*mut u64>`，每个地址存放一组连续的 `argc` 和 `argv` 数据
 pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
+    debug!("decode by script_slice");
     // 解码二进制脚本文件
+    debug!("script_slice_addr {:?}", script_slice.as_ptr());
     let mut decoder = ScriptDecoder::new(script_slice);
     let mut line_num = 0;
     let mut result = Vec::new();
+    debug!("CHECKPOINT");
 
     if let Ok((_magic, num_lines)) = decoder.parse_header() {
         info!("Magic verified, number of command lines: {}", num_lines);
@@ -119,6 +127,7 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
         line_num = num_lines;
     }
 
+    debug!("CHECKPOINT");
     line_num.eq(&0).then(|| panic!("Line num is zero"));
     result.is_empty().then(|| panic!("Script line is empty"));
 
@@ -126,6 +135,7 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
 }
 
 /// 解码之后的脚本数据
+#[derive(Debug)]
 pub struct ScriptDecoded {
     /// 用于指定脚本行的行数
     pub line_num: u32,
@@ -143,9 +153,16 @@ pub struct ScriptDecoded {
 /// # 返回
 /// 返回解码后的脚本数据
 pub fn script_decoded(script_start: usize, script_size: usize) -> ScriptDecoded {
+    debug!("Decode script...");
+    info!(
+        "script_start: 0x{:x}, script_size: 0x{:x}",
+        script_start, script_size
+    );
+    // FIX: 这里应该加上PLASH的偏移，否则就是在低地址区取值了
     let script_slice = unsafe { from_raw_parts(script_start as *const u8, script_size) };
     let (line_num, lines_meta) = decode_script(script_slice);
 
+    debug!("Decode script done");
     ScriptDecoded {
         line_num,
         lines_meta,

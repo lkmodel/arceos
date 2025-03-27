@@ -36,6 +36,7 @@ pub fn exit_current_task(exit_code: i32) -> ! {
 
 #[cfg(feature = "batch")]
 pub fn exit_current_task(exit_code: i32) -> ! {
+    // exit(exit_code);
     unimplemented!() // 这里应该回到OS
 }
 

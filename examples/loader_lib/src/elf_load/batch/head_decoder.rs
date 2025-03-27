@@ -1,4 +1,5 @@
 use alloc::{ffi::CString, vec::Vec};
+use axlog::{debug, info};
 use axstd::string::{String, ToString};
 use core::slice::from_raw_parts;
 
@@ -7,6 +8,7 @@ use crate::elf_load::decoder::Decoder;
 const MAGIC_NUMBER: u64 = 0x5F7265646165685F; // 魔数 `_header_`
 
 /// 解码器，用于从二进制数据中解析出指令行列表
+#[derive(Debug)]
 pub struct HeadDecoder<'a> {
     decoder: Decoder<'a>,
 }
@@ -56,16 +58,17 @@ impl<'a> HeadDecoder<'a> {
 }
 
 /// 解码之后的头文件
+#[derive(Debug)]
 pub struct HeadDecoded {
     ///  应用数量
     pub app_num: u32,
     /// 头结构的大小
     pub head_size: u64,
-    /// 存放多个应用的（应用大小，`C` 风格字符串，应用在 `PLASH` 中的起始地址）
+    /// 存放多个应用的（应用大小，`C` 风格字符串，应用在 `PLASH` 中的偏移）
     pub apps: Vec<(u64, CString, u64)>,
-    /// (`Lib` 库大小, 库在 `PLASH` 中的起始地址)
+    /// (`Lib` 库大小, 库在 `PLASH` 中的偏移)
     pub lib: (u64, u64),
-    /// (脚本大小, 脚本在 `PLASH` 中的起始地址)
+    /// (脚本大小, 脚本在 `PLASH` 中的偏移)
     pub script: (u64, u64),
 }
 
@@ -77,6 +80,7 @@ pub struct HeadDecoded {
 /// # 返回值
 /// 解码后的头文件
 pub fn head_decoded(plash_start: usize, plash_size: usize) -> HeadDecoded {
+    debug!("Decode head...");
     let plash = unsafe { from_raw_parts(plash_start as *const u8, plash_size) };
     let mut decode = HeadDecoder::new(plash);
 
@@ -91,6 +95,7 @@ pub fn head_decoded(plash_start: usize, plash_size: usize) -> HeadDecoded {
         .parse_script_line()
         .expect("Failed to parse script line");
 
+    debug!("Decode head done");
     HeadDecoded {
         app_num,
         head_size,

@@ -17,19 +17,20 @@ use crate::{
     elf_load::verify::verify_elf_header,
 };
 
-// TODO: 添加使用 `verify_elf_header`, 现在没有验证ELF
 pub fn run_loop() {
     info!("Load payload ...");
     debug!("Decode head and script...");
     let head_decoded = head_decoded(PLASH_START, PLASH_SIZE);
+    info!("HeadDecoded {:?}", head_decoded);
     let script_decoded = script_decoded(
-        head_decoded.script.1 as usize,
+        PLASH_START + head_decoded.script.1 as usize,
         head_decoded.script.0 as usize,
     );
+    info!("ScriptDecoded {:?}", script_decoded);
 
     let lib_elf_slice = unsafe {
         from_raw_parts(
-            (head_decoded.lib.1 as usize) as *const u8,
+            (PLASH_START + (head_decoded.lib.1 as usize)) as *const u8,
             head_decoded.lib.0 as usize,
         )
     };
@@ -37,6 +38,9 @@ pub fn run_loop() {
     let lib_elf: ElfBytes<'_, LittleEndian> =
         ElfBytes::<LittleEndian>::minimal_parse(lib_elf_slice)
             .expect("Failed to parse ELF at LIB file");
+    verify_elf_header(&lib_elf)
+        .is_err()
+        .then(|| panic!("Failed to verify_elf_header for Lib ELF"));
 
     let lib_entry = load_lib(lib_elf_slice, lib_code, &lib_elf, LIB_START);
 
@@ -57,12 +61,19 @@ pub fn run_loop() {
             .expect("Failed to find app");
 
         info!("Load APP");
-        let app_elf_slice =
-            unsafe { from_raw_parts((app.2 as usize) as *const u8, app.0 as usize) };
+        let app_elf_slice = unsafe {
+            from_raw_parts(
+                (PLASH_START + (app.2 as usize)) as *const u8,
+                app.0 as usize,
+            )
+        };
         let app_code = unsafe { from_raw_parts_mut((APP_START) as *mut u8, MAX_APP_SIZE) };
         let app_elf: ElfBytes<'_, LittleEndian> =
             ElfBytes::<LittleEndian>::minimal_parse(app_elf_slice)
                 .expect("Failed to parse ELF at APP file");
+        verify_elf_header(&app_elf)
+            .is_err()
+            .then(|| panic!("Failed to verify_elf_header for App ELF"));
 
         let main_entry = load_app_dyn(
             app_elf_slice,
@@ -76,8 +87,10 @@ pub fn run_loop() {
         );
         modify_lib_main(&lib_elf, LIB_START, main_entry);
 
-        info!("Entry");
-        // FIX: 在这里，可能在传递param的时候，会破坏 `t2` 寄存器
+        info!(
+            "Entry @0x{:x} arg @0x{:x}",
+            lib_entry as usize, arg_entry as usize
+        );
         unsafe {
             core::arch::asm!("
             addi    sp, sp, -128
@@ -101,7 +114,7 @@ pub fn run_loop() {
             sd      t0, 120(sp)
 
             mv      t2, {entry}
-            la      a0, {param}     // 将参数p的地址加载到a0
+            mv      a0, {param}     // 将参数p的地址加载到a0
             la      a7, {abi_table}
             jalr    t2
 
