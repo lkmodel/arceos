@@ -28,11 +28,6 @@ pub fn run_loop() {
         PLASH_START + head_decoded.script.1 as usize,
         head_decoded.script.0 as usize,
     );
-    // XXX: 在这里看起来很奇怪的一个操作，实则是为了避免一些问题。
-    // 由于一个未知问题，在特殊的脚本组织情况下，会导致文件名被破坏
-    // 经过实践发现，这样实现可以缓解一些问题，但是在少数情况下依然出现问题。
-    // 并且，我发现，这个被破坏会同步到 script 2
-    let script_decoded2 = script_decoded.clone();
 
     let lib_elf_slice = unsafe {
         from_raw_parts(
@@ -61,10 +56,7 @@ pub fn run_loop() {
         let app_name = script_decoded.lines_meta[i].0.clone();
         let arg_entry = script_decoded.lines_meta[i].1.argc_ptr();
 
-        info!(
-            "ScriptDecoded {:?} script_decoded2 {:?}",
-            script_decoded, script_decoded2
-        );
+        info!("ScriptDecoded {:?}", script_decoded);
         let app = head_decoded
             .apps
             .iter()

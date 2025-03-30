@@ -860,83 +860,83 @@ void testset_main(void)
     sqlite3_create_function(g.db, "group_concat", 1, SQLITE_UTF8, 0, 0, groupStep, groupFinal);
 #endif
 
-    // n = 25;
-    // speedtest1_begin_test(130, "%d SELECTS, numeric BETWEEN, unindexed", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(c) FROM z1\n"
-    //                    " WHERE b BETWEEN ?1 AND ?2; -- %d times",
-    //                    / n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = speedtest1_random() % maxb;
-    //         x2 = speedtest1_random() % 10 + sz / 5000 + x1;
-    //     }
-    //     sqlite3_bind_int(g.pStmt, 1, x1);
-    //     sqlite3_bind_int(g.pStmt, 2, x2);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = 25;
+    speedtest1_begin_test(130, "%d SELECTS, numeric BETWEEN, unindexed", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(c) FROM z1\n"
+                       " WHERE b BETWEEN ?1 AND ?2; -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = speedtest1_random() % maxb;
+            x2 = speedtest1_random() % 10 + sz / 5000 + x1;
+        }
+        sqlite3_bind_int(g.pStmt, 1, x1);
+        sqlite3_bind_int(g.pStmt, 2, x2);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = 10;
-    // speedtest1_begin_test(140, "%d SELECTS, LIKE, unindexed", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(c) FROM z1\n"
-    //                    " WHERE c LIKE ?1; -- %d times",
-    //                    n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = speedtest1_random() % maxb;
-    //         zNum[0] = '%';
-    //         len = speedtest1_numbername(i, zNum + 1, sizeof(zNum) - 2);
-    //         zNum[len] = '%';
-    //         zNum[len + 1] = 0;
-    //     }
-    //     sqlite3_bind_text(g.pStmt, 1, zNum, len + 1, SQLITE_STATIC);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = 10;
+    speedtest1_begin_test(140, "%d SELECTS, LIKE, unindexed", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(c) FROM z1\n"
+                       " WHERE c LIKE ?1; -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = speedtest1_random() % maxb;
+            zNum[0] = '%';
+            len = speedtest1_numbername(i, zNum + 1, sizeof(zNum) - 2);
+            zNum[len] = '%';
+            zNum[len + 1] = 0;
+        }
+        sqlite3_bind_text(g.pStmt, 1, zNum, len + 1, SQLITE_STATIC);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = 10;
-    // speedtest1_begin_test(142, "%d SELECTS w/ORDER BY, unindexed", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT a, b, c FROM z1 WHERE c LIKE ?1\n"
-    //                    " ORDER BY a; -- %d times",
-    //                    n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = speedtest1_random() % maxb;
-    //         zNum[0] = '%';
-    //         len = speedtest1_numbername(i, zNum + 1, sizeof(zNum) - 2);
-    //         zNum[len] = '%';
-    //         zNum[len + 1] = 0;
-    //     }
-    //     sqlite3_bind_text(g.pStmt, 1, zNum, len + 1, SQLITE_STATIC);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = 10;
+    speedtest1_begin_test(142, "%d SELECTS w/ORDER BY, unindexed", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT a, b, c FROM z1 WHERE c LIKE ?1\n"
+                       " ORDER BY a; -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = speedtest1_random() % maxb;
+            zNum[0] = '%';
+            len = speedtest1_numbername(i, zNum + 1, sizeof(zNum) - 2);
+            zNum[len] = '%';
+            zNum[len + 1] = 0;
+        }
+        sqlite3_bind_text(g.pStmt, 1, zNum, len + 1, SQLITE_STATIC);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = 10; /* g.szTest/5; */
-    // speedtest1_begin_test(145, "%d SELECTS w/ORDER BY and LIMIT, unindexed", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT a, b, c FROM z1 WHERE c LIKE ?1\n"
-    //                    " ORDER BY a LIMIT 10; -- %d times",
-    //                    n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = speedtest1_random() % maxb;
-    //         zNum[0] = '%';
-    //         len = speedtest1_numbername(i, zNum + 1, sizeof(zNum) - 2);
-    //         zNum[len] = '%';
-    //         zNum[len + 1] = 0;
-    //     }
-    //     sqlite3_bind_text(g.pStmt, 1, zNum, len + 1, SQLITE_STATIC);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = 10; /* g.szTest/5; */
+    speedtest1_begin_test(145, "%d SELECTS w/ORDER BY and LIMIT, unindexed", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT a, b, c FROM z1 WHERE c LIKE ?1\n"
+                       " ORDER BY a LIMIT 10; -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = speedtest1_random() % maxb;
+            zNum[0] = '%';
+            len = speedtest1_numbername(i, zNum + 1, sizeof(zNum) - 2);
+            zNum[len] = '%';
+            zNum[len + 1] = 0;
+        }
+        sqlite3_bind_text(g.pStmt, 1, zNum, len + 1, SQLITE_STATIC);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
     // speedtest1_begin_test(150, "CREATE INDEX five times");
     // speedtest1_exec("BEGIN;");
@@ -948,79 +948,79 @@ void testset_main(void)
     // speedtest1_exec("COMMIT;");
     // speedtest1_end_test();
 
-    // n = sz / 5;
-    // speedtest1_begin_test(160, "%d SELECTS, numeric BETWEEN, indexed", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(a) FROM z1\n"
-    //                    " WHERE b BETWEEN ?1 AND ?2; -- %d times",
-    //                    n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = speedtest1_random() % maxb;
-    //         x2 = speedtest1_random() % 10 + sz / 5000 + x1;
-    //     }
-    //     sqlite3_bind_int(g.pStmt, 1, x1);
-    //     sqlite3_bind_int(g.pStmt, 2, x2);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = sz / 5;
+    speedtest1_begin_test(160, "%d SELECTS, numeric BETWEEN, indexed", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(a) FROM z1\n"
+                       " WHERE b BETWEEN ?1 AND ?2; -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = speedtest1_random() % maxb;
+            x2 = speedtest1_random() % 10 + sz / 5000 + x1;
+        }
+        sqlite3_bind_int(g.pStmt, 1, x1);
+        sqlite3_bind_int(g.pStmt, 2, x2);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = sz / 5;
-    // speedtest1_begin_test(161, "%d SELECTS, numeric BETWEEN, PK", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(a) FROM z2\n"
-    //                    " WHERE a BETWEEN ?1 AND ?2; -- %d times",
-    //                    n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = speedtest1_random() % maxb;
-    //         x2 = speedtest1_random() % 10 + sz / 5000 + x1;
-    //     }
-    //     sqlite3_bind_int(g.pStmt, 1, x1);
-    //     sqlite3_bind_int(g.pStmt, 2, x2);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = sz / 5;
+    speedtest1_begin_test(161, "%d SELECTS, numeric BETWEEN, PK", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(a) FROM z2\n"
+                       " WHERE a BETWEEN ?1 AND ?2; -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = speedtest1_random() % maxb;
+            x2 = speedtest1_random() % 10 + sz / 5000 + x1;
+        }
+        sqlite3_bind_int(g.pStmt, 1, x1);
+        sqlite3_bind_int(g.pStmt, 2, x2);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = sz / 5;
-    // speedtest1_begin_test(170, "%d SELECTS, text BETWEEN, indexed", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(a) FROM z1\n"
-    //                    " WHERE c BETWEEN ?1 AND (?1||'~'); -- %d times",
-    //                    n);
-    // for (i = 1; i <= n; i++) {
-    //     if ((i - 1) % g.nRepeat == 0) {
-    //         x1 = swizzle(i, maxb);
-    //         len = speedtest1_numbername(x1, zNum, sizeof(zNum) - 1);
-    //     }
-    //     sqlite3_bind_text(g.pStmt, 1, zNum, len, SQLITE_STATIC);
-    //     speedtest1_run();
-    // }
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = sz / 5;
+    speedtest1_begin_test(170, "%d SELECTS, text BETWEEN, indexed", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_prepare("SELECT count(*), avg(b), sum(length(c)), group_concat(a) FROM z1\n"
+                       " WHERE c BETWEEN ?1 AND (?1||'~'); -- %d times",
+                       n);
+    for (i = 1; i <= n; i++) {
+        if ((i - 1) % g.nRepeat == 0) {
+            x1 = swizzle(i, maxb);
+            len = speedtest1_numbername(x1, zNum, sizeof(zNum) - 1);
+        }
+        sqlite3_bind_text(g.pStmt, 1, zNum, len, SQLITE_STATIC);
+        speedtest1_run();
+    }
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = sz;
-    // speedtest1_begin_test(180, "%d INSERTS with three indexes", n);
-    // speedtest1_exec("BEGIN");
-    // speedtest1_exec("CREATE%s TABLE t4(\n"
-    //                 "  a INTEGER %s %s,\n"
-    //                 "  b INTEGER %s,\n"
-    //                 "  c TEXT %s\n"
-    //                 ") %s",
-    //                 isTemp(1), g.zNN, g.zPK, g.zNN, g.zNN, g.zWR);
-    // speedtest1_exec("CREATE INDEX t4b ON t4(b)");
-    // speedtest1_exec("CREATE INDEX t4c ON t4(c)");
-    // speedtest1_exec("INSERT INTO t4 SELECT * FROM z1");
-    // speedtest1_exec("COMMIT");
-    // speedtest1_end_test();
+    n = sz;
+    speedtest1_begin_test(180, "%d INSERTS with three indexes", n);
+    speedtest1_exec("BEGIN");
+    speedtest1_exec("CREATE%s TABLE t4(\n"
+                    "  a INTEGER %s %s,\n"
+                    "  b INTEGER %s,\n"
+                    "  c TEXT %s\n"
+                    ") %s",
+                    isTemp(1), g.zNN, g.zPK, g.zNN, g.zNN, g.zWR);
+    speedtest1_exec("CREATE INDEX t4b ON t4(b)");
+    speedtest1_exec("CREATE INDEX t4c ON t4(c)");
+    speedtest1_exec("INSERT INTO t4 SELECT * FROM z1");
+    speedtest1_exec("COMMIT");
+    speedtest1_end_test();
 
-    // n = sz;
-    // speedtest1_begin_test(190, "DELETE and REFILL one table", n);
-    // speedtest1_exec("DELETE FROM z2;");
-    // speedtest1_exec("INSERT INTO z2 SELECT * FROM z1;");
-    // speedtest1_end_test();
+    n = sz;
+    speedtest1_begin_test(190, "DELETE and REFILL one table", n);
+    speedtest1_exec("DELETE FROM z2;");
+    speedtest1_exec("INSERT INTO z2 SELECT * FROM z1;");
+    speedtest1_end_test();
 
     // speedtest1_begin_test(200, "VACUUM");
     // speedtest1_exec("VACUUM");
@@ -1061,9 +1061,9 @@ void testset_main(void)
     // speedtest1_exec("UPDATE z2 SET d=b*4");
     // speedtest1_end_test();
 
-    // speedtest1_begin_test(260, "Query added column after filling");
-    // speedtest1_exec("SELECT sum(d) FROM z2");
-    // speedtest1_end_test();
+    speedtest1_begin_test(260, "Query added column after filling");
+    speedtest1_exec("SELECT sum(d) FROM z2");
+    speedtest1_end_test();
 
     // n = sz / 5;
     // speedtest1_begin_test(270, "%d DELETEs, numeric BETWEEN, indexed", n);
@@ -1091,18 +1091,18 @@ void testset_main(void)
     // speedtest1_exec("COMMIT");
     // speedtest1_end_test();
 
-    // speedtest1_begin_test(290, "Refill two %d-row tables using REPLACE", sz);
-    // speedtest1_exec("REPLACE INTO z2(a,b,c) SELECT a,b,c FROM z1");
-    // speedtest1_exec("REPLACE INTO t3(a,b,c) SELECT a,b,c FROM z1");
-    // speedtest1_end_test();
+    speedtest1_begin_test(290, "Refill two %d-row tables using REPLACE", sz);
+    speedtest1_exec("REPLACE INTO z2(a,b,c) SELECT a,b,c FROM z1");
+    speedtest1_exec("REPLACE INTO t3(a,b,c) SELECT a,b,c FROM z1");
+    speedtest1_end_test();
 
-    // speedtest1_begin_test(300, "Refill a %d-row table using (b&1)==(a&1)", sz);
-    // speedtest1_exec("DELETE FROM z2;");
-    // speedtest1_exec("INSERT INTO z2(a,b,c)\n"
-    //                 " SELECT a,b,c FROM z1  WHERE (b&1)==(a&1);");
-    // speedtest1_exec("INSERT INTO z2(a,b,c)\n"
-    //                 " SELECT a,b,c FROM z1  WHERE (b&1)<>(a&1);");
-    // speedtest1_end_test();
+    speedtest1_begin_test(300, "Refill a %d-row table using (b&1)==(a&1)", sz);
+    speedtest1_exec("DELETE FROM z2;");
+    speedtest1_exec("INSERT INTO z2(a,b,c)\n"
+                    " SELECT a,b,c FROM z1  WHERE (b&1)==(a&1);");
+    speedtest1_exec("INSERT INTO z2(a,b,c)\n"
+                    " SELECT a,b,c FROM z1  WHERE (b&1)<>(a&1);");
+    speedtest1_end_test();
 
     // n = sz / 5;
     // speedtest1_begin_test(310, "%d four-ways joins", n);
@@ -2549,9 +2549,9 @@ void testset_trigger(void)
     speedtest1_end_test();
 
     speedtest1_exec("CREATE TABLE t5(t TEXT PRIMARY KEY, i INTEGER);");
-    // speedtest1_begin_test(170, "speed4p-insert-ignore");
-    // speedtest1_exec("INSERT OR IGNORE INTO t5 SELECT t, i FROM z1");
-    // speedtest1_end_test();
+    speedtest1_begin_test(170, "speed4p-insert-ignore");
+    speedtest1_exec("INSERT OR IGNORE INTO t5 SELECT t, i FROM z1");
+    speedtest1_end_test();
 
     speedtest1_exec("CREATE TABLE log(op TEXT, r INTEGER, i INTEGER, t TEXT);"
                     "CREATE TABLE t4(rowid INTEGER PRIMARY KEY, i INTEGER, t TEXT);"

@@ -1,5 +1,5 @@
 busybox_WHOAMI --version
-busybox_ECHO TREE FFF
+busybox_ECHO TREE
 busybox_PWD
 busybox_ENV
 busybox_TOUCH fff.txt
@@ -9,5 +9,4 @@ busybox_UNAME
 busybox_TOUCH --help
 busybox_NICE
 sqlite3_startup init
-sqlite3_startup run
 busybox_CAT
