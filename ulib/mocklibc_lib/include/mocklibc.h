@@ -5,6 +5,7 @@
 #define ABI_NOIMPL         0
 #define ABI_INIT_SCHEDULER 1
 #define ABI_TERMINATE      2
+#define ABI_CHECKPOINT     3
 // `stdio`
 #define ABI_TIMESPEC 11
 // `pthread`
@@ -86,6 +87,21 @@ extern unsigned long volatile abi_entry;
     long *abi_ptr = (long *)(abi_entry + 8 * ABI_NOIMPL); \
     FnABI func = (FnABI)(*abi_ptr);                       \
     func();
+
+#define ASM_CHECKPOINT(val)                \
+    __asm__ volatile("nop\n"               \
+                     "nop\n"               \
+                     "addi zero,zero,%0\n" \
+                     "nop\n"               \
+                     "nop\n"               \
+                     :                     \
+                     : "i"(val));
+
+#define CHECKPOINT                                                                \
+    typedef int (*FnABI_CheckPoint)();                                            \
+    long *abi_ptr_check_point = (long *)(abi_entry + 8 * ABI_CHECKPOINT);         \
+    FnABI_CheckPoint func_check_point = (FnABI_CheckPoint)(*abi_ptr_check_point); \
+    func_check_point();
 
 #include <stdarg.h>
 extern int main(int, char **);

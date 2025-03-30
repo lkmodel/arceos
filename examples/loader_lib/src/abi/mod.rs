@@ -1,10 +1,11 @@
 mod mem;
 mod noimpl;
 mod syscall;
-mod thread;
+pub mod thread;
 
+use alloc::string::ToString;
 use axhal::time::monotonic_time;
-use axlog::{debug, info};
+use axlog::{debug, info, warn};
 use axstd::{println, process::exit};
 
 use crate::runtime_func::{
@@ -32,6 +33,7 @@ use thread::*;
 const ABI_NOIMPL: usize = 0;
 const ABI_INIT_SCHEDULER: usize = 1;
 pub const ABI_TERMINATE: usize = 2;
+const ABI_CHECKPOINT: usize = 3;
 // `stdio`
 const ABI_TIMESPEC: usize = 11;
 // `pthread`
@@ -313,13 +315,9 @@ pub fn init_abis() {
     register_abi("noimpl", ABI_NOIMPL, abi_noimpl as usize);
     register_abi("init", ABI_INIT_SCHEDULER, abi_init_scheduler as usize);
     register_abi("exit", ABI_TERMINATE, abi_terminate as usize);
+    register_abi("exit", ABI_CHECKPOINT, abi_checkpoint as usize);
 
-    // register_abi("putchar", ABI_PUTCHAR, abi_putchar as usize);
     register_abi("timespec", ABI_TIMESPEC, abi_timespec as usize);
-    // register_abi("vfprintf", ABI_VFPRINTF, vfprintf as usize);
-    // register_abi("vsnprintf", ABI_VSNPRINTF, vsnprintf as usize);
-    // register_abi("vscanf", ABI_VSCANF, vscanf as usize);
-    // register_abi("out", ABI_OUT, abi_out as usize);
 
     register_abi(
         "pthread_create",
@@ -435,20 +433,23 @@ fn register_abi(name: &str, num: usize, handle: usize) {
 }
 
 pub fn abi_init_scheduler() {
+    info!("[ABI: SYS CTL] init_scheduler");
     init_scheduler();
-}
-
-/// `SYS_PUTCHAR: 2`
-#[unsafe(no_mangle)]
-fn abi_putchar(_c: char) {
-    unimplemented!();
-    // print!("{c}");
 }
 
 /// `SYS_TERMINATE: 3`
 #[unsafe(no_mangle)]
 fn abi_terminate() -> ! {
+    info!("[ABI: SYS CTL] abi_terminate");
     exit(0);
+}
+
+#[unsafe(no_mangle)]
+fn abi_checkpoint() {
+    info!("[ABI: SYS CTL] abi_checkpoint");
+    // FIXME: BUG
+    // ".".to_string();
+    // warn!("[ABI: SYS CTL] CHECKPOINT 2");
 }
 
 #[repr(C)]
@@ -461,6 +462,7 @@ struct TimeSpec {
 /// `SYS_TIMESPEC: 4`
 #[unsafe(no_mangle)]
 fn abi_timespec(ts: *mut TimeSpec) {
+    info!("[ABI: Remove this] abi_timespec");
     unsafe {
         let ts = &mut *ts;
         let now = monotonic_time();

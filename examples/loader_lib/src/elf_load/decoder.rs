@@ -1,7 +1,7 @@
 use alloc::ffi::CString;
 use axstd::string::{String, ToString};
 
-use axlog::{debug, info};
+use axlog::debug;
 
 /// 通用解码器模板
 #[derive(Debug)]
@@ -17,7 +17,6 @@ impl<'a> Decoder<'a> {
 
     /// 读取一个 `u64`
     pub fn read_u64(&mut self) -> Result<u64, String> {
-        debug!("CHECKPOINT");
         self.read_bytes(8).map(|b| {
             debug!("CHECK {:?}", b);
             u64::from_le_bytes(b.try_into().unwrap())

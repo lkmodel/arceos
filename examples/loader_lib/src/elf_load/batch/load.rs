@@ -1,6 +1,6 @@
 use core::cmp::min;
 
-use axstd::{format, println};
+use axstd::format;
 
 use axlog::{debug, info};
 
@@ -8,11 +8,6 @@ use elf::{
     ElfBytes,
     abi::{PT_LOAD, R_RISCV_64, R_RISCV_JUMP_SLOT, R_RISCV_RELATIVE},
     endian::LittleEndian,
-};
-
-use crate::{
-    config::{APP_START, LIB_START, MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_START},
-    elf_load::verify::{LoadError, verify_elf_header},
 };
 
 // pub fn load_elf() -> u64 {
@@ -573,7 +568,7 @@ fn modify_app(
                     .expect("Failed to find symbol in LIB dynamic symbol table");
 
                 let relative_offset = app_start + app_rela_dyn.r_offset as usize;
-                let new_value = LIB_START + lib_sym.st_value as usize;
+                let new_value = lib_start + lib_sym.st_value as usize;
                 debug!(
                     "[App-rela.dyn R_RISCV_64] @0x{:x}=0x{:x} name {}",
                     relative_offset, new_value, app_rela_name,

@@ -678,7 +678,20 @@ pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
     let process = process_api();
     let out_file = process.fd_manager.fd_table.lock()[out_fd].clone().unwrap();
     let in_file = process.fd_manager.fd_table.lock()[in_fd].clone().unwrap();
-    let old_in_offset = in_file.seek(SeekFrom::Current(0)).unwrap();
+    let old_in_offset = match in_file.seek(SeekFrom::Current(0)) {
+        Ok(t) => t,
+        Err(e) => match e {
+            AxError::Unsupported => {
+                debug!(
+                    "EINVAL Descriptor  is  not  valid  or locked, or an mmap(2)-like operation is not available for in_fd, or count is negative."
+                );
+                return Err(SyscallError::EIO);
+            }
+            _ => {
+                panic!("Error {:?}", e);
+            }
+        },
+    };
 
     let mut buf = vec![0u8; count];
     if !offset.is_null() {

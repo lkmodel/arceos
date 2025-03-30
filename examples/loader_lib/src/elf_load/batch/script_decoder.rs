@@ -28,14 +28,10 @@ impl<'a> ScriptDecoder<'a> {
 
     /// 从头部解析魔术和行数
     fn parse_header(&mut self) -> Result<(u64, u32), String> {
-        debug!("CHECKPOINT");
         let magic = self.decoder.read_u64()?;
-        debug!("CHECKPOINT");
         if magic != MAGIC {
-            debug!("CHECKPOINT");
             return Err("Invalid magic number!".to_string());
         }
-        debug!("CHECKPOINT");
         let num_lines = self.decoder.read_u32()?;
         Ok((magic, num_lines))
     }
@@ -105,7 +101,6 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
     let mut decoder = ScriptDecoder::new(script_slice);
     let mut line_num = 0;
     let mut result = Vec::new();
-    debug!("CHECKPOINT");
 
     if let Ok((_magic, num_lines)) = decoder.parse_header() {
         info!("Magic verified, number of command lines: {}", num_lines);
@@ -127,7 +122,6 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
         line_num = num_lines;
     }
 
-    debug!("CHECKPOINT");
     line_num.eq(&0).then(|| panic!("Line num is zero"));
     result.is_empty().then(|| panic!("Script line is empty"));
 

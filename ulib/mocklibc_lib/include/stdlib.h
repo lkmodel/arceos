@@ -39,6 +39,7 @@ void srand(unsigned);
 
 void *malloc(size_t);
 void *calloc(size_t, size_t);
+void *__libc_calloc(size_t, size_t);
 void *realloc(void *, size_t);
 void free(void *);
 // void *aligned_alloc(size_t, size_t);

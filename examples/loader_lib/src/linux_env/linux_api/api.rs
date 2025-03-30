@@ -1,22 +1,10 @@
-// use crate::{
-//     abi::ABI_TABLE,
-//     config::TASK_STACK_SIZE,
-//     elf_load::load::load_user_app,
-//     linux_env::{
-//         axfs_ext::api::{FileIO, OpenFlags},
-//         linux_fs::{
-//             fd_manager::{FD_LIMIT_ORIGIN, FdManager},
-//             stdio::{Stderr, Stdin, Stdout},
-//         },
-//         task_ext::TaskExt,
-//     },
-// };
-
+use crate::abi::thread::abi_pthread_exit;
 use alloc::{string::String, sync::Arc};
 use axstd::process::exit;
 use axtask::current;
 use lazyinit::LazyInit;
 
+use crate::elf_load::batch::reentry_label;
 #[cfg(feature = "pseudo_multi_process")]
 use crate::linux_env::process_ext::api::current_process;
 use crate::linux_env::process_ext::process::Process;
@@ -36,8 +24,7 @@ pub fn exit_current_task(exit_code: i32) -> ! {
 
 #[cfg(feature = "batch")]
 pub fn exit_current_task(exit_code: i32) -> ! {
-    // exit(exit_code);
-    unimplemented!() // 这里应该回到OS
+    reentry_label(); // 这里回到OS
 }
 
 #[cfg(feature = "pseudo_multi_process")]

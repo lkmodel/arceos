@@ -1,5 +1,5 @@
 use alloc::{ffi::CString, vec::Vec};
-use axlog::{debug, info};
+use axlog::debug;
 use axstd::string::{String, ToString};
 use core::slice::from_raw_parts;
 
@@ -61,8 +61,10 @@ impl<'a> HeadDecoder<'a> {
 #[derive(Debug)]
 pub struct HeadDecoded {
     ///  应用数量
+    #[allow(unused)]
     pub app_num: u32,
     /// 头结构的大小
+    #[allow(unused)]
     pub head_size: u64,
     /// 存放多个应用的（应用大小，`C` 风格字符串，应用在 `PLASH` 中的偏移）
     pub apps: Vec<(u64, CString, u64)>,

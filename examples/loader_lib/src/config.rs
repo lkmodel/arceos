@@ -12,3 +12,5 @@ pub const APP_START: usize = 0xffff_ffc0_8060_0000;
 pub const MAX_LIB_SIZE: usize = 0x08_0000;
 /// LIB 的加载地址
 pub const LIB_START: usize = 0xffff_ffc0_8010_0000;
+/// 用于存储全局信息
+pub const GLOBAL_SOTRE: usize = 0xffff_ffc0_801f_fff0;

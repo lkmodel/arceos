@@ -13,7 +13,9 @@ use script_decoder::script_decoded;
 
 use crate::{
     abi::ABI_TABLE,
-    config::{APP_START, LIB_START, MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_SIZE, PLASH_START},
+    config::{
+        APP_START, GLOBAL_SOTRE, LIB_START, MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_SIZE, PLASH_START,
+    },
     elf_load::verify::verify_elf_header,
 };
 
@@ -91,9 +93,13 @@ pub fn run_loop() {
             "Entry @0x{:x} arg @0x{:x}",
             lib_entry as usize, arg_entry as usize
         );
+
+        let global_store = GLOBAL_SOTRE;
+
         unsafe {
             core::arch::asm!("
-            addi    sp, sp, -128
+            // 除了通用寄存器，还需要保存其他内容
+            addi    sp, sp, -240
 
             // 保存通用寄存器
             sd      ra, 0(sp)
@@ -112,9 +118,38 @@ pub fn run_loop() {
             sd      t2, 104(sp)
             sd      t1, 112(sp)
             sd      t0, 120(sp)
+            sd      s11,128(sp)
+            sd      s10,136(sp)
+            sd      s9, 144(sp)
+            sd      s8, 152(sp)
+            sd      s7, 160(sp)
+            sd      s6, 168(sp)
+            sd      s5, 176(sp)
+            sd      s4, 184(sp)
+            sd      s3, 192(sp)
+            sd      s2, 200(sp)
+            sd      s1, 208(sp)
+            sd      s0, 216(sp)
+            sd      gp, 224(sp)
+            sd      tp, 232(sp)
+
+            mv      t1, {global_store}
+            sd      sp, 0(t1)
+            fence   rw,rw
+
+            // 使用临时寄存器保存栈指针和返回地址，避免竞争
+            auipc   t2, 0                  // 当前指令的地址（基址）
+            addi    t2, t2, 22
+            fence   rw,rw
+            sd      t2, 8(t1)
+            fence   rw,rw
+
+            // 重进入跳板段
+            jal     t2, 8                  // 此时t2被抛弃
+            jal     t2, 18                  // 在执行重进入函数前，这个语句不应当被调用
 
             mv      t2, {entry}
-            mv      a0, {param}     // 将参数p的地址加载到a0
+            mv      a0, {param}             // 将参数p的地址加载到a0
             la      a7, {abi_table}
             jalr    t2
 
@@ -134,16 +169,52 @@ pub fn run_loop() {
             ld      t2, 104(sp)
             ld      t1, 112(sp)
             ld      t0, 120(sp)
+            ld      s11,128(sp)
+            ld      s10,136(sp)
+            ld      s9, 144(sp)
+            ld      s8, 152(sp)
+            ld      s7, 160(sp)
+            ld      s6, 168(sp)
+            ld      s5, 176(sp)
+            ld      s4, 184(sp)
+            ld      s3, 192(sp)
+            ld      s2, 200(sp)
+            ld      s1, 208(sp)
+            ld      s0, 216(sp)
+            ld      gp, 224(sp)
+            ld      tp, 232(sp)
 
-            addi    sp, sp, 128
+            addi    sp, sp, 240
             ",
                 abi_table = sym ABI_TABLE,
+                global_store = in(reg) global_store,
                 param = in(reg) arg_entry,
                 entry = in(reg) lib_entry,
-                options(nostack)
+                options(nostack, nomem)
             )
         }
 
         info!("Done app");
+    }
+}
+
+// 汇编重新进入的循环位置
+pub extern "C" fn reentry_label() -> ! {
+    let store0 = unsafe { *(GLOBAL_SOTRE as *const usize) }.clone();
+    let store8 = unsafe { *((GLOBAL_SOTRE + 8) as *const usize) }.clone();
+    info!("CHECK store0 0x{:x}, store8 0x{:x}", store0, store8);
+    unsafe {
+        core::arch::asm!(
+            "
+            mv      sp, {global_store0}
+            mv      t2, {global_store8}
+            fence.i
+            fence   rw,rw
+            jalr    t2
+            ",
+            global_store0 = in(reg) store0,
+            global_store8 = in(reg) store8,
+            options(nostack, nomem, noreturn)
+        );
     }
 }

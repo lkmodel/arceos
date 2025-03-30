@@ -1,6 +1,6 @@
 use alloc::{format, string::ToString};
 use axfs::api::Permissions;
-use axlog::{debug, warn};
+use axlog::debug;
 
 use crate::linux_env::{
     axfs_ext::api::FileIOType,
@@ -33,9 +33,11 @@ pub enum UtilsError {
     NoEntryInTable,
     /// Permission Denied.
     /// 权限错误
+    #[allow(unused)]
     PermDenied,
     /// Something cannot be found.
     /// 无法找到某个东西
+    #[allow(unused)]
     NotFound,
     /// Other invalid parameters not marked by UtilsError
     /// 非UtilsError标出的其他非法参数
@@ -77,6 +79,7 @@ pub fn deal_path(
         }
 
         // FIX:
+        // ```
         // if UNI_API
         //     .manual_alloc_for_lazy((path_addr as usize).into())
         //     .is_err()

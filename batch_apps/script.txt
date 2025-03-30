@@ -1,4 +1,5 @@
-busybox_LS -la
-busybox_TOUCH test.txt
-busybox_LS
-busybox_CAT test.txt
+busybox_WHOAMI
+busybox_PWD
+busybox_UNAME
+busybox_TOUCH --help
+busybox_CAT
