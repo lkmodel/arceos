@@ -156,6 +156,67 @@ use elf::{
 
 // 往后的内容是新的
 
+// fn load_exec(
+//     app_elf: &ElfBytes<LittleEndian>,
+//     app_elf_slice: &[u8],
+//     app_code: &mut [u8],
+// ) -> Result<(), LoadError> {
+//     // 检查 ELF 头
+//     verify_elf_header(app_elf).expect("Failed to verify ELF header");
+//
+//     if let Some(phs) = app_elf.segments() {
+//         for ph in phs {
+//             if ph.p_type != PT_LOAD {
+//                 debug!("skipping segment type: {}", ph.p_type);
+//                 continue;
+//             }
+//
+//             let offset = ph.p_offset as usize;
+//             let filesz = ph.p_filesz as usize;
+//             let memsz = ph.p_memsz as usize;
+//
+//             // 计算在内存中的实际地址
+//             let vaddr = ph.p_vaddr as usize;
+//             let dest_addr = vaddr - APP_START;
+//
+//             debug!(
+//                 "Loading segment: offset=0x{:x}, filesz=0x{:x}, memsz=0x{:x}, vaddr=0x{:x}",
+//                 offset, filesz, memsz, vaddr
+//             );
+//
+//             debug!(
+//                 "dest_addr: {:x} = vaddr({:x}) - APP_START({:x})",
+//                 dest_addr, vaddr, APP_START
+//             );
+//
+//             // 复制段内容
+//             if filesz > 0 {
+//                 let src: &[u8] = &app_elf_slice[offset..offset + filesz];
+//                 let dest = &mut app_code[dest_addr..dest_addr + filesz];
+//                 dest.copy_from_slice(src);
+//             }
+//
+//             // 处理`.bss`等需要零初始化的部分
+//             if memsz > filesz {
+//                 let dest = &mut app_code[dest_addr + filesz..dest_addr + memsz];
+//                 dest.fill(0);
+//             }
+//         }
+//     }
+//     /* ```
+//         let text_shdr = app_elf
+//             .section_header_by_name(".text")
+//             .expect("section table should be parseable")
+//             .expect("elf should have a .text section");
+//         let text_slice = app_elf_slice
+//             .get(text_shdr.sh_offset as usize..)
+//             .expect("text section should be in bounds");
+//         let copy_size = min(app_code.len(), text_slice.len());
+//         app_code[..copy_size].copy_from_slice(&text_slice[..copy_size]);
+//     ```*/
+//     Ok(())
+// }
+
 pub fn load_dyn(
     elf: &ElfBytes<LittleEndian>,
     elf_slice: &[u8],

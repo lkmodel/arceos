@@ -59,7 +59,7 @@ pub fn run_loop() {
     for i in 0..script_decoded.line_num as usize {
         info!("Read script");
         let app_name = script_decoded.lines_meta[i].0.clone();
-        let arg_entry = script_decoded.lines_meta[i].1;
+        let arg_entry = script_decoded.lines_meta[i].1.argc_ptr();
 
         info!(
             "ScriptDecoded {:?} script_decoded2 {:?}",

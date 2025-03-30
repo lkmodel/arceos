@@ -4,7 +4,11 @@ use core::{
     slice::from_raw_parts,
 };
 
-use alloc::{alloc::alloc_zeroed, ffi::CString, vec::Vec};
+use alloc::{
+    alloc::{alloc_zeroed, dealloc},
+    ffi::CString,
+    vec::Vec,
+};
 use axlog::{debug, info};
 use axstd::string::{String, ToString};
 
@@ -44,25 +48,33 @@ impl<'a> ScriptDecoder<'a> {
         // FIX: 在这里我们假设是每一行都有，但是如果没有呢？
         // 如果只有一个参数呢？
         let argc = self.decoder.read_u32()?;
+        // `argv` 在栈上创建，但是 `Vec` 在堆上
+        // 此时 argv 的所有权属于 parse_command_line 这个函数。
         let mut argv = Vec::new();
 
         for _ in 0..argc {
-            let arg = self.decoder.read_c_string()?;
-            argv.push(arg);
+            let arg = self.decoder.read_c_string()?; // 返回 CString，所有权在 arg 上
+            argv.push(arg); // arg 移动到 argv，arg 失效
         }
-        Ok(argv)
+        Ok(argv) // argv 移动到 Result，argv 失效
+        // Result<Vec<CString>, String> -> 返回给调用者
+        // 最终调用者获取 Result<Vec<CString>>，因此也拥有了 Vec<CString> 的所有权，进而拥有所有 CString 的所有权。
     }
 }
 
+#[derive(Debug, Clone)]
 /// 参数设置器：将解码得到的 `argv` 列表组织为 `argc` 和 `argv` C 格式布局
-pub struct ParameterSetup;
+pub struct ArgvStorage {
+    memory: *mut u64,   // 指向连续内存
+    args: Vec<CString>, // 保存原始的 CString，确保生命周期
+}
 
-impl ParameterSetup {
+impl ArgvStorage {
     /// 为一个指令行设置 C 兼容的 `argc` 和 `argv` 格式，确保在内存中连续分配
     ///
     /// # Safety
     /// - 返回一个指向 `argc` 的指针，并确保 `argc` 和 `argv` 在内存中是连续分配的。
-    pub unsafe fn setup_args_contiguous(argv: &Vec<CString>) -> *mut u64 {
+    pub unsafe fn new(argv: Vec<CString>) -> Self {
         info!("Argv {:?}", argv);
         // 计算所需的内存大小
         let argc = argv.len();
@@ -77,13 +89,30 @@ impl ParameterSetup {
 
         // 设置 argv
         let argv_base = unsafe { memory.add(1) as *mut *mut u8 };
-        for (i, arg) in argv.iter().map(|c| c.as_ptr() as *mut u8).enumerate() {
+        for (i, arg) in argv
+            .iter()
+            .map(|c| {
+                info!("Pushing CString @0x{:?}=={:?}", c.as_ptr(), c);
+                c.as_ptr() as *mut u8
+            })
+            .enumerate()
+        {
             unsafe { write_volatile(argv_base.add(i), arg) };
         }
         // 设置 NULL 终止符
         unsafe { write_volatile(argv_base.add(argc), null_mut()) };
 
-        memory
+        Self { memory, args: argv }
+    }
+
+    pub fn argc_ptr(&self) -> *mut u64 {
+        self.memory
+    }
+}
+
+impl Drop for ArgvStorage {
+    fn drop(&mut self) {
+        unsafe { dealloc(self.memory as *mut u8, Layout::new::<u64>()) };
     }
 }
 
@@ -95,7 +124,7 @@ impl ParameterSetup {
 /// # 返回值
 /// 0: `Vec<CString>` 的直接命令名字，方便查找
 /// 1: 在 `mem` 中，存放 `argc` 地址的 `Vec<*mut u64>`，每个地址存放一组连续的 `argc` 和 `argv` 数据
-pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
+pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, ArgvStorage)>) {
     debug!("decode by script_slice");
     // 解码二进制脚本文件
     debug!("script_slice_addr {:?}", script_slice.as_ptr());
@@ -108,15 +137,18 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
 
         // 解码每一行指令行
         for i in 0..num_lines {
+            // argv 获得了 Vec<CString> 的所有权
             if let Ok(argv) = decoder.parse_command_line() {
                 info!("Line {} parsed with args: {:?}", i, argv);
-
-                // 调用连续内存分配函数
-                unsafe {
-                    // NOTE: 在这里仅仅借用所有权，而不是进行所有权转移
-                    let argc_ptr = ParameterSetup::setup_args_contiguous(&argv);
-                    result.push((argv[0].clone(), argc_ptr));
-                }
+                let storage = unsafe { ArgvStorage::new(argv) };
+                // storage 被存入 result，它的生命周期会跟随 result
+                result.push((storage.args[0].clone(), storage));
+                //                // 调用连续内存分配函数
+                //                unsafe {
+                //                    // NOTE: 在这里仅仅借用所有权，而不是进行所有权转移
+                //                    let argc_ptr = ParameterSetup::setup_args_contiguous(argv);
+                //                    result.push((argv[0].clone(), argc_ptr));
+                //                }
             }
         }
 
@@ -136,7 +168,7 @@ pub struct ScriptDecoded {
     pub line_num: u32,
     /// 0: `Vec<CString>` 的直接命令名字，方便查找
     /// 1: 在 `mem` 中，存放 `argc` 地址的 `Vec<*mut u64>`，每个地址存放一组连续的 `argc` 和 `argv` 数据
-    pub lines_meta: Vec<(CString, *mut u64)>,
+    pub lines_meta: Vec<(CString, ArgvStorage)>,
 }
 
 /// 解码执行脚本
