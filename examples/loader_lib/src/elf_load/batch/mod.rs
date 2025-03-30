@@ -28,7 +28,11 @@ pub fn run_loop() {
         PLASH_START + head_decoded.script.1 as usize,
         head_decoded.script.0 as usize,
     );
-    info!("ScriptDecoded {:?}", script_decoded);
+    // XXX: 在这里看起来很奇怪的一个操作，实则是为了避免一些问题。
+    // 由于一个未知问题，在特殊的脚本组织情况下，会导致文件名被破坏
+    // 经过实践发现，这样实现可以缓解一些问题，但是在少数情况下依然出现问题。
+    // 并且，我发现，这个被破坏会同步到 script 2
+    let script_decoded2 = script_decoded.clone();
 
     let lib_elf_slice = unsafe {
         from_raw_parts(
@@ -56,10 +60,18 @@ pub fn run_loop() {
         info!("Read script");
         let app_name = script_decoded.lines_meta[i].0.clone();
         let arg_entry = script_decoded.lines_meta[i].1;
+
+        info!(
+            "ScriptDecoded {:?} script_decoded2 {:?}",
+            script_decoded, script_decoded2
+        );
         let app = head_decoded
             .apps
             .iter()
-            .find(|app| app.1 == app_name)
+            .find(|app| {
+                info!("Finding app {:?} == {:?}?", app.1, app_name);
+                app.1 == app_name
+            })
             .expect("Failed to find app");
 
         info!("Load APP");
@@ -96,6 +108,7 @@ pub fn run_loop() {
 
         let global_store = GLOBAL_SOTRE;
 
+        info!("CHECK ScriptDecoded {:?}", script_decoded);
         unsafe {
             core::arch::asm!("
             // 除了通用寄存器，还需要保存其他内容
@@ -145,7 +158,7 @@ pub fn run_loop() {
             fence   rw,rw
 
             // 重进入跳板段
-            jal     t2, 8                  // 此时t2被抛弃
+            jal     t2, 8                  // 写入t2没有什么特别的考量
             jal     t2, 18                  // 在执行重进入函数前，这个语句不应当被调用
 
             mv      t2, {entry}
@@ -194,6 +207,7 @@ pub fn run_loop() {
             )
         }
 
+        info!("CHECK ScriptDecoded {:?}", script_decoded);
         info!("Done app");
     }
 }
@@ -202,7 +216,7 @@ pub fn run_loop() {
 pub extern "C" fn reentry_label() -> ! {
     let store0 = unsafe { *(GLOBAL_SOTRE as *const usize) }.clone();
     let store8 = unsafe { *((GLOBAL_SOTRE + 8) as *const usize) }.clone();
-    info!("CHECK store0 0x{:x}, store8 0x{:x}", store0, store8);
+    info!("GLOBAL store0 0x{:x}, store8 0x{:x}", store0, store8);
     unsafe {
         core::arch::asm!(
             "

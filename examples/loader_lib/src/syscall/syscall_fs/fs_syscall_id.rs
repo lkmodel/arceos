@@ -53,6 +53,8 @@ pub enum FsSyscallId {
     FSYNC = 82,
     FDATASYNC = 83,
     UTIMENSAT = 88,
+    SETPRIORITY = 140,
+    GETPRIORITY = 141,
     RENAMEAT2 = 276,
     COPYFILERANGE = 285,
 }

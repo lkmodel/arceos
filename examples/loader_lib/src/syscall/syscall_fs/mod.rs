@@ -59,6 +59,8 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         EPOLL_CTL => syscall_epoll_ctl(args),
         EPOLL_WAIT => syscall_epoll_wait(args),
         PPOLL => syscall_ppoll(args),
+        SETPRIORITY => Ok(0),
+        GETPRIORITY => Ok(0),
         PSELECT6 => syscall_pselect6(args),
         EVENTFD => syscall_eventfd(args),
     }

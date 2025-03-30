@@ -330,11 +330,11 @@
 // #define SYS_ioprio_set 30
 // #define SYS_ioprio_get 31
 // #define SYS_flock 32
-#define SYS_mknodat 33
-#define SYS_mkdirat  34
-#define SYS_unlinkat 35
+#define SYS_mknodat   33
+#define SYS_mkdirat   34
+#define SYS_unlinkat  35
 #define SYS_symlinkat 36
-#define SYS_linkat 37
+#define SYS_linkat    37
 // #define SYS_umount2 39
 // #define SYS_mount 40
 // #define SYS_pivot_root 41
@@ -436,8 +436,8 @@
 // #define SYS_rt_sigtimedwait 137
 // #define SYS_rt_sigqueueinfo 138
 // #define SYS_rt_sigreturn 139
-// #define SYS_setpriority 140
-// #define SYS_getpriority 141
+#define SYS_setpriority 140
+#define SYS_getpriority 141
 // #define SYS_reboot 142
 #define SYS_setregid  143
 #define SYS_setgid    144

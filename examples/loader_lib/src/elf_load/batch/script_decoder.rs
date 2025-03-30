@@ -63,6 +63,7 @@ impl ParameterSetup {
     /// # Safety
     /// - 返回一个指向 `argc` 的指针，并确保 `argc` 和 `argv` 在内存中是连续分配的。
     pub unsafe fn setup_args_contiguous(argv: &Vec<CString>) -> *mut u64 {
+        info!("Argv {:?}", argv);
         // 计算所需的内存大小
         let argc = argv.len();
         let total_size = (1 + argc + 1) * core::mem::size_of::<u64>(); // argc + argv指针 + NULL终止符
@@ -129,7 +130,7 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, *mut u64)>) {
 }
 
 /// 解码之后的脚本数据
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScriptDecoded {
     /// 用于指定脚本行的行数
     pub line_num: u32,

@@ -1,5 +1,11 @@
-busybox_WHOAMI
+busybox_WHOAMI --version
 busybox_PWD
+busybox_ENV
+busybox_TOUCH fff.txt
+busybox_XZ fff.txt
+busybox_XZ --help
 busybox_UNAME
 busybox_TOUCH --help
+busybox_NICE
+sqlite3_startup run
 busybox_CAT
