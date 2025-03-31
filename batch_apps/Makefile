@@ -4,6 +4,8 @@
 APP_DIR ?= APPS
 # 应用程序原码目录
 SRC_DIR ?= SRCS
+# 是否包含 Lib，默认包含 (1)
+INCLUDE_LIB ?= 1
 # 库目录
 MOCK_LIBC_SO ?= ../ulib/mocklibc_lib/lib/libmock.so
 # 执行脚本
@@ -21,6 +23,13 @@ HEADER = $(BUILD_DIR)/header.bin
 OUTPUT = $(BUILD_DIR)/apps.bin
 # PAYLOAD 目录
 PAYLOAD_DIR = ../payload
+
+# 处理 Lib 选项
+ifeq ($(INCLUDE_LIB), 1)
+	LIB_ARG = --lib_file $(MOCK_LIBC_SO)
+else
+	LIB_ARG =
+endif
 
 all: subdir toplash
 
@@ -40,18 +49,18 @@ toplash:
 
 	# 调用 `python` 脚本生成头部元信息
 	python3 generate_header.py \
-		--appsdir $(APP_DIR) \
-		--lib $(MOCK_LIBC_SO) \
-		--script $(ENCODED_SCRIPT) \
-		--outfile $(HEADER)
+		--apps_dir $(APP_DIR) \
+		$(LIB_ARG) \
+		--script_file $(ENCODED_SCRIPT) \
+		--out_file $(HEADER)
 
 	# 调用打包脚本，将头部、应用、Lib库和脚本按顺序写入到 `apps.bin`
 	python3 pack_apps.py \
 		--header_file $(HEADER) \
 		--apps_dir $(APP_DIR) \
-		--lib_file $(MOCK_LIBC_SO) \
+		$(LIB_ARG) \
 		--script_file $(ENCODED_SCRIPT) \
-		--outfile $(OUTPUT)
+		--out_file $(OUTPUT)
 
 	# 通过 `dd` 填充空字节，确保最终文件大小为 `32MB`
 	dd if=/dev/zero bs=1 count=0 seek=32M of=$(OUTPUT)

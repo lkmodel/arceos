@@ -3,9 +3,8 @@ mod noimpl;
 mod syscall;
 pub mod thread;
 
-use alloc::string::ToString;
 use axhal::time::monotonic_time;
-use axlog::{debug, info, warn};
+use axlog::{debug, info};
 use axstd::{println, process::exit};
 
 use crate::runtime_func::{
@@ -19,11 +18,8 @@ use crate::runtime_func::{
     rt_integer::{abi_rt_bswapdi2, abi_rt_bswapsi2, abi_rt_clzdi2, abi_rt_clzsi2, abi_rt_clzti2},
 };
 use axtask::init_scheduler;
-use core::{
-    ffi::{CStr, VaList},
-    slice::from_raw_parts,
-};
-use cty::{c_char, c_int, size_t};
+use core::{ffi::CStr, slice::from_raw_parts};
+use cty::{c_char, size_t};
 use mem::*;
 use noimpl::abi_noimpl;
 use syscall::*;
@@ -470,65 +466,6 @@ fn abi_timespec(ts: *mut TimeSpec) {
         ts.tv_sec = now.as_secs() as usize;
         debug!("{:?}", ts);
     }
-}
-
-/// `SYS_VFPRINTF: 5`
-#[unsafe(no_mangle)]
-unsafe extern "C" fn vfprintf(_str: *const c_char, _args: VaList) -> c_int {
-    unimplemented!();
-}
-
-/// `SYS_VSNPRINTF: 6`
-#[unsafe(no_mangle)]
-unsafe extern "C" fn vsnprintf(
-    _out: *mut c_char,
-    _maxlen: size_t,
-    _str: *const c_char,
-    _args: VaList,
-) -> c_int {
-    unimplemented!();
-    //    // 检查str是否为null
-    //    if str.is_null() {
-    //        return -1; // 返回一个错误代码
-    //    }
-    //    // 创建格式化字符串
-    //    let format = unsafe { display(str, args) };
-    //    let output_string = format.to_string();
-    //    let bytes_written = output_string.len();
-    //
-    //    // 限制写入的字节数
-    //    let len_to_copy = bytes_written.min(maxlen - 1); // 保留一个字节用于Null终止符
-    //    unsafe {
-    //        copy_nonoverlapping(output_string.as_ptr(), out as *mut u8, len_to_copy);
-    //    }
-    //
-    //    // 添加null终止符
-    //    unsafe {
-    //        *out.add(len_to_copy) = 0;
-    //    }
-    //
-    //    bytes_written as c_int
-}
-
-/// `SYS_VSCANF: 7`
-#[unsafe(no_mangle)]
-unsafe extern "C" fn vscanf(_str: *mut c_char, _args: VaList) -> c_int {
-    unimplemented!();
-    //    println!("DONT USE THIS YET");
-    //    return -1;
-    // ```
-    //     if str.is_null() {
-    //         return -1;
-    //     }
-    //
-    //     let mut output: String = String::new();
-    //     let bytes_read = stdin().read_line(&mut output).unwrap_or(0);
-    //
-    //     let output_string = output.to_string();
-    //
-    //     // 读取
-    //     copy_nonoverlapping(output_string.as_ptr(), str, output_string.len());
-    //     0
 }
 
 /// `SYS_OUT: 16`

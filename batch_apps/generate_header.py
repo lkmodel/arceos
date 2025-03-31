@@ -33,10 +33,16 @@ def generate_header(apps_dir, lib_path, script_path, output_file):
         apps_offsets.append((app_size, app_name, offset))
         offset += app_size
 
-    # 获取 Lib库大小和偏移
-    lib_size = os.path.getsize(lib_path)
-    lib_offset = offset
-    offset += lib_size
+    # 在没有提供的情况下，将会跳过。
+    if lib_path:
+        # 获取 Lib库大小和偏移
+        lib_size = os.path.getsize(lib_path)
+        lib_offset = offset
+        offset += lib_size
+    else:
+        # 大小和偏移设为 0
+        lib_size = 0
+        lib_offset = 0
 
     # 获取执行脚本大小和偏移
     script_size = os.path.getsize(script_path)
@@ -68,17 +74,19 @@ def generate_header(apps_dir, lib_path, script_path, output_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate header for OS batch loader.")
     parser.add_argument(
-        "--appsdir",
+        "--apps_dir",
         required=True,
         help="Directory containing application binary files.",
     )
-    parser.add_argument("--lib", required=True, help="Path to the Lib library binary.")
     parser.add_argument(
-        "--script", required=True, help="Path to the encoded script file."
+        "--lib_file", help="File of lib part. If not provided, will be skipped."
     )
     parser.add_argument(
-        "--outfile", required=True, help="Output file for the generated header."
+        "--script_file", required=True, help="Path to the encoded script file."
+    )
+    parser.add_argument(
+        "--out_file", required=True, help="Output file for the generated header."
     )
     args = parser.parse_args()
 
-    generate_header(args.appsdir, args.lib, args.script, args.outfile)
+    generate_header(args.apps_dir, args.lib_file, args.script_file, args.out_file)

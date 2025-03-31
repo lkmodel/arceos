@@ -10,212 +10,49 @@ use elf::{
     endian::LittleEndian,
 };
 
-// pub fn load_elf() -> u64 {
-//     debug!("Load payload ...");
-//     // Load X out file
-//     let app_elf_size = unsafe { *(PLASH_START as *const usize) };
-//     debug!("app_elf_size 0x{:x}", app_elf_size);
-//     if app_elf_size >= MAX_APP_SIZE {
-//         panic!("app elf size > MAP_APP_SIZE");
-//     }
-//     let app_elf_slice = unsafe { from_raw_parts((PLASH_START + 0x8) as *const u8, app_elf_size) };
-//     let app_code = unsafe { from_raw_parts_mut((APP_START) as *mut u8, MAX_APP_SIZE) };
-//
-//     let app_elf: ElfBytes<'_, LittleEndian> =
-//         ElfBytes::<LittleEndian>::minimal_parse(app_elf_slice).expect("Failed to parse ELF");
-//
-//     let is_need_interp = {
-//         if let Some(segments) = app_elf.segments() {
-//             let mut is_pie = false;
-//             for segment in segments {
-//                 debug!("Segment type: {}", segment.p_type);
-//                 if segment.p_type == elf::abi::PT_INTERP {
-//                     is_pie = true;
-//                 }
-//             }
-//             is_pie
-//         } else {
-//             false
-//         }
-//     };
-//     debug!(
-//         "Dynamic interpreter (.interp section) exists: {}",
-//         is_need_interp
-//     );
-//
-//     let entry: u64 = {
-//         if is_need_interp == false {
-//             // Static and position independent executable
-//             debug!("Static and position independent app");
-//             let _ = load_exec(&app_elf, app_elf_slice, app_code);
-//             app_elf.ehdr.e_entry
-//         } else {
-//             debug!("Dynamic link app");
-//             let lib_elf_size = unsafe { *((PLASH_START + app_elf_size + 0x8) as *const usize) };
-//             if lib_elf_size > MAX_LIB_SIZE {
-//                 panic!("lib elf size > MAP LIB SIZE");
-//             }
-//             let lib_elf_slice = unsafe {
-//                 from_raw_parts(
-//                     (PLASH_START + app_elf_size + 0x10) as *const u8,
-//                     lib_elf_size,
-//                 )
-//             };
-//             let lib_code = unsafe { from_raw_parts_mut((LIB_START) as *mut u8, MAX_LIB_SIZE) };
-//
-//             let lib_elf: ElfBytes<'_, LittleEndian> =
-//                 ElfBytes::<LittleEndian>::minimal_parse(lib_elf_slice)
-//                     .expect("Failed to parse ELF at LIB file");
-//
-//             debug!(
-//                 "ELF Headers App: 0x{:x}, Lib: 0x{:x}",
-//                 app_elf.ehdr.e_ehsize, lib_elf.ehdr.e_ehsize
-//             );
-//
-//             debug!("Load lib to mem space");
-//             load_dyn(&lib_elf, lib_elf_slice, lib_code, 0);
-//             debug!("Load app to mem space");
-//             load_dyn(&app_elf, app_elf_slice, app_code, 0);
-//
-//             modify_plt_for_app(&app_elf, &lib_elf);
-//             modify_plt_for_lib(&app_elf, &lib_elf);
-//
-//             println!("Lib elf size: 0x{:x}", lib_elf_size);
-//             // FIX: 检查一下
-//             // NOTE:
-//             // 正常情况下，应该是由APP内的start函数开始执行，但是因为我们是unikernel,直接执行也OK？
-//             LIB_START as u64 + lib_elf.ehdr.e_entry
-//             // APP_START as u64 + app_elf.ehdr.e_entry
-//         }
-//     };
-//
-//     println!("App elf size: 0x{:x}", app_elf_size);
-//     return entry;
-// }
-//
-// fn load_exec(
-//     app_elf: &ElfBytes<LittleEndian>,
-//     app_elf_slice: &[u8],
-//     app_code: &mut [u8],
-// ) -> Result<(), LoadError> {
-//     // 检查 ELF 头
-//     verify_elf_header(app_elf).expect("Failed to verify ELF header");
-//
-//     if let Some(phs) = app_elf.segments() {
-//         for ph in phs {
-//             if ph.p_type != PT_LOAD {
-//                 debug!("skipping segment type: {}", ph.p_type);
-//                 continue;
-//             }
-//
-//             let offset = ph.p_offset as usize;
-//             let filesz = ph.p_filesz as usize;
-//             let memsz = ph.p_memsz as usize;
-//
-//             // 计算在内存中的实际地址
-//             let vaddr = ph.p_vaddr as usize;
-//             let dest_addr = vaddr - APP_START;
-//
-//             debug!(
-//                 "Loading segment: offset=0x{:x}, filesz=0x{:x}, memsz=0x{:x}, vaddr=0x{:x}",
-//                 offset, filesz, memsz, vaddr
-//             );
-//
-//             debug!(
-//                 "dest_addr: {:x} = vaddr({:x}) - APP_START({:x})",
-//                 dest_addr, vaddr, APP_START
-//             );
-//
-//             // 复制段内容
-//             if filesz > 0 {
-//                 let src: &[u8] = &app_elf_slice[offset..offset + filesz];
-//                 let dest = &mut app_code[dest_addr..dest_addr + filesz];
-//                 dest.copy_from_slice(src);
-//             }
-//
-//             // 处理`.bss`等需要零初始化的部分
-//             if memsz > filesz {
-//                 let dest = &mut app_code[dest_addr + filesz..dest_addr + memsz];
-//                 dest.fill(0);
-//             }
-//         }
-//     }
-//     /* ```
-//         let text_shdr = app_elf
-//             .section_header_by_name(".text")
-//             .expect("section table should be parseable")
-//             .expect("elf should have a .text section");
-//         let text_slice = app_elf_slice
-//             .get(text_shdr.sh_offset as usize..)
-//             .expect("text section should be in bounds");
-//         let copy_size = min(app_code.len(), text_slice.len());
-//         app_code[..copy_size].copy_from_slice(&text_slice[..copy_size]);
-//     ```*/
-//     Ok(())
-// }
+pub fn load_exec(
+    app_elf: &ElfBytes<LittleEndian>,
+    app_elf_slice: &[u8],
+    app_code: &mut [u8],
+    app_start: usize,
+) {
+    if let Some(phs) = app_elf.segments() {
+        for ph in phs {
+            if ph.p_type != PT_LOAD {
+                continue;
+            }
 
-// 往后的内容是新的
+            let offset = ph.p_offset as usize;
+            let filesz = ph.p_filesz as usize;
+            let memsz = ph.p_memsz as usize;
 
-// fn load_exec(
-//     app_elf: &ElfBytes<LittleEndian>,
-//     app_elf_slice: &[u8],
-//     app_code: &mut [u8],
-// ) -> Result<(), LoadError> {
-//     // 检查 ELF 头
-//     verify_elf_header(app_elf).expect("Failed to verify ELF header");
-//
-//     if let Some(phs) = app_elf.segments() {
-//         for ph in phs {
-//             if ph.p_type != PT_LOAD {
-//                 debug!("skipping segment type: {}", ph.p_type);
-//                 continue;
-//             }
-//
-//             let offset = ph.p_offset as usize;
-//             let filesz = ph.p_filesz as usize;
-//             let memsz = ph.p_memsz as usize;
-//
-//             // 计算在内存中的实际地址
-//             let vaddr = ph.p_vaddr as usize;
-//             let dest_addr = vaddr - APP_START;
-//
-//             debug!(
-//                 "Loading segment: offset=0x{:x}, filesz=0x{:x}, memsz=0x{:x}, vaddr=0x{:x}",
-//                 offset, filesz, memsz, vaddr
-//             );
-//
-//             debug!(
-//                 "dest_addr: {:x} = vaddr({:x}) - APP_START({:x})",
-//                 dest_addr, vaddr, APP_START
-//             );
-//
-//             // 复制段内容
-//             if filesz > 0 {
-//                 let src: &[u8] = &app_elf_slice[offset..offset + filesz];
-//                 let dest = &mut app_code[dest_addr..dest_addr + filesz];
-//                 dest.copy_from_slice(src);
-//             }
-//
-//             // 处理`.bss`等需要零初始化的部分
-//             if memsz > filesz {
-//                 let dest = &mut app_code[dest_addr + filesz..dest_addr + memsz];
-//                 dest.fill(0);
-//             }
-//         }
-//     }
-//     /* ```
-//         let text_shdr = app_elf
-//             .section_header_by_name(".text")
-//             .expect("section table should be parseable")
-//             .expect("elf should have a .text section");
-//         let text_slice = app_elf_slice
-//             .get(text_shdr.sh_offset as usize..)
-//             .expect("text section should be in bounds");
-//         let copy_size = min(app_code.len(), text_slice.len());
-//         app_code[..copy_size].copy_from_slice(&text_slice[..copy_size]);
-//     ```*/
-//     Ok(())
-// }
+            // 计算在内存中的实际地址
+            let vaddr = ph.p_vaddr as usize;
+            vaddr
+                .lt(&app_start)
+                .then(|| panic!("segments vaddr less then app_start"));
+            let dest_addr = vaddr - app_start;
+
+            debug!(
+                "Loading segment: offset=0x{:x}, filesz=0x{:x}, memsz=0x{:x}, vaddr=0x{:x}",
+                offset, filesz, memsz, vaddr
+            );
+
+            // 复制段内容
+            if filesz > 0 {
+                let src: &[u8] = &app_elf_slice[offset..offset + filesz];
+                let dest = &mut app_code[dest_addr..dest_addr + filesz];
+                dest.copy_from_slice(src);
+            }
+
+            // 处理`.bss`等需要零初始化的部分
+            if memsz > filesz {
+                let dest = &mut app_code[dest_addr + filesz..dest_addr + memsz];
+                dest.fill(0);
+            }
+        }
+    }
+}
 
 pub fn load_dyn(
     elf: &ElfBytes<LittleEndian>,

@@ -6,9 +6,13 @@ use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 use axlog::{debug, info};
 
-use elf::{ElfBytes, endian::LittleEndian};
+use elf::{
+    ElfBytes,
+    abi::{ET_DYN, ET_EXEC},
+    endian::LittleEndian,
+};
 use head_decoder::head_decoded;
-use load::{load_app_dyn, load_lib, modify_lib_main};
+use load::{load_app_dyn, load_exec, load_lib, modify_lib_main};
 use script_decoder::script_decoded;
 
 use crate::{
@@ -18,6 +22,11 @@ use crate::{
     },
     elf_load::verify::verify_elf_header,
 };
+
+struct LibInfo<'a> {
+    pub elf: ElfBytes<'a, LittleEndian>,
+    pub entry: usize,
+}
 
 pub fn run_loop() {
     info!("Load payload ...");
@@ -29,26 +38,34 @@ pub fn run_loop() {
         head_decoded.script.0 as usize,
     );
 
-    let lib_elf_slice = unsafe {
-        from_raw_parts(
-            (PLASH_START + (head_decoded.lib.1 as usize)) as *const u8,
-            head_decoded.lib.0 as usize,
-        )
+    let lib = if head_decoded.lib.0 != 0 {
+        let lib_elf_slice = unsafe {
+            from_raw_parts(
+                (PLASH_START + (head_decoded.lib.1 as usize)) as *const u8,
+                head_decoded.lib.0 as usize,
+            )
+        };
+        let lib_code = unsafe { from_raw_parts_mut((LIB_START) as *mut u8, MAX_LIB_SIZE) };
+        let lib_elf: ElfBytes<'_, LittleEndian> =
+            ElfBytes::<LittleEndian>::minimal_parse(lib_elf_slice)
+                .expect("Failed to parse ELF at LIB file");
+        verify_elf_header(&lib_elf)
+            .is_err()
+            .then(|| panic!("Failed to verify_elf_header for Lib ELF"));
+
+        let lib_entry = load_lib(lib_elf_slice, lib_code, &lib_elf, LIB_START);
+
+        info!(
+            "Load lib done, entry 0x{:x} size 0x{:x}",
+            lib_entry, head_decoded.lib.0
+        );
+        Some(LibInfo {
+            elf: lib_elf,
+            entry: lib_entry,
+        })
+    } else {
+        None
     };
-    let lib_code = unsafe { from_raw_parts_mut((LIB_START) as *mut u8, MAX_LIB_SIZE) };
-    let lib_elf: ElfBytes<'_, LittleEndian> =
-        ElfBytes::<LittleEndian>::minimal_parse(lib_elf_slice)
-            .expect("Failed to parse ELF at LIB file");
-    verify_elf_header(&lib_elf)
-        .is_err()
-        .then(|| panic!("Failed to verify_elf_header for Lib ELF"));
-
-    let lib_entry = load_lib(lib_elf_slice, lib_code, &lib_elf, LIB_START);
-
-    info!(
-        "Load lib done, entry 0x{:x} size 0x{:x}",
-        lib_entry, head_decoded.lib.0
-    );
 
     // 基于 `script_decoded` 进行加载与执行
     for i in 0..script_decoded.line_num as usize {
@@ -56,14 +73,10 @@ pub fn run_loop() {
         let app_name = script_decoded.lines_meta[i].0.clone();
         let arg_entry = script_decoded.lines_meta[i].1.argc_ptr();
 
-        info!("ScriptDecoded {:?}", script_decoded);
         let app = head_decoded
             .apps
             .iter()
-            .find(|app| {
-                info!("Finding app {:?} == {:?}?", app.1, app_name);
-                app.1 == app_name
-            })
+            .find(|app| app.1 == app_name)
             .expect("Failed to find app");
 
         info!("Load APP");
@@ -81,26 +94,43 @@ pub fn run_loop() {
             .is_err()
             .then(|| panic!("Failed to verify_elf_header for App ELF"));
 
-        let main_entry = load_app_dyn(
-            app_elf_slice,
-            &app_elf,
-            app_code,
-            app.0 as usize,
-            APP_START,
-            &lib_elf,
-            LIB_START,
-            "main",
-        );
-        modify_lib_main(&lib_elf, LIB_START, main_entry);
+        // 判断是否需要动态链接器
+        let entry = match app_elf.ehdr.e_type {
+            ET_EXEC => {
+                // 在需要动态链接器的时候（静态加载），就可以直接使用App的Entry
+                load_exec(&app_elf, app_elf_slice, app_code, APP_START);
+
+                app_elf.ehdr.e_entry as usize
+            }
+            ET_DYN => {
+                let lib = lib
+                    .as_ref()
+                    .expect("ERROR: A dynamic app loaded but cant find lib.");
+                // 动态连接加载
+                let main_entry = load_app_dyn(
+                    app_elf_slice,
+                    &app_elf,
+                    app_code,
+                    app.0 as usize,
+                    APP_START,
+                    &lib.elf, // ✅ 这里用 &lib.elf 避免 Move
+                    LIB_START,
+                    "main",
+                );
+                modify_lib_main(&lib.elf, LIB_START, main_entry);
+
+                lib.entry // ✅ 这里还是可用
+            }
+            _ => panic!("Unsupported ehdr type {:?}", app_elf.ehdr.e_type),
+        };
 
         info!(
             "Entry @0x{:x} arg @0x{:x}",
-            lib_entry as usize, arg_entry as usize
+            entry as usize, arg_entry as usize
         );
 
         let global_store = GLOBAL_SOTRE;
 
-        info!("CHECK ScriptDecoded {:?}", script_decoded);
         unsafe {
             core::arch::asm!("
             // 除了通用寄存器，还需要保存其他内容
@@ -194,12 +224,11 @@ pub fn run_loop() {
                 abi_table = sym ABI_TABLE,
                 global_store = in(reg) global_store,
                 param = in(reg) arg_entry,
-                entry = in(reg) lib_entry,
+                entry = in(reg) entry,
                 options(nostack, nomem)
             )
         }
 
-        info!("CHECK ScriptDecoded {:?}", script_decoded);
         info!("Done app");
     }
 }
@@ -214,8 +243,6 @@ pub extern "C" fn reentry_label() -> ! {
             "
             mv      sp, {global_store0}
             mv      t2, {global_store8}
-            fence.i
-            fence   rw,rw
             jalr    t2
             ",
             global_store0 = in(reg) store0,

@@ -45,8 +45,6 @@ impl<'a> ScriptDecoder<'a> {
         if self.decoder.read_u8()? != HEADER_MARKER {
             return Err("Invalid line header marker!".to_string());
         }
-        // FIX: 在这里我们假设是每一行都有，但是如果没有呢？
-        // 如果只有一个参数呢？
         let argc = self.decoder.read_u32()?;
         // `argv` 在栈上创建，但是 `Vec` 在堆上
         // 此时 argv 的所有权属于 parse_command_line 这个函数。
@@ -89,14 +87,7 @@ impl ArgvStorage {
 
         // 设置 argv
         let argv_base = unsafe { memory.add(1) as *mut *mut u8 };
-        for (i, arg) in argv
-            .iter()
-            .map(|c| {
-                info!("Pushing CString @0x{:?}=={:?}", c.as_ptr(), c);
-                c.as_ptr() as *mut u8
-            })
-            .enumerate()
-        {
+        for (i, arg) in argv.iter().map(|c| c.as_ptr() as *mut u8).enumerate() {
             unsafe { write_volatile(argv_base.add(i), arg) };
         }
         // 设置 NULL 终止符
@@ -143,12 +134,6 @@ pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, ArgvStorage)>) 
                 let storage = unsafe { ArgvStorage::new(argv) };
                 // storage 被存入 result，它的生命周期会跟随 result
                 result.push((storage.args[0].clone(), storage));
-                //                // 调用连续内存分配函数
-                //                unsafe {
-                //                    // NOTE: 在这里仅仅借用所有权，而不是进行所有权转移
-                //                    let argc_ptr = ParameterSetup::setup_args_contiguous(argv);
-                //                    result.push((argv[0].clone(), argc_ptr));
-                //                }
             }
         }
 
@@ -185,7 +170,7 @@ pub fn script_decoded(script_start: usize, script_size: usize) -> ScriptDecoded 
         "script_start: 0x{:x}, script_size: 0x{:x}",
         script_start, script_size
     );
-    // FIX: 这里应该加上PLASH的偏移，否则就是在低地址区取值了
+    // NOTE: 这里应该加上PLASH的偏移，否则就是在低地址区取值了
     let script_slice = unsafe { from_raw_parts(script_start as *const u8, script_size) };
     let (line_num, lines_meta) = decode_script(script_slice);
 

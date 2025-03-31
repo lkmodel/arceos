@@ -18,10 +18,13 @@ def pack_apps(header, apps_dir, lib_path, script_path, output_file):
                 with open(app_path, "rb") as app_file:
                     output.write(app_file.read())
 
-        # 3. 写入 Lib 库
-        print(f"Writing lib from {lib_path}")
-        with open(lib_path, "rb") as lib_file:
-            output.write(lib_file.read())
+        # 3. 写入 Lib 库(如果提供了)
+        if lib_path:
+            print(f"Writing lib from {lib_path}")
+            with open(lib_path, "rb") as lib_file:
+                output.write(lib_file.read())
+        else:
+            print("Skipping lib file, not provided.")
 
         # 4. 写入编码后的执行脚本
         print(f"Writing encoded script from {script_path}")
@@ -41,14 +44,16 @@ if __name__ == "__main__":
         required=True,
         help="Directory containing application binary files.",
     )
-    parser.add_argument("--lib_file", required=True, help="File of lib part.")
+    parser.add_argument(
+        "--lib_file", help="File of lib part. If not provided, will be skipped."
+    )
     parser.add_argument("--script_file", required=True, help="File of encoded script.")
     parser.add_argument(
-        "--outfile", required=True, help="Output File for the packed file."
+        "--out_file", required=True, help="Output File for the packed file."
     )
 
     args = parser.parse_args()
 
     pack_apps(
-        args.header_file, args.apps_dir, args.lib_file, args.script_file, args.outfile
+        args.header_file, args.apps_dir, args.lib_file, args.script_file, args.out_file
     )
