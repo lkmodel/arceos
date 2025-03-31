@@ -170,14 +170,11 @@ pub fn run_loop() {
 
             mv      t1, {global_store}
             sd      sp, 0(t1)
-            fence   rw,rw
 
             // 使用临时寄存器保存栈指针和返回地址，避免竞争
             auipc   t2, 0                  // 当前指令的地址（基址）
-            addi    t2, t2, 22
-            fence   rw,rw
+            addi    t2, t2, 14
             sd      t2, 8(t1)
-            fence   rw,rw
 
             // 重进入跳板段
             jal     t2, 8                  // 写入t2没有什么特别的考量
