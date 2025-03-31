@@ -16,7 +16,7 @@ use load::{load_app_dyn, load_exec, load_lib, modify_lib_main};
 use script_decoder::script_decoded;
 
 use crate::{
-    abi::ABI_TABLE,
+    abi::{ABI_TABLE, mem::cleanup_memory},
     config::{
         APP_START, GLOBAL_SOTRE, LIB_START, MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_SIZE, PLASH_START,
     },
@@ -229,12 +229,14 @@ pub fn run_loop() {
             )
         }
 
+        cleanup_memory();
         info!("Done app");
     }
 }
 
 // 汇编重新进入的循环位置
 pub extern "C" fn reentry_label() -> ! {
+    cleanup_memory();
     let store0 = unsafe { *(GLOBAL_SOTRE as *const usize) }.clone();
     let store8 = unsafe { *((GLOBAL_SOTRE + 8) as *const usize) }.clone();
     info!("GLOBAL store0 0x{:x}, store8 0x{:x}", store0, store8);

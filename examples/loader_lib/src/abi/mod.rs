@@ -1,4 +1,4 @@
-mod mem;
+pub mod mem;
 mod noimpl;
 mod syscall;
 pub mod thread;
