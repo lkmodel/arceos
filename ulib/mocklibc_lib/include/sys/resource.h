@@ -47,7 +47,7 @@ struct rusage {
 };
 
 int getrlimit (int, struct rlimit *);
-// int setrlimit (int, const struct rlimit *);
+int setrlimit (int, const struct rlimit *);
 // int getrusage (int, struct rusage *);
 
 int getpriority (int, id_t);

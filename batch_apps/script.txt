@@ -1,4 +1,5 @@
 busybox_WHOAMI --version
+busybox_ASH
 busybox_ECHO TREE
 busybox_PWD
 busybox_ENV

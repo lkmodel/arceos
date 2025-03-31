@@ -63,5 +63,9 @@ pub fn fs_syscall(syscall_id: fs_syscall_id::FsSyscallId, args: [usize; 6]) -> S
         GETPRIORITY => Ok(0),
         PSELECT6 => syscall_pselect6(args),
         EVENTFD => syscall_eventfd(args),
+
+        _ => {
+            panic!("Invalid Syscall Id: {:?}!", syscall_id);
+        }
     }
 }

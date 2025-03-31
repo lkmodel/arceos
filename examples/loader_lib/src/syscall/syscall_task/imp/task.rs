@@ -224,3 +224,18 @@ pub fn syscall_exec(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_getuid() -> SyscallResult {
     Ok(0)
 }
+
+/// To get the parent process id
+pub fn syscall_getppid() -> SyscallResult {
+    #[cfg(feature = "batch")]
+    {
+        unimplemented!()
+    }
+    unimplemented!()
+    // Ok(process_api().get_parent() as isize)
+}
+
+/// not support
+pub fn syscall_getpgid() -> SyscallResult {
+    Ok(0)
+}

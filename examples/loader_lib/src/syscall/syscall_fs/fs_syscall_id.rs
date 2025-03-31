@@ -57,5 +57,6 @@ pub enum FsSyscallId {
     GETPRIORITY = 141,
     RENAMEAT2 = 276,
     COPYFILERANGE = 285,
+    FACCESSAT2 = 439,
 }
 }

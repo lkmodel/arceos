@@ -355,7 +355,7 @@
 #define SYS_openat   56
 #define SYS_close    57
 // #define SYS_vhangup 58
-// #define SYS_pipe2 59
+#define SYS_pipe2 59
 // #define SYS_quotactl 60
 #define SYS_getdents64 61
 #define SYS_lseek      62
@@ -451,7 +451,7 @@
 #define SYS_setfsgid 152
 #define SYS_times    153
 #define SYS_setpgid  154
-// #define SYS_getpgid 155
+#define SYS_getpgid 155
 // #define SYS_getsid 156
 #define SYS_setsid 157
 // #define SYS_getgroups 158
@@ -460,7 +460,7 @@
 // #define SYS_sethostname 161
 // #define SYS_setdomainname 162
 // #define SYS_getrlimit 163
-// #define SYS_setrlimit 164
+#define SYS_setrlimit 164
 // #define SYS_getrusage 165
 #define SYS_umask 166
 // #define SYS_prctl 167
@@ -469,7 +469,7 @@
 // #define SYS_settimeofday 170
 // #define SYS_adjtimex 171
 #define SYS_getpid 172
-// #define SYS_getppid 173
+#define SYS_getppid 173
 #define SYS_getuid  174
 #define SYS_geteuid 175
 #define SYS_getgid  176

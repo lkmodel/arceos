@@ -6,17 +6,24 @@ pub mod thread;
 use axhal::time::monotonic_time;
 use axlog::{debug, info};
 use axstd::{println, process::exit};
-
-use crate::runtime_func::{
-    rt_float::{
-        abi_rt_adddf3, abi_rt_addsf3, abi_rt_addtf3, abi_rt_addxf3, abi_rt_divtf3, abi_rt_eqtf2,
-        abi_rt_extenddftf2, abi_rt_extendsftf2, abi_rt_fixtfdi, abi_rt_fixtfsi, abi_rt_fixunstfsi,
-        abi_rt_floatditf, abi_rt_floatsitf, abi_rt_floatunsitf, abi_rt_getf2, abi_rt_gttf2,
-        abi_rt_letf2, abi_rt_lttf2, abi_rt_multf3, abi_rt_netf2, abi_rt_subdf3, abi_rt_subsf3,
-        abi_rt_subtf3, abi_rt_subxf3, abi_rt_trunctfdf2, abi_rt_trunctfsf2,
+use compiler_builtins::{
+    float::{
+        add::{__adddf3, __addsf3, __addtf3},
+        cmp::{__eqtf2, __getf2, __gttf2, __letf2, __lttf2, __netf2},
+        conv::{__fixtfdi, __fixtfsi, __fixunstfsi, __floatditf, __floatsitf, __floatunsitf},
+        div::__divtf3,
+        extend::{__extenddftf2, __extendsftf2},
+        mul::__multf3,
+        sub::{__subdf3, __subsf3, __subtf3},
+        trunc::{__trunctfdf2, __trunctfsf2},
     },
-    rt_integer::{abi_rt_bswapdi2, abi_rt_bswapsi2, abi_rt_clzdi2, abi_rt_clzsi2, abi_rt_clzti2},
+    int::{
+        bswap::{__bswapdi2, __bswapsi2},
+        leading_zeros::{__clzdi2, __clzsi2, __clzti2},
+    },
 };
+
+use crate::runtime_func::rt_float::{abi_rt_addxf3, abi_rt_subxf3};
 use axtask::init_scheduler;
 use core::{ffi::CStr, slice::from_raw_parts};
 use cty::{c_char, size_t};
@@ -360,65 +367,41 @@ pub fn init_abis() {
     register_abi("syscall6", ABI_SYSCALL6, abi_syscall6 as usize);
 
     // `rt_float`的实现
-    register_abi("rt_addsf3", ABI_RT_ADDSF3, abi_rt_addsf3 as usize);
-    register_abi("rt_adddf3", ABI_RT_ADDDF3, abi_rt_adddf3 as usize);
-    register_abi("rt_addtf3", ABI_RT_ADDTF3, abi_rt_addtf3 as usize);
+    register_abi("rt_addsf3", ABI_RT_ADDSF3, __addsf3 as usize);
+    register_abi("rt_adddf3", ABI_RT_ADDDF3, __adddf3 as usize);
+    register_abi("rt_addtf3", ABI_RT_ADDTF3, __addtf3 as usize);
     register_abi("rt_addxf3", ABI_RT_ADDXF3, abi_rt_addxf3 as usize);
 
-    register_abi("rt_subsf3", ABI_RT_SUBSF3, abi_rt_subsf3 as usize);
-    register_abi("rt_subdf3", ABI_RT_SUBDF3, abi_rt_subdf3 as usize);
-    register_abi("rt_subtf3", ABI_RT_SUBTF3, abi_rt_subtf3 as usize);
+    register_abi("rt_subsf3", ABI_RT_SUBSF3, __subsf3 as usize);
+    register_abi("rt_subdf3", ABI_RT_SUBDF3, __subdf3 as usize);
+    register_abi("rt_subtf3", ABI_RT_SUBTF3, __subtf3 as usize);
     register_abi("rt_subxf3", ABI_RT_SUBXF3, abi_rt_subxf3 as usize);
 
-    register_abi("rt_multf3", ABI_RT_MULTF3, abi_rt_multf3 as usize);
-    register_abi("rt_divtf3", ABI_RT_DIVTF3, abi_rt_divtf3 as usize);
-    register_abi(
-        "rt_extendsftf2",
-        ABI_RT_EXTENDSFTF2,
-        abi_rt_extendsftf2 as usize,
-    );
-    register_abi(
-        "rt_extenddftf2",
-        ABI_RT_EXTENDDFTF2,
-        abi_rt_extenddftf2 as usize,
-    );
-    register_abi(
-        "rt_trunctfdf2",
-        ABI_RT_TRUNCTFDF2,
-        abi_rt_trunctfdf2 as usize,
-    );
-    register_abi(
-        "rt_trunctfsf2",
-        ABI_RT_TRUNCTFSF2,
-        abi_rt_trunctfsf2 as usize,
-    );
-    register_abi("rt_fixtfsi", ABI_RT_FIXTFSI, abi_rt_fixtfsi as usize);
-    register_abi("rt_fixtfdi", ABI_RT_FIXTFDI, abi_rt_fixtfdi as usize);
-    register_abi(
-        "rt_fixunstfsi",
-        ABI_RT_FIXUNSTFSI,
-        abi_rt_fixunstfsi as usize,
-    );
-    register_abi("rt_floatsitf", ABI_RT_FLOATSITF, abi_rt_floatsitf as usize);
-    register_abi("rt_floatditf", ABI_RT_FLOATDITF, abi_rt_floatditf as usize);
-    register_abi(
-        "rt_floatunsitf",
-        ABI_RT_FLOATUNSITF,
-        abi_rt_floatunsitf as usize,
-    );
-    register_abi("rt_eqtf2", ABI_RT_EQTF2, abi_rt_eqtf2 as usize);
-    register_abi("rt_netf2", ABI_RT_NETF2, abi_rt_netf2 as usize);
-    register_abi("rt_getf2", ABI_RT_GETF2, abi_rt_getf2 as usize);
-    register_abi("rt_lttf2", ABI_RT_LTTF2, abi_rt_lttf2 as usize);
-    register_abi("rt_letf2", ABI_RT_LETF2, abi_rt_letf2 as usize);
-    register_abi("rt_gttf2", ABI_RT_GTTF2, abi_rt_gttf2 as usize);
+    register_abi("rt_multf3", ABI_RT_MULTF3, __multf3 as usize);
+    register_abi("rt_divtf3", ABI_RT_DIVTF3, __divtf3 as usize);
+    register_abi("rt_extendsftf2", ABI_RT_EXTENDSFTF2, __extendsftf2 as usize);
+    register_abi("rt_extenddftf2", ABI_RT_EXTENDDFTF2, __extenddftf2 as usize);
+    register_abi("rt_trunctfdf2", ABI_RT_TRUNCTFDF2, __trunctfdf2 as usize);
+    register_abi("rt_trunctfsf2", ABI_RT_TRUNCTFSF2, __trunctfsf2 as usize);
+    register_abi("rt_fixtfsi", ABI_RT_FIXTFSI, __fixtfsi as usize);
+    register_abi("rt_fixtfdi", ABI_RT_FIXTFDI, __fixtfdi as usize);
+    register_abi("rt_fixunstfsi", ABI_RT_FIXUNSTFSI, __fixunstfsi as usize);
+    register_abi("rt_floatsitf", ABI_RT_FLOATSITF, __floatsitf as usize);
+    register_abi("rt_floatditf", ABI_RT_FLOATDITF, __floatditf as usize);
+    register_abi("rt_floatunsitf", ABI_RT_FLOATUNSITF, __floatunsitf as usize);
+    register_abi("rt_eqtf2", ABI_RT_EQTF2, __eqtf2 as usize);
+    register_abi("rt_netf2", ABI_RT_NETF2, __netf2 as usize);
+    register_abi("rt_getf2", ABI_RT_GETF2, __getf2 as usize);
+    register_abi("rt_lttf2", ABI_RT_LTTF2, __lttf2 as usize);
+    register_abi("rt_letf2", ABI_RT_LETF2, __letf2 as usize);
+    register_abi("rt_gttf2", ABI_RT_GTTF2, __gttf2 as usize);
 
-    register_abi("rt_clzsi2", ABI_RT_CLZSI2, abi_rt_clzsi2 as usize);
-    register_abi("rt_clzdi2", ABI_RT_CLZDI2, abi_rt_clzdi2 as usize);
-    register_abi("rt_clzti2", ABI_RT_CLZTI2, abi_rt_clzti2 as usize);
+    register_abi("rt_clzsi2", ABI_RT_CLZSI2, __clzsi2 as usize);
+    register_abi("rt_clzdi2", ABI_RT_CLZDI2, __clzdi2 as usize);
+    register_abi("rt_clzti2", ABI_RT_CLZTI2, __clzti2 as usize);
 
-    register_abi("rt_bswapsi2", ABI_RT_BSWAPSI2, abi_rt_bswapsi2 as usize);
-    register_abi("rt_bswapdi2", ABI_RT_BSWAPDI2, abi_rt_bswapdi2 as usize);
+    register_abi("rt_bswapsi2", ABI_RT_BSWAPSI2, __bswapsi2 as usize);
+    register_abi("rt_bswapdi2", ABI_RT_BSWAPDI2, __bswapdi2 as usize);
 }
 
 fn register_abi(name: &str, num: usize, handle: usize) {

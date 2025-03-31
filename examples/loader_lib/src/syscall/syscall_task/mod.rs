@@ -21,10 +21,10 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         TIMES => syscall_time(args),
         UNAME => syscall_uname(args),
         GETTIMEOFDAY => syscall_get_time_of_day(args),
-        //        GETPGID => syscall_getpgid(),
+        GETPGID => syscall_getpgid(),
         //        SETPGID => syscall_setpgid(args),
         GETPID => syscall_getpid(),
-        //        GETPPID => syscall_getppid(),
+        GETPPID => syscall_getppid(),
         WAIT4 => syscall_wait4(args),
         //        GETRANDOM => syscall_getrandom(args),
         //        #[cfg(feature = "signal")]

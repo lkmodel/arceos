@@ -36,8 +36,8 @@ extern "C" {
 
 #include <bits/alltypes.h>
 
-// int pipe(int[2]);
-// int pipe2(int[2], int);
+int pipe(int[2]);
+int pipe2(int[2], int);
 int close(int);
 // int posix_close(int, int);
 int dup(int);
@@ -97,9 +97,9 @@ int execvp(const char *, char *const[]);
 _Noreturn void _exit(int);
 
 pid_t getpid(void);
-// pid_t getppid(void);
-// pid_t getpgrp(void);
-// pid_t getpgid(pid_t);
+pid_t getppid(void);
+pid_t getpgrp(void);
+pid_t getpgid(pid_t);
 int setpgid(pid_t, pid_t);
 pid_t setsid(void);
 // pid_t getsid(pid_t);
