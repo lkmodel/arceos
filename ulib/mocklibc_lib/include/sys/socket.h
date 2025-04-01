@@ -19,62 +19,62 @@ extern "C" {
 // FIXME: 添加
 // #include <bits/socket.h>
 
-// struct msghdr {
-//     void *msg_name;
-//     socklen_t msg_namelen;
-//     struct iovec *msg_iov;
-// #if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
-//     int __pad1;
-// #endif
-//     int msg_iovlen;
-// #if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
-//     int __pad1;
-// #endif
-//     void *msg_control;
-// #if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
-//     int __pad2;
-// #endif
-//     socklen_t msg_controllen;
-// #if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
-//     int __pad2;
-// #endif
-//     int msg_flags;
-// };
+struct msghdr {
+    void *msg_name;
+    socklen_t msg_namelen;
+    struct iovec *msg_iov;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
+    int __pad1;
+#endif
+    int msg_iovlen;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
+    int __pad1;
+#endif
+    void *msg_control;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
+    int __pad2;
+#endif
+    socklen_t msg_controllen;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
+    int __pad2;
+#endif
+    int msg_flags;
+};
 
-// struct cmsghdr {
-// #if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
-//     int __pad1;
-// #endif
-//     socklen_t cmsg_len;
-// #if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
-//     int __pad1;
-// #endif
-//     int cmsg_level;
-//     int cmsg_type;
-// };
+struct cmsghdr {
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __BIG_ENDIAN
+    int __pad1;
+#endif
+    socklen_t cmsg_len;
+#if __LONG_MAX > 0x7fffffff && __BYTE_ORDER == __LITTLE_ENDIAN
+    int __pad1;
+#endif
+    int cmsg_level;
+    int cmsg_type;
+};
 
-// #ifdef _GNU_SOURCE
-// struct ucred {
-//     pid_t pid;
-//     uid_t uid;
-//     gid_t gid;
-// };
-//
-// struct mmsghdr {
-//     struct msghdr msg_hdr;
-//     unsigned int msg_len;
-// };
-//
-// struct timespec;
-//
-// int sendmmsg(int, struct mmsghdr *, unsigned int, unsigned int);
+#ifdef _GNU_SOURCE
+struct ucred {
+    pid_t pid;
+    uid_t uid;
+    gid_t gid;
+};
+
+struct mmsghdr {
+    struct msghdr msg_hdr;
+    unsigned int msg_len;
+};
+
+struct timespec;
+
+int sendmmsg(int, struct mmsghdr *, unsigned int, unsigned int);
 // int recvmmsg(int, struct mmsghdr *, unsigned int, unsigned int, struct timespec *);
-// #endif
+#endif
 
-// struct linger {
-//     int l_onoff;
-//     int l_linger;
-// };
+struct linger {
+    int l_onoff;
+    int l_linger;
+};
 
 #define SHUT_RD   0
 #define SHUT_WR   1
@@ -371,24 +371,24 @@ extern "C" {
 #define SCM_RIGHTS      0x01
 #define SCM_CREDENTIALS 0x02
 
-// struct sockaddr {
-//     sa_family_t sa_family;
-//     char sa_data[14];
-// };
-//
-// struct sockaddr_storage {
-//     sa_family_t ss_family;
-//     char __ss_padding[128 - sizeof(long) - sizeof(sa_family_t)];
-//     unsigned long __ss_align;
-// };
+struct sockaddr {
+    sa_family_t sa_family;
+    char sa_data[14];
+};
 
-// int socket(int, int, int);
+struct sockaddr_storage {
+    sa_family_t ss_family;
+    char __ss_padding[128 - sizeof(long) - sizeof(sa_family_t)];
+    unsigned long __ss_align;
+};
+
+int socket(int, int, int);
 // int socketpair(int, int, int, int[2]);
 //
 // int shutdown(int, int);
 //
 // int bind(int, const struct sockaddr *, socklen_t);
-// int connect(int, const struct sockaddr *, socklen_t);
+int connect (int, const struct sockaddr *, socklen_t);
 // int listen(int, int);
 // int accept(int, struct sockaddr *__restrict, socklen_t *__restrict);
 // int accept4(int, struct sockaddr *__restrict, socklen_t *__restrict, int);
@@ -401,7 +401,7 @@ extern "C" {
 // ssize_t sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
 // ssize_t recvfrom(int, void *__restrict, size_t, int, struct sockaddr *__restrict,
 //                  socklen_t *__restrict);
-// ssize_t sendmsg(int, const struct msghdr *, int);
+ssize_t sendmsg(int, const struct msghdr *, int);
 // ssize_t recvmsg(int, struct msghdr *, int);
 //
 // int getsockopt(int, int, int, void *__restrict, socklen_t *__restrict);

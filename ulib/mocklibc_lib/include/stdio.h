@@ -136,14 +136,14 @@ void setbuf(FILE *__restrict, char *__restrict);
  || defined(_BSD_SOURCE)
 FILE *fmemopen(void *__restrict, size_t, const char *__restrict);
 // FILE *open_memstream(char **, size_t *);
-// FILE *fdopen(int, const char *);
+FILE *fdopen(int, const char *);
 // FILE *popen(const char *, const char *);
 // int pclose(FILE *);
 int fileno(FILE *);
 int fseeko(FILE *, off_t, int);
 // off_t ftello(FILE *);
-// int dprintf(int, const char *__restrict, ...);
-// int vdprintf(int, const char *__restrict, __isoc_va_list);
+int dprintf(int, const char *__restrict, ...);
+int vdprintf(int, const char *__restrict, __isoc_va_list);
 void flockfile(FILE *);
 int ftrylockfile(FILE *);
 void funlockfile(FILE *);

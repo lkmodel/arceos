@@ -60,18 +60,18 @@ extern "C" {
 //
 // int wcscoll(const wchar_t *, const wchar_t *);
 // size_t wcsxfrm(wchar_t *__restrict, const wchar_t *__restrict, size_t);
-//
-// wchar_t *wcschr(const wchar_t *, wchar_t);
+
+wchar_t *wcschr(const wchar_t *, wchar_t);
 // wchar_t *wcsrchr(const wchar_t *, wchar_t);
-//
+
 // size_t wcscspn(const wchar_t *, const wchar_t *);
 // size_t wcsspn(const wchar_t *, const wchar_t *);
 // wchar_t *wcspbrk(const wchar_t *, const wchar_t *);
 //
 // wchar_t *wcstok(wchar_t *__restrict, const wchar_t *__restrict, wchar_t **__restrict);
-//
-// size_t wcslen(const wchar_t *);
-//
+
+size_t wcslen(const wchar_t *);
+
 // wchar_t *wcsstr(const wchar_t *__restrict, const wchar_t *__restrict);
 // wchar_t *wcswcs(const wchar_t *, const wchar_t *);
 //
@@ -176,7 +176,7 @@ size_t wcsnrtombs(char *__restrict, const wchar_t **__restrict, size_t, size_t,
 #endif
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
-// int wcwidth(wchar_t);
+int wcwidth(wchar_t);
 // int wcswidth(const wchar_t *, size_t);
 // int iswalnum(wint_t);
 // int iswalpha(wint_t);

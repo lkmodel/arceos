@@ -210,10 +210,10 @@ int __libc_current_sigrtmax(void);
 #define SIGRTMIN  (__libc_current_sigrtmin())
 #define SIGRTMAX  (__libc_current_sigrtmax())
 
-// int kill(pid_t, int);
+int kill(pid_t, int);
 
 // int sigemptyset(sigset_t *);
-// int sigfillset(sigset_t *);
+int sigfillset(sigset_t *);
 // int sigaddset(sigset_t *, int);
 // int sigdelset(sigset_t *, int);
 // int sigismember(const sigset_t *, int);
@@ -286,7 +286,7 @@ typedef void (*sighandler_t)(int);
 
 typedef int sig_atomic_t;
 
-// void (*signal(int, void (*)(int)))(int);
+void (*signal(int, void (*)(int)))(int);
 int raise(int);
 
 #if _REDIR_TIME64

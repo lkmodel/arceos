@@ -31,8 +31,8 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        SIGSUSPEND => syscall_sigsuspend(args),
         #[cfg(feature = "signal")]
         SIGACTION => syscall_sigaction(args),
-        //        #[cfg(feature = "signal")]
-        //        KILL => syscall_kill(args),
+        #[cfg(feature = "signal")]
+        KILL => syscall_kill(args),
         #[cfg(feature = "signal")]
         TKILL => syscall_tkill(args),
         //        #[cfg(feature = "signal")]

@@ -1,16 +1,14 @@
-// NOTE: `Std C impl based on musl 1.2.5`
 #include <ctype.h>
 
 int tolower(int c)
 {
-    if (isupper(c))
-        return c | 32;
-    return c;
+	if (isupper(c)) return c | 32;
+	return c;
 }
 
 int __tolower_l(int c, locale_t l)
 {
-    return tolower(c);
+	return tolower(c);
 }
 
 weak_alias(__tolower_l, tolower_l);

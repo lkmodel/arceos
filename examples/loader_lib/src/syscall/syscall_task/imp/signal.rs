@@ -159,3 +159,25 @@ pub fn syscall_tkill(_args: [usize; 6]) -> SyscallResult {
     //        Err(SyscallError::EINVAL)
     //    }
 }
+
+/// 向tid指定的线程发送信号
+/// # Arguments
+/// * `tid` - isize
+/// * `signum` - isize
+#[cfg(feature = "signal")]
+pub fn syscall_tkill(args: [usize; 6]) -> SyscallResult {
+    let tid = args[0] as isize;
+    let signum = args[1] as isize;
+    debug!(
+        "cpu: {}, send singal: {} to: {}",
+        this_cpu_id(),
+        signum,
+        tid
+    );
+    if tid > 0 && signum > 0 {
+        let _ = axprocess::signal::send_signal_to_thread(tid, signum);
+        Ok(0)
+    } else {
+        Err(SyscallError::EINVAL)
+    }
+}
