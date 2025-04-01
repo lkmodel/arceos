@@ -113,7 +113,7 @@ uid_t getuid(void);
 uid_t geteuid(void);
 gid_t getgid(void);
 gid_t getegid(void);
-// int getgroups(int, gid_t[]);
+int getgroups(int, gid_t[]);
 int setuid(uid_t);
 int seteuid(uid_t);
 int setgid(gid_t);

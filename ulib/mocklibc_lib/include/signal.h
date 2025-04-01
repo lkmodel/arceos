@@ -217,9 +217,9 @@ int sigfillset(sigset_t *);
 // int sigaddset(sigset_t *, int);
 // int sigdelset(sigset_t *, int);
 // int sigismember(const sigset_t *, int);
-// 
+
 // int sigprocmask(int, const sigset_t *__restrict, sigset_t *__restrict);
-// int sigsuspend(const sigset_t *);
+int sigsuspend(const sigset_t *);
 // int sigaction(int, const struct sigaction *__restrict, struct sigaction *__restrict);
 // int sigpending(sigset_t *);
 // int sigwait(const sigset_t *__restrict, int *__restrict);

@@ -67,7 +67,7 @@ char *stpncpy(char *__restrict, const char *__restrict, size_t);
 size_t strnlen(const char *, size_t);
 char *strdup(const char *);
 char *strndup(const char *, size_t);
-// char *strsignal(int);
+char *strsignal(int);
 // char *strerror_l(int, locale_t);
 // int strcoll_l(const char *, const char *, locale_t);
 // size_t strxfrm_l(char *__restrict, const char *__restrict, size_t, locale_t);

@@ -61,5 +61,7 @@ pub enum TaskSyscallId {
     SIGPROCMASK = 135,
     SIGRETURN = 139,
     SETRLIMIT = 164,
+    GETGROUPS = 158,
+    SETGROUPS = 159,
 }
 }

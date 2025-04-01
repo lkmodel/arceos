@@ -429,7 +429,7 @@
 #define SYS_tkill 130
 // #define SYS_tgkill 131
 // #define SYS_sigaltstack 132
-// #define SYS_rt_sigsuspend 133
+#define SYS_rt_sigsuspend 133
 #define SYS_rt_sigaction   134
 #define SYS_rt_sigprocmask 135
 // #define SYS_rt_sigpending 136
@@ -454,7 +454,7 @@
 #define SYS_getpgid 155
 // #define SYS_getsid 156
 #define SYS_setsid 157
-// #define SYS_getgroups 158
+#define SYS_getgroups 158
 // #define SYS_setgroups 159
 #define SYS_uname 160
 // #define SYS_sethostname 161

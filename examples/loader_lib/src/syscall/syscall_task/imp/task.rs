@@ -1,4 +1,4 @@
-use axlog::info;
+use axlog::{info, warn};
 
 use crate::{
     linux_env::{
@@ -227,12 +227,20 @@ pub fn syscall_getuid() -> SyscallResult {
 
 /// To get the parent process id
 pub fn syscall_getppid() -> SyscallResult {
+    #[cfg(feature = "unikernel")]
+    {
+        warn!("Pretending to successfully getppid.");
+        Ok(0)
+    }
     #[cfg(feature = "batch")]
     {
-        unimplemented!()
+        warn!("Pretending to successfully getppid.");
+        Ok(0)
     }
-    unimplemented!()
-    // Ok(process_api().get_parent() as isize)
+    #[cfg(feature = "pseudo_multi_process")]
+    {
+        Ok(process_api().get_parent() as isize)
+    }
 }
 
 /// not support

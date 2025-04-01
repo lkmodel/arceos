@@ -181,3 +181,50 @@ pub fn syscall_tkill(args: [usize; 6]) -> SyscallResult {
         Err(SyscallError::EINVAL)
     }
 }
+
+/// 实现sigsuspend系统调用
+/// TODO: 这里实现的似乎和文档有出入，应该有 BUG
+/// # Arguments
+/// * `mask` - *const usize
+#[cfg(feature = "signal")]
+pub fn syscall_sigsuspend(args: [usize; 6]) -> SyscallResult {
+    let mask = args[0] as *const usize;
+    let process = current_process();
+    if process
+        .manual_alloc_for_lazy((mask as usize).into())
+        .is_err()
+    {
+        return Err(SyscallError::EFAULT);
+    }
+    let mut signal_modules = process.signal_modules.lock();
+
+    let signal_module = signal_modules
+        .get_mut(&current_task().id().as_u64())
+        .unwrap();
+    // 设置新的掩码
+    if signal_module.last_trap_frame_for_signal.is_some() {
+        // 信号嵌套的情况下触发这个调用
+        return Err(SyscallError::EINTR);
+    }
+    signal_module.signal_set.mask = unsafe { *mask };
+    drop(signal_modules);
+    loop {
+        let mut signal_modules = process.signal_modules.lock();
+        let signal_module = signal_modules
+            .get_mut(&current_task().id().as_u64())
+            .unwrap();
+
+        if signal_module.signal_set.find_signal().is_none() {
+            // 记得释放锁
+            drop(signal_modules);
+            yield_now_task();
+            if process.have_signals().is_some() {
+                return Err(SyscallError::EINTR);
+            }
+        } else {
+            // 说明来了一个信号
+            break;
+        }
+    }
+    Err(SyscallError::EINTR)
+}
