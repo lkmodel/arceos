@@ -17,16 +17,16 @@ long double __subtf3(long double a, long double b);
 long double __subxf3(long double a, long double b);
 // These functions return the difference between `b` and `a`; that is, `a` - `b`.
 
-// float __mulsf3(float a, float b);
-// double __muldf3(double a, double b);
+float __mulsf3(float a, float b);
+double __muldf3(double a, double b);
 long double __multf3(long double a, long double b);
-// long double __mulxf3(long double a, long double b);
+long double __mulxf3(long double a, long double b);
 // These functions return the product of `a` and `b`.
 
-// float __divsf3(float a, float b);
-// double __divdf3(double a, double b);
+float __divsf3(float a, float b);
+double __divdf3(double a, double b);
 long double __divtf3(long double a, long double b);
-// long double __divxf3(long double a, long double b);
+long double __divxf3(long double a, long double b);
 // These functions return the quotient of `a` and `b`; that is, `a` / `b`.
 
 // float __negsf2(float a);

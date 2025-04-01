@@ -16,7 +16,6 @@ mod config;
 mod elf_load;
 mod init;
 mod linux_env;
-mod runtime_func;
 mod syscall;
 
 use alloc::{ffi::CString, string::ToString, vec::Vec};

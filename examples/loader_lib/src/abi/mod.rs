@@ -11,9 +11,9 @@ use compiler_builtins::{
         add::{__adddf3, __addsf3, __addtf3},
         cmp::{__eqtf2, __getf2, __gttf2, __letf2, __lttf2, __netf2},
         conv::{__fixtfdi, __fixtfsi, __fixunstfsi, __floatditf, __floatsitf, __floatunsitf},
-        div::__divtf3,
+        div::{__divdf3, __divsf3, __divtf3},
         extend::{__extenddftf2, __extendsftf2},
-        mul::__multf3,
+        mul::{__muldf3, __mulsf3, __multf3},
         sub::{__subdf3, __subsf3, __subtf3},
         trunc::{__trunctfdf2, __trunctfsf2},
     },
@@ -23,7 +23,6 @@ use compiler_builtins::{
     },
 };
 
-use crate::runtime_func::rt_float::{abi_rt_addxf3, abi_rt_subxf3};
 use axtask::init_scheduler;
 use core::{ffi::CStr, slice::from_raw_parts};
 use cty::{c_char, size_t};
@@ -75,15 +74,15 @@ const ABI_RT_SUBDF3: usize = 105;
 const ABI_RT_SUBTF3: usize = 106;
 const ABI_RT_SUBXF3: usize = 107;
 
-const _ABI_RT_MULSF3: usize = 108;
-const _ABI_RT_MULDF3: usize = 109;
+const ABI_RT_MULSF3: usize = 108;
+const ABI_RT_MULDF3: usize = 109;
 const ABI_RT_MULTF3: usize = 110;
-const _ABI_RT_MULXF3: usize = 111;
+const ABI_RT_MULXF3: usize = 111;
 
-const _ABI_RT_DIVSF3: usize = 112;
-const _ABI_RT_DIVDF3: usize = 113;
+const ABI_RT_DIVSF3: usize = 112;
+const ABI_RT_DIVDF3: usize = 113;
 const ABI_RT_DIVTF3: usize = 114;
-const _ABI_RT_DIVXF3: usize = 115;
+const ABI_RT_DIVXF3: usize = 115;
 
 const _ABI_RT_NEGSF2: usize = 116;
 const _ABI_RT_NEGDF2: usize = 117;
@@ -370,15 +369,23 @@ pub fn init_abis() {
     register_abi("rt_addsf3", ABI_RT_ADDSF3, __addsf3 as usize);
     register_abi("rt_adddf3", ABI_RT_ADDDF3, __adddf3 as usize);
     register_abi("rt_addtf3", ABI_RT_ADDTF3, __addtf3 as usize);
-    register_abi("rt_addxf3", ABI_RT_ADDXF3, abi_rt_addxf3 as usize);
+    register_abi("rt_addxf3", ABI_RT_ADDXF3, __addtf3 as usize);
 
     register_abi("rt_subsf3", ABI_RT_SUBSF3, __subsf3 as usize);
     register_abi("rt_subdf3", ABI_RT_SUBDF3, __subdf3 as usize);
     register_abi("rt_subtf3", ABI_RT_SUBTF3, __subtf3 as usize);
-    register_abi("rt_subxf3", ABI_RT_SUBXF3, abi_rt_subxf3 as usize);
+    register_abi("rt_subxf3", ABI_RT_SUBXF3, __subtf3 as usize);
 
+    register_abi("rt_multf3", ABI_RT_MULSF3, __mulsf3 as usize);
+    register_abi("rt_multf3", ABI_RT_MULDF3, __muldf3 as usize);
     register_abi("rt_multf3", ABI_RT_MULTF3, __multf3 as usize);
+    register_abi("rt_multf3", ABI_RT_MULXF3, __multf3 as usize);
+
+    register_abi("rt_divtf3", ABI_RT_DIVSF3, __divsf3 as usize);
+    register_abi("rt_divtf3", ABI_RT_DIVDF3, __divdf3 as usize);
     register_abi("rt_divtf3", ABI_RT_DIVTF3, __divtf3 as usize);
+    register_abi("rt_divtf3", ABI_RT_DIVXF3, __divtf3 as usize);
+
     register_abi("rt_extendsftf2", ABI_RT_EXTENDSFTF2, __extendsftf2 as usize);
     register_abi("rt_extenddftf2", ABI_RT_EXTENDDFTF2, __extenddftf2 as usize);
     register_abi("rt_trunctfdf2", ABI_RT_TRUNCTFDF2, __trunctfdf2 as usize);
