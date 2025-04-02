@@ -5,11 +5,14 @@ pub mod thread;
 
 use axhal::time::monotonic_time;
 use axlog::{debug, info};
-use axstd::{println, process::exit};
+use axstd::process::exit;
 use compiler_builtins::{
     float::{
         add::*,
-        cmp::{__eqtf2, __getf2, __gttf2, __letf2, __lttf2, __nedf2, __nesf2, __netf2},
+        cmp::{
+            __eqdf2, __eqsf2, __eqtf2, __gedf2, __gesf2, __getf2, __gtdf2, __gtsf2, __gttf2,
+            __ledf2, __lesf2, __letf2, __ltdf2, __ltsf2, __lttf2, __nedf2, __nesf2, __netf2,
+        },
         conv::{
             __fixdfdi, __fixdfsi, __fixdfti, __fixsfdi, __fixsfsi, __fixsfti, __fixtfdi, __fixtfsi,
             __fixtfti, __fixunsdfdi, __fixunsdfsi, __fixunsdfti, __fixunssfdi, __fixunssfsi,
@@ -31,8 +34,6 @@ use compiler_builtins::{
 };
 
 use axtask::init_scheduler;
-use core::{ffi::CStr, slice::from_raw_parts};
-use cty::{c_char, size_t};
 use mem::*;
 use noimpl::abi_noimpl;
 use syscall::*;
@@ -96,6 +97,7 @@ const ABI_RT_NEGSF2: usize = 116;
 const ABI_RT_NEGDF2: usize = 117;
 const ABI_RT_NEGTF2: usize = 118;
 const ABI_RT_NEGXF2: usize = 119;
+
 // Conversion functions[120, 187]
 const ABI_RT_EXTENDSFDF2: usize = 120;
 const ABI_RT_EXTENDSFTF2: usize = 121;
@@ -174,43 +176,44 @@ const ABI_RT_FIXDFBITINT: usize = 179;
 const ABI_RT_FIXXFBITINT: usize = 180;
 const ABI_RT_FIXTFBITINT: usize = 181;
 
-const _ABI_RT_FLOATBITINTSF: usize = 182;
-const _ABI_RT_FLOATBITINTDF: usize = 183;
-const _ABI_RT_FLOATBITINTXF: usize = 184;
-const _ABI_RT_FLOATBITINTTF: usize = 185;
-const _ABI_RT_FLOATBITINTHF: usize = 186;
-const _ABI_RT_FLOATBITINTBF: usize = 187;
+const ABI_RT_FLOATBITINTSF: usize = 182;
+const ABI_RT_FLOATBITINTDF: usize = 183;
+const ABI_RT_FLOATBITINTXF: usize = 184;
+const ABI_RT_FLOATBITINTTF: usize = 185;
+const ABI_RT_FLOATBITINTHF: usize = 186;
+const ABI_RT_FLOATBITINTBF: usize = 187;
+
 // Comparison functions [180, 223]
-const _ABI_RT_CMPSF2: usize = 188;
-const _ABI_RT_CMPDF2: usize = 189;
-const _ABI_RT_CMPTF2: usize = 190;
+const ABI_RT_CMPSF2: usize = 188;
+const ABI_RT_CMPDF2: usize = 189;
+const ABI_RT_CMPTF2: usize = 190;
 
-const _ABI_RT_UNORDSF2: usize = 191;
-const _ABI_RT_UNORDDF2: usize = 192;
-const _ABI_RT_UNORDTF2: usize = 193;
+const ABI_RT_UNORDSF2: usize = 191;
+const ABI_RT_UNORDDF2: usize = 192;
+const ABI_RT_UNORDTF2: usize = 193;
 
-const _ABI_RT_EQSF2: usize = 194;
-const _ABI_RT_EQDF2: usize = 195;
+const ABI_RT_EQSF2: usize = 194;
+const ABI_RT_EQDF2: usize = 195;
 const ABI_RT_EQTF2: usize = 196;
 
-const _ABI_RT_NESF2: usize = 197;
-const _ABI_RT_NEDF2: usize = 198;
+const ABI_RT_NESF2: usize = 197;
+const ABI_RT_NEDF2: usize = 198;
 const ABI_RT_NETF2: usize = 199;
 
-const _ABI_RT_GESF2: usize = 200;
-const _ABI_RT_GEDF2: usize = 201;
+const ABI_RT_GESF2: usize = 200;
+const ABI_RT_GEDF2: usize = 201;
 const ABI_RT_GETF2: usize = 202;
 
-const _ABI_RT_LTSF2: usize = 203;
-const _ABI_RT_LTDF2: usize = 204;
+const ABI_RT_LTSF2: usize = 203;
+const ABI_RT_LTDF2: usize = 204;
 const ABI_RT_LTTF2: usize = 205;
 
-const _ABI_RT_LESF2: usize = 206;
-const _ABI_RT_LEDF2: usize = 207;
+const ABI_RT_LESF2: usize = 206;
+const ABI_RT_LEDF2: usize = 207;
 const ABI_RT_LETF2: usize = 208;
 
-const _ABI_RT_GTSF2: usize = 209;
-const _ABI_RT_GTDF2: usize = 210;
+const ABI_RT_GTSF2: usize = 209;
+const ABI_RT_GTDF2: usize = 210;
 const ABI_RT_GTTF2: usize = 211;
 
 const _ABI_RT_POWISF2: usize = 212;
@@ -477,14 +480,71 @@ pub fn init_abis() {
     register_abi("rt_fixxfbitint", ABI_RT_FIXXFBITINT, abi_noimpl as usize);
     register_abi("rt_fixtfbitint", ABI_RT_FIXTFBITINT, abi_noimpl as usize);
 
-    // ----------------
+    register_abi(
+        "rt_floatbitintsf",
+        ABI_RT_FLOATBITINTSF,
+        abi_noimpl as usize,
+    );
+    register_abi(
+        "rt_floatbitintdf",
+        ABI_RT_FLOATBITINTDF,
+        abi_noimpl as usize,
+    );
+    register_abi(
+        "rt_floatbitintxf",
+        ABI_RT_FLOATBITINTXF,
+        abi_noimpl as usize,
+    );
+    register_abi(
+        "rt_floatbitinttf",
+        ABI_RT_FLOATBITINTTF,
+        abi_noimpl as usize,
+    );
+    register_abi(
+        "rt_floatbitinthf",
+        ABI_RT_FLOATBITINTHF,
+        abi_noimpl as usize,
+    );
+    register_abi(
+        "rt_floatbitintbf",
+        ABI_RT_FLOATBITINTBF,
+        abi_noimpl as usize,
+    );
 
+    // Comparison functions [180, 223]
+    register_abi("rt_cmpsf2", ABI_RT_CMPSF2, abi_noimpl as usize);
+    register_abi("rt_cmpdf2", ABI_RT_CMPDF2, abi_noimpl as usize);
+    register_abi("rt_cmptf2", ABI_RT_CMPTF2, abi_noimpl as usize);
+
+    register_abi("rt_unordsf2", ABI_RT_UNORDSF2, abi_noimpl as usize);
+    register_abi("rt_unorddf2", ABI_RT_UNORDDF2, abi_noimpl as usize);
+    register_abi("rt_unordtf2", ABI_RT_UNORDTF2, abi_noimpl as usize);
+
+    register_abi("rt_eqsf2", ABI_RT_EQSF2, __eqsf2 as usize);
+    register_abi("rt_eqdf2", ABI_RT_EQDF2, __eqdf2 as usize);
     register_abi("rt_eqtf2", ABI_RT_EQTF2, __eqtf2 as usize);
+
+    register_abi("rt_nesf2", ABI_RT_NESF2, __nesf2 as usize);
+    register_abi("rt_nedf2", ABI_RT_NEDF2, __nedf2 as usize);
     register_abi("rt_netf2", ABI_RT_NETF2, __netf2 as usize);
+
+    register_abi("rt_gesf2", ABI_RT_GESF2, __gesf2 as usize);
+    register_abi("rt_gedf2", ABI_RT_GEDF2, __gedf2 as usize);
     register_abi("rt_getf2", ABI_RT_GETF2, __getf2 as usize);
+
+    register_abi("rt_ltsf2", ABI_RT_LTSF2, __ltsf2 as usize);
+    register_abi("rt_ltdf2", ABI_RT_LTDF2, __ltdf2 as usize);
     register_abi("rt_lttf2", ABI_RT_LTTF2, __lttf2 as usize);
+
+    register_abi("rt_lesf2", ABI_RT_LESF2, __lesf2 as usize);
+    register_abi("rt_ledf2", ABI_RT_LEDF2, __ledf2 as usize);
     register_abi("rt_letf2", ABI_RT_LETF2, __letf2 as usize);
+
+    register_abi("rt_gtsf2", ABI_RT_GTSF2, __gtsf2 as usize);
+    register_abi("rt_gtdf2", ABI_RT_GTDF2, __gtdf2 as usize);
     register_abi("rt_gttf2", ABI_RT_GTTF2, __gttf2 as usize);
+
+    // ----------------
 
     register_abi("rt_clzsi2", ABI_RT_CLZSI2, __clzsi2 as usize);
     register_abi("rt_clzdi2", ABI_RT_CLZDI2, __clzdi2 as usize);
@@ -513,6 +573,7 @@ fn abi_terminate() -> ! {
     exit(0);
 }
 
+/// `SYS_CHECKPOINT: 4`
 #[unsafe(no_mangle)]
 fn abi_checkpoint() {
     info!("[ABI: SYS CTL] abi_checkpoint");
@@ -538,21 +599,5 @@ fn abi_timespec(ts: *mut TimeSpec) {
         ts.tv_nsec = now.as_nanos() as usize;
         ts.tv_sec = now.as_secs() as usize;
         debug!("{:?}", ts);
-    }
-}
-
-/// `SYS_OUT: 16`
-#[unsafe(no_mangle)]
-extern "C" fn abi_out(s: *const c_char, l: size_t) {
-    unsafe {
-        let bytes = from_raw_parts(s as *const u8, l);
-
-        match CStr::from_bytes_with_nul(bytes) {
-            Ok(c_str) => {
-                let str_slice = c_str.to_str().unwrap();
-                axhal::console::write_bytes(str_slice.as_bytes());
-            }
-            Err(_) => println!("Failed to convert to &str"),
-        }
     }
 }

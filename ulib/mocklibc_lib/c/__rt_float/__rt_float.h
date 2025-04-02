@@ -147,66 +147,70 @@ long double __floatuntixf(unsigned long long i);
 // 3.2.3 Comparison functions
 // There are two sets of basic comparison functions.
 
-// int __cmpsf2(float a, float b);
-// int __cmpdf2(double a, double b);
-// int __cmptf2(long double a, long double b);
-// These functions calculate a <=> b. That is, if a is less than b, they return −1; if a is greater
-// than b, they return 1; and if a and b are equal they return 0. If either argument is NaN they
-// return 1, but you should not rely on this; if NaN is a possibility, use one of the higher-level
-// comparison functions.
+int __cmpsf2(float a, float b);
+int __cmpdf2(double a, double b);
+int __cmptf2(long double a, long double b);
+// These functions calculate `a` <=> `b`.
+// That is, if `a` is less than `b`, they return −1;
+// if `a` is greater than `b`, they return 1;
+// and if `a` and `b` are equal they return 0.
+// If either argument is `NaN` they return 1, but you should not rely on this;
+// if `NaN` is a possibility, use one of the higher-level comparison functions.
 
-// int __unordsf2(float a, float b);
-// int __unorddf2(double a, double b);
-// int __unordtf2(long double a, long double b);
-// // These functions return a nonzero value if either argument is NaN, otherwise 0.
+int __unordsf2(float a, float b);
+int __unorddf2(double a, double b);
+int __unordtf2(long double a, long double b);
+// These functions return a nonzero value if either argument is `NaN`, otherwise 0.
 
 /*
 There is also a complete group of higher level functions which correspond directly to comparison
-operators. They implement the ISO C semantics for floating-point comparisons, taking NaN into
+operators. They implement the ISO C semantics for floating-point comparisons, taking `NaN` into
 account. Pay careful attention to the return values defined for each set. Under the hood, all of
 these routines are implemented as
-
+```
   if (__unordXf2 (a, b))
     return E;
   return __cmpXf2 (a, b);
-where E is a constant chosen to give the proper behavior for NaN. Thus, the meaning of the return
+```
+Where E is a constant chosen to give the proper behavior for `NaN`. Thus, the meaning of the return
 value is different for each set. Do not rely on this implementation; only the semantics
 documented below are guaranteed.
 */
 
-// int __eqsf2(float a, float b);
-// int __eqdf2(double a, double b);
+int __eqsf2(float a, float b);
+int __eqdf2(double a, double b);
 int __eqtf2(long double a, long double b);
-// These functions return zero if neither argument is NaN, and a and b are equal.
+// These functions return zero if neither argument is `NaN`, and `a` and `b` are equal.
 
-// int __nesf2(float a, float b);
-// int __nedf2(double a, double b);
+int __nesf2(float a, float b);
+int __nedf2(double a, double b);
 int __netf2(long double a, long double b);
-// These functions return a nonzero value if either argument is NaN, or if a and b are unequal.
+// These functions return a nonzero value if either argument is `NaN`,
+// or if `a` and `b` are unequal.
 
-// int __gesf2(float a, float b);
-// int __gedf2(double a, double b);
+int __gesf2(float a, float b);
+int __gedf2(double a, double b);
 int __getf2(long double a, long double b);
-// These functions return a value greater than or equal to zero if neither argument is NaN, and a is
-// greater than or equal to b.
+// These functions return a value greater than or equal to zero if neither argument is `NaN`,
+// and `a` is greater than or equal to `b`.
 
-// int __ltsf2(float a, float b);
-// int __ltdf2(double a, double b);
+int __ltsf2(float a, float b);
+int __ltdf2(double a, double b);
 int __lttf2(long double a, long double b);
-// These functions return a value less than zero if neither argument is NaN, and a is strictly less
-// than b.
+// These functions return a value less than zero if neither argument is `NaN`,
+// and `a` is strictly less than `b`.
 
-// int __lesf2(float a, float b);
-// int __ledf2(double a, double b);
+int __lesf2(float a, float b);
+int __ledf2(double a, double b);
 int __letf2(long double a, long double b);
-// These functions return a value less than or equal to zero if neither argument is NaN, and a is
-// less than or equal to b.
+// These functions return a value less than or equal to zero if neither argument is `NaN`,
+// and `a` is less than or equal to `b`.
 
-// int __gtsf2(float a, float b);
-// int __gtdf2(double a, double b);
+int __gtsf2(float a, float b);
+int __gtdf2(double a, double b);
 int __gttf2(long double a, long double b);
-// These functions return a value greater than zero if neither argument is NaN, and a is strictly
-// greater than b.
+// These functions return a value greater than zero if neither argument is `NaN`,
+// and `a` is strictly greater than `b`.
 
 // 3.2.4 Other floating-point functions
 
