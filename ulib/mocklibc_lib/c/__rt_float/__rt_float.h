@@ -115,17 +115,17 @@ long double __floatunsitf(unsigned int i);
 long double __floatunsixf(unsigned int i);
 // These functions convert `i`, an unsigned integer, to floating point.
 
-// float __floatundisf(unsigned long i);
-// double __floatundidf(unsigned long i);
-// long double __floatunditf(unsigned long i);
-// long double __floatundixf(unsigned long i);
-// These functions convert i, an unsigned long, to floating point.
+float __floatundisf(unsigned long i);
+double __floatundidf(unsigned long i);
+long double __floatunditf(unsigned long i);
+long double __floatundixf(unsigned long i);
+// These functions convert `i`, an unsigned long, to floating point.
 
-// float __floatuntisf(unsigned long long i);
-// double __floatuntidf(unsigned long long i);
-// long double __floatuntitf(unsigned long long i);
-// long double __floatuntixf(unsigned long long i);
-// These functions convert i, an unsigned long long, to floating point.
+float __floatuntisf(unsigned long long i);
+double __floatuntidf(unsigned long long i);
+long double __floatuntitf(unsigned long long i);
+long double __floatuntixf(unsigned long long i);
+// These functions convert `i`, an unsigned long long, to floating point.
 
 // void __fixsfbitint(UBILtype *r, int32_t rprec, float a);
 // void __fixdfbitint(UBILtype *r, int32_t rprec, double a);

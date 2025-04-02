@@ -377,3 +377,63 @@ long double __floatunsixf(unsigned int i)
     FnABI func = (FnABI)(*abi_ptr);
     return func(i);
 }
+
+// These functions convert `i`, an unsigned long, to floating point.
+float __floatundisf(unsigned long i)
+{
+    typedef float (*FnABI)(unsigned long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNDISF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+double __floatundidf(unsigned long i)
+{
+    typedef double (*FnABI)(unsigned long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNDIDF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+long double __floatunditf(unsigned long i)
+{
+    typedef long double (*FnABI)(unsigned long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNDITF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+long double __floatundixf(unsigned long i)
+{
+    typedef long double (*FnABI)(unsigned long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNDIXF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+
+// These functions convert `i`, an unsigned long long, to floating point.
+float __floatuntisf(unsigned long long i)
+{
+    typedef float (*FnABI)(unsigned long long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNTISF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+double __floatuntidf(unsigned long long i)
+{
+    typedef double (*FnABI)(unsigned long long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNTIDF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+long double __floatuntitf(unsigned long long i)
+{
+    typedef long double (*FnABI)(unsigned long long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNTITF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
+long double __floatuntixf(unsigned long long i)
+{
+    typedef long double (*FnABI)(unsigned long long);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FLOATUNTIXF);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(i);
+}
