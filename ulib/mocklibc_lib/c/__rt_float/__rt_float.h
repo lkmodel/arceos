@@ -33,8 +33,8 @@ float __negsf2(float a);
 double __negdf2(double a);
 long double __negtf2(long double a);
 long double __negxf2(long double a);
-// These functions return the negation of `a`. They simply flip the sign bit, so they can produce
-// negative zero and negative `NaN`.
+// These functions return the negation of `a`. They simply flip the sign bit,
+// so they can produce negative zero and negative `NaN`.
 
 // 3.2.2 Conversion functions
 
@@ -74,22 +74,22 @@ unsigned int __fixunssfsi(float a);
 unsigned int __fixunsdfsi(double a);
 unsigned int __fixunstfsi(long double a);
 unsigned int __fixunsxfsi(long double a);
-// These functions convert a to an unsigned integer, rounding toward zero. Negative values all
-// become zero.
+// These functions convert a to an unsigned integer, rounding toward zero.
+// Negative values all become zero.
 
-// unsigned long __fixunssfdi(float a);
-// unsigned long __fixunsdfdi(double a);
-// unsigned long __fixunstfdi(long double a);
-// unsigned long __fixunsxfdi(long double a);
-// These functions convert a to an unsigned long, rounding toward zero.Negative values all become
-// zero.
+unsigned long __fixunssfdi(float a);
+unsigned long __fixunsdfdi(double a);
+unsigned long __fixunstfdi(long double a);
+unsigned long __fixunsxfdi(long double a);
+// These functions convert a to an unsigned long, rounding toward zero.
+// Negative values all become zero.
 
 // unsigned long long __fixunssfti(float a);
 // unsigned long long __fixunsdfti(double a);
 // unsigned long long __fixunstfti(long double a);
 // unsigned long long __fixunsxfti(long double a);
-// These functions convert a to an unsigned long long, rounding toward zero. Negative values all
-// become zero.
+// These functions convert a to an unsigned long long, rounding toward zero.
+// Negative values all become zero.
 
 // float __floatsisf(int i);
 // double __floatsidf(int i);

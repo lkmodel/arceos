@@ -195,3 +195,34 @@ unsigned int __fixunsxfsi(long double a)
     FnABI func = (FnABI)(*abi_ptr);
     return func(a);
 }
+
+// These functions convert a to an unsigned long, rounding toward zero.
+// Negative values all become zero.
+unsigned long __fixunssfdi(float a)
+{
+    typedef unsigned long (*FnABI)(float a);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FIXUNSSFDI);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(a);
+}
+unsigned long __fixunsdfdi(double a)
+{
+    typedef unsigned long (*FnABI)(double a);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FIXUNSDFDI);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(a);
+}
+unsigned long __fixunstfdi(long double a)
+{
+    typedef unsigned long (*FnABI)(long double a);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FIXUNSTFDI);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(a);
+}
+unsigned long __fixunsxfdi(long double a)
+{
+    typedef unsigned long (*FnABI)(long double a);
+    long *abi_ptr = (long *)(abi_entry + 8 * ABI_RT_FIXUNSXFDI);
+    FnABI func = (FnABI)(*abi_ptr);
+    return func(a);
+}

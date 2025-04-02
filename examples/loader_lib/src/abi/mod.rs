@@ -12,8 +12,8 @@ use compiler_builtins::{
         cmp::{__eqtf2, __getf2, __gttf2, __letf2, __lttf2, __nedf2, __nesf2, __netf2},
         conv::{
             __fixdfdi, __fixdfsi, __fixdfti, __fixsfdi, __fixsfsi, __fixsfti, __fixtfdi, __fixtfsi,
-            __fixtfti, __fixunsdfsi, __fixunssfsi, __fixunstfsi, __floatditf, __floatsitf,
-            __floatunsitf,
+            __fixtfti, __fixunsdfdi, __fixunsdfsi, __fixunssfdi, __fixunssfsi, __fixunstfdi,
+            __fixunstfsi, __floatditf, __floatsitf, __floatunsitf,
         },
         div::*,
         extend::{__extenddftf2, __extendsfdf2, __extendsftf2},
@@ -66,7 +66,8 @@ const ABI_SYSCALL3: usize = 63;
 const ABI_SYSCALL4: usize = 64;
 const ABI_SYSCALL5: usize = 65;
 const ABI_SYSCALL6: usize = 66;
-// `rt_float`的实现
+
+// `rt_float` 的实现
 // Arithmetic functions[100, 119]
 const ABI_RT_ADDSF3: usize = 100;
 const ABI_RT_ADDDF3: usize = 101;
@@ -125,10 +126,10 @@ const ABI_RT_FIXUNSDFSI: usize = 143;
 const ABI_RT_FIXUNSTFSI: usize = 144;
 const ABI_RT_FIXUNSXFSI: usize = 145;
 
-const _ABI_RT_FIXUNSSFDI: usize = 146;
-const _ABI_RT_FIXUNSDFDI: usize = 147;
-const _ABI_RT_FIXUNSTFDI: usize = 148;
-const _ABI_RT_FIXUNSXFDI: usize = 149;
+const ABI_RT_FIXUNSSFDI: usize = 146;
+const ABI_RT_FIXUNSDFDI: usize = 147;
+const ABI_RT_FIXUNSTFDI: usize = 148;
+const ABI_RT_FIXUNSXFDI: usize = 149;
 
 const _ABI_RT_FIXUNSSFTI: usize = 150;
 const _ABI_RT_FIXUNSDFTI: usize = 151;
@@ -224,7 +225,7 @@ const _ABI_RT_DIVDC3: usize = 221;
 const _ABI_RT_DIVTC3: usize = 222;
 const _ABI_RT_DIVXC3: usize = 223;
 
-// `rt_integer`的实现
+// `rt_integer` 的实现
 // Arithmetic functions[230, 256]
 const _ABI_RT_ASHLSI3: usize = 230;
 const _ABI_RT_ASHLDI3: usize = 231;
@@ -370,6 +371,7 @@ pub fn init_abis() {
     register_abi("syscall6", ABI_SYSCALL6, abi_syscall6 as usize);
 
     // `rt_float`的实现
+    // Arithmetic functions[100, 119]
     register_abi("rt_addsf3", ABI_RT_ADDSF3, __addsf3 as usize);
     register_abi("rt_adddf3", ABI_RT_ADDDF3, __adddf3 as usize);
     register_abi("rt_addtf3", ABI_RT_ADDTF3, __addtf3 as usize);
@@ -389,13 +391,12 @@ pub fn init_abis() {
     register_abi("rt_divdf3", ABI_RT_DIVDF3, __divdf3 as usize);
     register_abi("rt_divtf3", ABI_RT_DIVTF3, __divtf3 as usize);
     register_abi("rt_divxf3", ABI_RT_DIVXF3, __divtf3 as usize);
-
     // TODO: `Impl neg func`
     register_abi("rt_negsf2", ABI_RT_NEGSF2, abi_noimpl as usize);
     register_abi("rt_negdf2", ABI_RT_NEGDF2, abi_noimpl as usize);
     register_abi("rt_negtf2", ABI_RT_NEGTF2, abi_noimpl as usize);
     register_abi("rt_negxf2", ABI_RT_NEGXF2, abi_noimpl as usize);
-
+    // Conversion functions[120, 187]
     register_abi("rt_extendsfdf2", ABI_RT_EXTENDSFDF2, __extendsfdf2 as usize);
     register_abi("rt_extendsftf2", ABI_RT_EXTENDSFTF2, __extendsftf2 as usize);
     register_abi("rt_extendsfxf2", ABI_RT_EXTENDSFXF2, __extendsftf2 as usize);
@@ -427,6 +428,13 @@ pub fn init_abis() {
     register_abi("rt_fixunsdfsi", ABI_RT_FIXUNSDFSI, __fixunsdfsi as usize);
     register_abi("rt_fixunstfsi", ABI_RT_FIXUNSTFSI, __fixunstfsi as usize);
     register_abi("rt_fixunsxfsi", ABI_RT_FIXUNSXFSI, __fixunstfsi as usize);
+
+    register_abi("rt_fixunssfdi", ABI_RT_FIXUNSSFDI, __fixunssfdi as usize);
+    register_abi("rt_fixunsdfdi", ABI_RT_FIXUNSDFDI, __fixunsdfdi as usize);
+    register_abi("rt_fixunstfdi", ABI_RT_FIXUNSTFDI, __fixunstfdi as usize);
+    register_abi("rt_fixunsxfdi", ABI_RT_FIXUNSXFDI, __fixunstfdi as usize);
+
+    // ----------------
 
     register_abi("rt_floatsitf", ABI_RT_FLOATSITF, __floatsitf as usize);
     register_abi("rt_floatditf", ABI_RT_FLOATDITF, __floatditf as usize);
