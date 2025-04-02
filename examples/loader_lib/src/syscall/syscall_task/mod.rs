@@ -17,16 +17,16 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        CLONE => syscall_clone(args),
         //        CLONE3 => syscall_clone3(args),
         NANO_SLEEP => syscall_sleep(args),
-        //        SCHED_YIELD => syscall_yield(),
+        SCHED_YIELD => syscall_yield(),
         TIMES => syscall_time(args),
         UNAME => syscall_uname(args),
         GETTIMEOFDAY => syscall_get_time_of_day(args),
         GETPGID => syscall_getpgid(),
-        //        SETPGID => syscall_setpgid(args),
+        SETPGID => syscall_setpgid(args),
         GETPID => syscall_getpid(),
         GETPPID => syscall_getppid(),
         WAIT4 => syscall_wait4(args),
-        //        GETRANDOM => syscall_getrandom(args),
+        GETRANDOM => syscall_getrandom(args),
         #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
         SIGSUSPEND => syscall_sigsuspend(args),
         #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
@@ -43,7 +43,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         SIGRETURN => syscall_sigreturn(),
         EXIT_GROUP => syscall_exit(args),
         //        SET_TID_ADDRESS => syscall_set_tid_address(args),
-        //        PRLIMIT64 => syscall_prlimit64(args),
+        PRLIMIT64 => syscall_prlimit64(args),
         CLOCK_GET_TIME => syscall_clock_get_time(args),
         CLOCK_SET_TIME => unimplemented!(),
         GETUID => syscall_getuid(),
@@ -77,8 +77,6 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         #[allow(unused)]
         _ => {
             panic!("Invalid Syscall Id: {:?}!", syscall_id);
-            // return -1;
-            // exit(-1)
         }
     }
 }

@@ -1,11 +1,13 @@
 use axlog::{info, warn};
+use axtask::yield_now;
 
 use crate::{
+    config::TASK_STACK_SIZE,
     linux_env::{
         linux_api::api::{exit_current_task, process_api},
         process_ext::api::current_task,
     },
-    syscall::SyscallResult,
+    syscall::{RLIMIT_AS, RLIMIT_NOFILE, RLIMIT_STACK, RLimit, SyscallResult},
 };
 
 /// # Arguments
@@ -26,57 +28,56 @@ pub fn syscall_exit(args: [usize; 6]) -> ! {
 /// * `resource - i32`
 /// * `new_limit - *const RLimit`
 /// * `old_limit - *mut RLimit`
-pub fn syscall_prlimit64(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    //    let pid = args[0];
-    //    let resource = args[1] as i32;
-    //    let new_limit = args[2] as *const RLimit;
-    //    let old_limit = args[3] as *mut RLimit;
-    //    // 当pid不为0，其实没有权利去修改其他的进程的资源限制
-    //    let curr_process = current_process();
-    //    if pid == 0 || pid == curr_process.pid() as usize {
-    //        match resource {
-    //            RLIMIT_STACK => {
-    //                if old_limit as usize != 0 {
-    //                    unsafe {
-    //                        *old_limit = RLimit {
-    //                            rlim_cur: TASK_STACK_SIZE as u64,
-    //                            rlim_max: TASK_STACK_SIZE as u64,
-    //                        };
-    //                    }
-    //                }
-    //            }
-    //            RLIMIT_NOFILE => {
-    //                // 仅支持修改最大文件数
-    //                if old_limit as usize != 0 {
-    //                    let limit = curr_process.fd_manager.get_limit();
-    //                    unsafe {
-    //                        *old_limit = RLimit {
-    //                            rlim_cur: limit as u64,
-    //                            rlim_max: limit as u64,
-    //                        };
-    //                    }
-    //                }
-    //                if new_limit as usize != 0 {
-    //                    let new_limit = unsafe { (*new_limit).rlim_cur };
-    //                    curr_process.fd_manager.set_limit(new_limit);
-    //                }
-    //            }
-    //            RLIMIT_AS => {
-    //                const USER_MEMORY_LIMIT: usize = 0xffff_ffff;
-    //                if old_limit as usize != 0 {
-    //                    unsafe {
-    //                        *old_limit = RLimit {
-    //                            rlim_cur: USER_MEMORY_LIMIT as u64,
-    //                            rlim_max: USER_MEMORY_LIMIT as u64,
-    //                        };
-    //                    }
-    //                }
-    //            }
-    //            _ => {}
-    //        }
-    //    }
-    //    Ok(0)
+pub fn syscall_prlimit64(args: [usize; 6]) -> SyscallResult {
+    let pid = args[0];
+    let resource = args[1] as i32;
+    let new_limit = args[2] as *const RLimit;
+    let old_limit = args[3] as *mut RLimit;
+    // 当pid不为0，其实没有权利去修改其他的进程的资源限制
+    let curr_process = process_api();
+    if pid == 0 || pid == curr_process.pid() as usize {
+        match resource {
+            RLIMIT_STACK => {
+                if old_limit as usize != 0 {
+                    unsafe {
+                        *old_limit = RLimit {
+                            rlim_cur: TASK_STACK_SIZE as u64,
+                            rlim_max: TASK_STACK_SIZE as u64,
+                        };
+                    }
+                }
+            }
+            RLIMIT_NOFILE => {
+                // 仅支持修改最大文件数
+                if old_limit as usize != 0 {
+                    let limit = curr_process.fd_manager.get_limit();
+                    unsafe {
+                        *old_limit = RLimit {
+                            rlim_cur: limit as u64,
+                            rlim_max: limit as u64,
+                        };
+                    }
+                }
+                if new_limit as usize != 0 {
+                    let new_limit = unsafe { (*new_limit).rlim_cur };
+                    curr_process.fd_manager.set_limit(new_limit);
+                }
+            }
+            RLIMIT_AS => {
+                const USER_MEMORY_LIMIT: usize = 0xffff_ffff;
+                if old_limit as usize != 0 {
+                    unsafe {
+                        *old_limit = RLimit {
+                            rlim_cur: USER_MEMORY_LIMIT as u64,
+                            rlim_max: USER_MEMORY_LIMIT as u64,
+                        };
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(0)
 }
 
 /// 当前不涉及多核情况
@@ -240,5 +241,19 @@ pub fn syscall_getppid() -> SyscallResult {
 
 /// not support
 pub fn syscall_getpgid() -> SyscallResult {
+    Ok(0)
+}
+
+/// To yield the current task
+pub fn syscall_yield() -> SyscallResult {
+    yield_now();
+    Ok(0)
+}
+
+/// # Arguments
+/// * `pgid: usize`
+pub fn syscall_setpgid(args: [usize; 6]) -> SyscallResult {
+    let pgid = args[0];
+    info!("not support setpgid, try to set {}", pgid);
     Ok(0)
 }

@@ -450,3 +450,27 @@ impl DirEnt {
         self.d_type = type_ as u8;
     }
 }
+
+/// `sys_prlimit64` 使用的数组
+#[repr(C)]
+pub struct RLimit {
+    /// 软上限
+    pub rlim_cur: u64,
+    /// 硬上限
+    pub rlim_max: u64,
+}
+// `sys_prlimit64` 使用的选项
+/// 用户栈大小
+pub const RLIMIT_STACK: i32 = 3;
+/// 可以打开的 `fd` 数
+pub const RLIMIT_NOFILE: i32 = 7;
+/// 用户地址空间的最大大小
+pub const RLIMIT_AS: i32 = 9;
+
+/// robust list
+#[repr(C)]
+pub struct RobustList {
+    head: usize,
+    off: usize,
+    pending: usize,
+}

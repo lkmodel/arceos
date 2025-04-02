@@ -1,9 +1,13 @@
 use crate::{
-    linux_env::{linux_api::api::time_stat_output, process_ext::api::sleep_now_task},
+    linux_env::{
+        linux_api::api::{process_api, time_stat_output},
+        process_ext::api::sleep_now_task,
+    },
     syscall::{ClockId, SyscallError, SyscallResult, TimeSecs, TimeVal, Tms, UtsName},
 };
 use axhal::time::{current_ticks, monotonic_time_nanos, nanos_to_ticks, wall_time};
-use core::time::Duration;
+use core::{slice::from_raw_parts_mut, time::Duration};
+use rand::{Fill, SeedableRng, rngs::SmallRng};
 
 /// 返回值为当前经过的时钟中断数
 /// # Arguments
@@ -171,4 +175,35 @@ pub fn syscall_uname(args: [usize; 6]) -> SyscallResult {
         *uts = UtsName::default();
     }
     Ok(0)
+}
+
+/// # Arguments
+/// * `buf` - *mut u8
+/// * `len` - usize
+/// * `flags` - usize
+pub fn syscall_getrandom(args: [usize; 6]) -> SyscallResult {
+    let buf = args[0] as *mut u8;
+    let len = args[1];
+    let _flags = args[2];
+    // let process = process_api();
+
+    // if process
+    //     .manual_alloc_range_for_lazy(
+    //         (buf as usize).into(),
+    //         unsafe { buf.add(len) as usize }.into(),
+    //     )
+    //     .is_err()
+    // {
+    //     return Err(SyscallError::EFAULT);
+    // }
+
+    let buf = unsafe { from_raw_parts_mut(buf, len) };
+
+    // TODO: flags
+    // - GRND_RANDOM: use /dev/random or /dev/urandom
+    // - GRND_NONBLOCK: EAGAIN when block
+    let mut rng = SmallRng::from_seed([0; 32]);
+    buf.try_fill(&mut rng).unwrap();
+
+    Ok(buf.len() as isize)
 }
