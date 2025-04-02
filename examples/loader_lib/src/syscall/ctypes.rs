@@ -398,3 +398,55 @@ impl UtsName {
         data
     }
 }
+
+/// 目录项
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct DirEnt {
+    /// 索引结点号
+    pub d_ino: u64,
+    /// 到下一个`dirent`的偏移
+    pub d_off: u64,
+    /// 当前`dirent`的长度
+    pub d_reclen: u16,
+    /// 文件类型
+    pub d_type: u8,
+    /// 文件名
+    pub d_name: [u8; 0],
+}
+#[allow(unused)]
+/// 目录项类型
+pub enum DirEntType {
+    /// 未知类型文件
+    Unknown = 0,
+    /// 先进先出的文件/队列
+    Fifo = 1,
+    /// 字符设备
+    Chr = 2,
+    /// 目录
+    Dir = 4,
+    /// 块设备
+    Blk = 6,
+    /// 常规文件
+    Reg = 8,
+    /// 符号链接
+    Lnk = 10,
+    /// socket
+    Socket = 12,
+    /// whiteout
+    Wht = 14,
+}
+
+impl DirEnt {
+    /// 定长部分大小
+    pub fn fixed_size() -> usize {
+        8 + 8 + 2 + 1
+    }
+    /// 设置定长部分
+    pub fn set_fixed_part(&mut self, ino: u64, off: u64, reclen: usize, type_: DirEntType) {
+        self.d_ino = ino;
+        self.d_off = off;
+        self.d_reclen = reclen as u16;
+        self.d_type = type_ as u8;
+    }
+}

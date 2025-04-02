@@ -227,17 +227,12 @@ pub fn syscall_getuid() -> SyscallResult {
 
 /// To get the parent process id
 pub fn syscall_getppid() -> SyscallResult {
-    #[cfg(feature = "unikernel")]
+    #[cfg(feature = "placeholder_process")]
     {
         warn!("Pretending to successfully getppid.");
         Ok(0)
     }
-    #[cfg(feature = "batch")]
-    {
-        warn!("Pretending to successfully getppid.");
-        Ok(0)
-    }
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "process")]
     {
         Ok(process_api().get_parent() as isize)
     }

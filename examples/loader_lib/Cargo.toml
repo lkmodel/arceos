@@ -10,22 +10,24 @@ default = ["fs", "driver-ramdisk", "batch"]
 # 一级可选项目
 
 # 单进程模式
-unikernel = ["placeholder"]
+unikernel = ["placeholder_signal", "placeholder_process"]
 # 单进程，但是批处理模式
-batch = ["placeholder"]
+batch = ["placeholder_signal", "placeholder_process"]
 # `WIP` 不要使用，正在开发！
 # 无特权级的多进程模式
-pseudo_multi_process = ["axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process", "signal"]
+pseudo_multi_process = ["signal", "process"]
 
 ## 二级可选项目（不应该直接选择，可以包含三级）
 fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
 paging = ["alloc", "axhal/paging"]
-placeholder = ["placeholder_signal"]
 
 ### 三级可选特性（只能包含依赖，不应该包含其他特性）
 
-signal = []
-placeholder_signal = []
+signal = [] # 开启这个选项后，将会实质上支持signal模式。 `WIP`
+process = ["axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process"] # 开启这个选项后，将会实质上支持（伪）多进程。`WIP`
+placeholder_signal = [] # 假装支持
+placeholder_process = [] # 假装支持
+
 alloc = ["axalloc", "axruntime/alloc"]
 driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
 

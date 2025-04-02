@@ -62,32 +62,18 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        SETSID => syscall_setsid(),
         //        GETRUSAGE => syscall_getrusage(args),
         //        UMASK => syscall_umask(args),
-        //        // 不做处理即可
-        //        SIGTIMEDWAIT => Ok(0),
-        //        SYSLOG => Ok(0),
-        //        MADVICE => Ok(0),
-        //        SCHED_SETAFFINITY => Ok(0),
+        // 不做处理即可
+        SIGTIMEDWAIT => Ok(0),
+        SYSLOG => Ok(0),
+        MADVICE => Ok(0),
+        SCHED_SETAFFINITY => Ok(0),
         SCHED_GETAFFINITY => syscall_sched_getaffinity(args),
         //        SCHED_SETSCHEDULER => syscall_sched_setscheduler(args),
         //        SCHED_GETSCHEDULER => syscall_sched_getscheduler(args),
-        //        GET_MEMPOLICY => Ok(0),
+        GET_MEMPOLICY => Ok(0),
         //        CLOCK_GETRES => syscall_clock_getres(args),
         CLOCK_NANOSLEEP => syscall_clock_nanosleep(args),
-        //        // syscall below just for x86_64
-        //        #[cfg(target_arch = "x86_64")]
-        //        PRCTL => syscall_prctl(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        VFORK => syscall_vfork(),
-        //        #[cfg(target_arch = "x86_64")]
-        //        ARCH_PRCTL => syscall_arch_prctl(args),
-        //        #[cfg(target_arch = "x86_64")]
-        //        FORK => syscall_fork(),
-        //        #[cfg(target_arch = "x86_64")]
-        //        ALARM => Ok(0),
-        //        #[cfg(target_arch = "x86_64")]
-        //        RSEQ => Ok(0),
-        //        #[cfg(target_arch = "x86_64")]
-        //        TIME => Ok(0),
+
         #[allow(unused)]
         _ => {
             panic!("Invalid Syscall Id: {:?}!", syscall_id);

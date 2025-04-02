@@ -270,7 +270,5 @@ pub fn exit_current_task(exit_code: i32) -> ! {
 /// (用户态秒，用户态微妙，内核态秒，内核态微妙)
 pub fn time_stat_output() -> (usize, usize, usize, usize) {
     let curr_task = current();
-    unimplemented!();
-    // FIXME: 这里还需进一步实现，在starry中，这个是一个monotonic的
-    // curr_task.time_stat_output()
+    curr_task.time_stat_output()
 }

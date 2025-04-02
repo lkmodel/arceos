@@ -93,14 +93,28 @@ fn main() {
         "You must enable exactly one of `unikernel`, `batch` or `multi_process_unchecked`."
     );
 
-    #[cfg(all(
-        feature = "unikernel",
-        feature = "batch",
-        feature = "pseudo_multi_process"
-    ))]
+    #[cfg(all(feature = "unikernel", feature = "batch"))]
+    compile_error!("You cannot enable both `unikernel` and `batch` at the same time.");
+
+    #[cfg(all(feature = "unikernel", feature = "pseudo_multi_process"))]
     compile_error!(
-        "You cannot enable both `unikernel`, `batch` and `multi_process_unchecked` at the same time."
+        "You cannot enable both `unikernel` and `pseudo_multi_process` at the same time."
     );
+
+    #[cfg(all(feature = "batch", feature = "pseudo_multi_process"))]
+    compile_error!("You cannot enable both `batch` and `pseudo_multi_process` at the same time.");
+
+    #[cfg(not(any(feature = "placeholder_signal", feature = "signal",)))]
+    compile_error!("You must enable exactly one of `placeholder_***` or `***`.");
+
+    #[cfg(not(any(feature = "placeholder_process", feature = "process",)))]
+    compile_error!("You must enable exactly one of `placeholder_***` or `***`.");
+
+    #[cfg(all(feature = "placeholder_signal", feature = "signal"))]
+    compile_error!("You cannot enable both `placeholder_***` and `***` at the same time.");
+
+    #[cfg(all(feature = "placeholder_process", feature = "process"))]
+    compile_error!("You cannot enable both `placeholder_***` and `***` at the same time.");
 
     #[cfg(feature = "pseudo_multi_process")]
     {

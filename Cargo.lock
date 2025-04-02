@@ -143,7 +143,7 @@ dependencies = [
  "kspin",
  "lazyinit",
  "memory_addr",
- "numeric-enum-macro",
+ "numeric-enum-macro 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
 ]
 
@@ -623,6 +623,7 @@ dependencies = [
  "lazyinit",
  "log",
  "memory_addr",
+ "numeric-enum-macro 0.2.0 (git+https://github.com/mexus/numeric-enum-macro)",
  "percpu",
  "rand",
  "scheduler",
@@ -1288,6 +1289,11 @@ name = "numeric-enum-macro"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "300e4bdb6b46b592948e700ea1ef24a4296491f6a0ee722b258040abd15a3714"
+
+[[package]]
+name = "numeric-enum-macro"
+version = "0.2.0"
+source = "git+https://github.com/mexus/numeric-enum-macro#20aef288b2ecd2381ab6627c2a6c9e0436d8c8ff"
 
 [[package]]
 name = "once_cell"
