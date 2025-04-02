@@ -29,51 +29,51 @@ long double __divtf3(long double a, long double b);
 long double __divxf3(long double a, long double b);
 // These functions return the quotient of `a` and `b`; that is, `a` / `b`.
 
-// float __negsf2(float a);
-// double __negdf2(double a);
-// long double __negtf2(long double a);
-// long double __negxf2(long double a);
+float __negsf2(float a);
+double __negdf2(double a);
+long double __negtf2(long double a);
+long double __negxf2(long double a);
 // These functions return the negation of `a`. They simply flip the sign bit, so they can produce
 // negative zero and negative `NaN`.
 
 // 3.2.2 Conversion functions
 
-// double __extendsfdf2(float a);
+double __extendsfdf2(float a);
 long double __extendsftf2(float a);
-// long double __extendsfxf2(float a);
+long double __extendsfxf2(float a);
 long double __extenddftf2(double a);
-// long double __extenddfxf2(double a);
+long double __extenddfxf2(double a);
 // These functions extend a to the wider mode of their return type.
 
-// double __truncxfdf2(long double a);
+double __truncxfdf2(long double a);
 double __trunctfdf2(long double a);
-// float __truncxfsf2(long double a);
+float __truncxfsf2(long double a);
 float __trunctfsf2(long double a);
-// float __truncdfsf2(double a);
+float __truncdfsf2(double a);
 // These functions truncate a to the narrower mode of their return type, rounding toward zero.
 
-// int __fixsfsi(float a);
-// int __fixdfsi(double a);
+int __fixsfsi(float a);
+int __fixdfsi(double a);
 int __fixtfsi(long double a);
-// int __fixxfsi(long double a);
+int __fixxfsi(long double a);
 // These functions convert a to a signed integer, rounding toward zero.
 
-// long __fixsfdi(float a);
-// long __fixdfdi(double a);
+long __fixsfdi(float a);
+long __fixdfdi(double a);
 long __fixtfdi(long double a);
-// long __fixxfdi(long double a);
+long __fixxfdi(long double a);
 // These functions convert a to a signed long, rounding toward zero.
 
-// long long __fixsfti(float a);
-// long long __fixdfti(double a);
-// long long __fixtfti(long double a);
-// long long __fixxfti(long double a);
+long long __fixsfti(float a);
+long long __fixdfti(double a);
+long long __fixtfti(long double a);
+long long __fixxfti(long double a);
 // These functions convert a to a signed long long, rounding toward zero.
 
-// unsigned int __fixunssfsi(float a);
-// unsigned int __fixunsdfsi(double a);
+unsigned int __fixunssfsi(float a);
+unsigned int __fixunsdfsi(double a);
 unsigned int __fixunstfsi(long double a);
-// unsigned int __fixunsxfsi(long double a);
+unsigned int __fixunsxfsi(long double a);
 // These functions convert a to an unsigned integer, rounding toward zero. Negative values all
 // become zero.
 
