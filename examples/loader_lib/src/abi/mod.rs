@@ -24,6 +24,7 @@ use compiler_builtins::{
         div::*,
         extend::{__extenddftf2, __extendsfdf2, __extendsftf2},
         mul::*,
+        pow::{__powidf2, __powisf2, __powitf2},
         sub::*,
         trunc::{__truncdfsf2, __trunctfdf2, __trunctfsf2},
     },
@@ -183,7 +184,7 @@ const ABI_RT_FLOATBITINTTF: usize = 185;
 const ABI_RT_FLOATBITINTHF: usize = 186;
 const ABI_RT_FLOATBITINTBF: usize = 187;
 
-// Comparison functions [180, 223]
+// Comparison functions [180, 211]
 const ABI_RT_CMPSF2: usize = 188;
 const ABI_RT_CMPDF2: usize = 189;
 const ABI_RT_CMPTF2: usize = 190;
@@ -216,20 +217,21 @@ const ABI_RT_GTSF2: usize = 209;
 const ABI_RT_GTDF2: usize = 210;
 const ABI_RT_GTTF2: usize = 211;
 
-const _ABI_RT_POWISF2: usize = 212;
-const _ABI_RT_POWIDF2: usize = 213;
-const _ABI_RT_POWITF2: usize = 214;
-const _ABI_RT_POWIXF2: usize = 215;
+// Other floating-point functions [212, 223]
+const ABI_RT_POWISF2: usize = 212;
+const ABI_RT_POWIDF2: usize = 213;
+const ABI_RT_POWITF2: usize = 214;
+const ABI_RT_POWIXF2: usize = 215;
 
-const _ABI_RT_MULSC3: usize = 216;
-const _ABI_RT_MULDC3: usize = 217;
-const _ABI_RT_MULTC3: usize = 218;
-const _ABI_RT_MULXC3: usize = 219;
+const ABI_RT_MULSC3: usize = 216;
+const ABI_RT_MULDC3: usize = 217;
+const ABI_RT_MULTC3: usize = 218;
+const ABI_RT_MULXC3: usize = 219;
 
-const _ABI_RT_DIVSC3: usize = 220;
-const _ABI_RT_DIVDC3: usize = 221;
-const _ABI_RT_DIVTC3: usize = 222;
-const _ABI_RT_DIVXC3: usize = 223;
+const ABI_RT_DIVSC3: usize = 220;
+const ABI_RT_DIVDC3: usize = 221;
+const ABI_RT_DIVTC3: usize = 222;
+const ABI_RT_DIVXC3: usize = 223;
 
 // `rt_integer` 的实现
 // Arithmetic functions[230, 256]
@@ -543,6 +545,22 @@ pub fn init_abis() {
     register_abi("rt_gtsf2", ABI_RT_GTSF2, __gtsf2 as usize);
     register_abi("rt_gtdf2", ABI_RT_GTDF2, __gtdf2 as usize);
     register_abi("rt_gttf2", ABI_RT_GTTF2, __gttf2 as usize);
+
+    // Other floating-point functions [212, 223]
+    register_abi("rt_powisf2", ABI_RT_POWISF2, __powisf2 as usize);
+    register_abi("rt_powidf2", ABI_RT_POWIDF2, __powidf2 as usize);
+    register_abi("rt_powitf2", ABI_RT_POWITF2, __powitf2 as usize);
+    register_abi("rt_powixf2", ABI_RT_POWIXF2, __powitf2 as usize);
+
+    register_abi("rt_mulsc3", ABI_RT_MULSC3, abi_noimpl as usize);
+    register_abi("rt_muldc3", ABI_RT_MULDC3, abi_noimpl as usize);
+    register_abi("rt_multc3", ABI_RT_MULTC3, abi_noimpl as usize);
+    register_abi("rt_mulxc3", ABI_RT_MULXC3, abi_noimpl as usize);
+
+    register_abi("rt_divsc3", ABI_RT_DIVSC3, abi_noimpl as usize);
+    register_abi("rt_divdc3", ABI_RT_DIVDC3, abi_noimpl as usize);
+    register_abi("rt_divtc3", ABI_RT_DIVTC3, abi_noimpl as usize);
+    register_abi("rt_divxc3", ABI_RT_DIVXC3, abi_noimpl as usize);
 
     // ----------------
 

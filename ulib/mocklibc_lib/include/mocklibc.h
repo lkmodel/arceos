@@ -176,6 +176,22 @@
 #define ABI_RT_GTDF2 210
 #define ABI_RT_GTTF2 211
 
+// Other floating-point functions
+#define ABI_RT_POWISF2 212
+#define ABI_RT_POWIDF2 213
+#define ABI_RT_POWITF2 214
+#define ABI_RT_POWIXF2 215
+
+#define ABI_RT_MULSC3 216
+#define ABI_RT_MULDC3 217
+#define ABI_RT_MULTC3 218
+#define ABI_RT_MULXC3 219
+
+#define ABI_RT_DIVSC3 220
+#define ABI_RT_DIVDC3 221
+#define ABI_RT_DIVTC3 222
+#define ABI_RT_DIVXC3 223
+
 #define ABI_RT_CLZSI2 271
 #define ABI_RT_CLZDI2 272
 #define ABI_RT_CLZTI2 273

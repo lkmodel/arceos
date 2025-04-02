@@ -127,6 +127,7 @@ long double __floatuntitf(unsigned long long i);
 long double __floatuntixf(unsigned long long i);
 // These functions convert `i`, an unsigned long long, to floating point.
 
+// ```
 // void __fixsfbitint(UBILtype *r, int32_t rprec, float a);
 // void __fixdfbitint(UBILtype *r, int32_t rprec, double a);
 // void __fixxfbitint(UBILtype *r, int32_t rprec, __float80 a);
@@ -135,6 +136,7 @@ long double __floatuntixf(unsigned long long i);
 // it converts to unsigned bit-precise integer and negative values all become zero, if rprec is
 // negative, it converts to signed bit-precise integer.
 
+// ```
 // float __floatbitintsf(UBILtype *i, int32_t iprec);
 // double __floatbitintdf(UBILtype *i, int32_t iprec);
 // __float80 __floatbitintxf(UBILtype *i, int32_t iprec);
@@ -214,23 +216,24 @@ int __gttf2(long double a, long double b);
 
 // 3.2.4 Other floating-point functions
 
-// float __powisf2(float a, int b);
-// double __powidf2(double a, int b);
-// long double __powitf2(long double a, int b);
-// long double __powixf2(long double a, int b);
-// These functions convert raise a to the power b.
+float __powisf2(float a, int b);
+double __powidf2(double a, int b);
+long double __powitf2(long double a, int b);
+long double __powixf2(long double a, int b);
+// These functions convert raise `a` to the power `b`.
 
 _Complex float __mulsc3(float a, float b, float c, float d);
 _Complex double __muldc3(double a, double b, double c, double d);
 _Complex long double __multc3(long double a, long double b, long double c, long double d);
-// complex long double __mulxc3(long double a, long double b, long double c, long double d);
-// These functions return the product of a + ib and c + id, following the rules of C99 Annex G.
+_Complex long double __mulxc3(long double a, long double b, long double c, long double d);
+// These functions return the product of `a` + `ib` and `c` + `id`,
+// following the rules of `C99` Annex `G`.
 
-// complex float __divsc3(float a, float b, float c, float d);
-// complex double __divdc3(double a, double b, double c, double d);
-// complex long double __divtc3(long double a, long double b, long double c, long double d);
-// complex long double __divxc3(long double a, long double b, long double c, long double d);
-// These functions return the quotient of a + ib and c + id (i.e., (a + ib) / (c + id)), following
-// the rules of C99 Annex G.
+_Complex float __divsc3(float a, float b, float c, float d);
+_Complex double __divdc3(double a, double b, double c, double d);
+_Complex long double __divtc3(long double a, long double b, long double c, long double d);
+_Complex long double __divxc3(long double a, long double b, long double c, long double d);
+// These functions return the quotient of `a` + `ib` and `c` + `id`
+// (i.e., (`a` + `ib`) / (`c` + `id`)), following the rules of `C99` Annex `G`.
 
 #endif // !__HIDDEN_H
