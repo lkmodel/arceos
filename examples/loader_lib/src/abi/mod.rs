@@ -12,6 +12,7 @@ use compiler_builtins::{
         cmp::{
             __eqdf2, __eqsf2, __eqtf2, __gedf2, __gesf2, __getf2, __gtdf2, __gtsf2, __gttf2,
             __ledf2, __lesf2, __letf2, __ltdf2, __ltsf2, __lttf2, __nedf2, __nesf2, __netf2,
+            __unorddf2, __unordsf2, __unordtf2,
         },
         conv::{
             __fixdfdi, __fixdfsi, __fixdfti, __fixsfdi, __fixsfsi, __fixsfti, __fixtfdi, __fixtfsi,
@@ -518,9 +519,9 @@ pub fn init_abis() {
     register_abi("rt_cmpdf2", ABI_RT_CMPDF2, abi_noimpl as usize);
     register_abi("rt_cmptf2", ABI_RT_CMPTF2, abi_noimpl as usize);
 
-    register_abi("rt_unordsf2", ABI_RT_UNORDSF2, abi_noimpl as usize);
-    register_abi("rt_unorddf2", ABI_RT_UNORDDF2, abi_noimpl as usize);
-    register_abi("rt_unordtf2", ABI_RT_UNORDTF2, abi_noimpl as usize);
+    register_abi("rt_unordsf2", ABI_RT_UNORDSF2, __unordsf2 as usize);
+    register_abi("rt_unorddf2", ABI_RT_UNORDDF2, __unorddf2 as usize);
+    register_abi("rt_unordtf2", ABI_RT_UNORDTF2, __unordtf2 as usize);
 
     register_abi("rt_eqsf2", ABI_RT_EQSF2, __eqsf2 as usize);
     register_abi("rt_eqdf2", ABI_RT_EQDF2, __eqdf2 as usize);
