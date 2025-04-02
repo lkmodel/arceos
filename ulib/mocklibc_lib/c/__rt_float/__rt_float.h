@@ -91,29 +91,29 @@ unsigned long long __fixunsxfti(long double a);
 // These functions convert a to an unsigned long long, rounding toward zero.
 // Negative values all become zero.
 
-// float __floatsisf(int i);
-// double __floatsidf(int i);
+float __floatsisf(int i);
+double __floatsidf(int i);
 long double __floatsitf(int i);
-// long double __floatsixf(int i);
-// These functions convert i, a signed integer, to floating point.
+long double __floatsixf(int i);
+// These functions convert `i`, a signed integer, to floating point.
 
-// float __floatdisf(long i);
-// double __floatdidf(long i);
+float __floatdisf(long i);
+double __floatdidf(long i);
 long double __floatditf(long i);
-// long double __floatdixf(long i);
-// These functions convert i, a signed long, to floating point.
+long double __floatdixf(long i);
+// These functions convert `i`, a signed long, to floating point.
 
-// float __floattisf(long long i);
-// double __floattidf(long long i);
-// long double __floattitf(long long i);
-// long double __floattixf(long long i);
-// These functions convert i, a signed long long, to floating point.
+float __floattisf(long long i);
+double __floattidf(long long i);
+long double __floattitf(long long i);
+long double __floattixf(long long i);
+// These functions convert `i`, a signed long long, to floating point.
 
-// float __floatunsisf(unsigned int i);
-// double __floatunsidf(unsigned int i);
+float __floatunsisf(unsigned int i);
+double __floatunsidf(unsigned int i);
 long double __floatunsitf(unsigned int i);
-// long double __floatunsixf(unsigned int i);
-// These functions convert i, an unsigned integer, to floating point.
+long double __floatunsixf(unsigned int i);
+// These functions convert `i`, an unsigned integer, to floating point.
 
 // float __floatundisf(unsigned long i);
 // double __floatundidf(unsigned long i);

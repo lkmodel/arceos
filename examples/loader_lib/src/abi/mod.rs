@@ -13,8 +13,9 @@ use compiler_builtins::{
         conv::{
             __fixdfdi, __fixdfsi, __fixdfti, __fixsfdi, __fixsfsi, __fixsfti, __fixtfdi, __fixtfsi,
             __fixtfti, __fixunsdfdi, __fixunsdfsi, __fixunsdfti, __fixunssfdi, __fixunssfsi,
-            __fixunssfti, __fixunstfdi, __fixunstfsi, __fixunstfti, __floatditf, __floatsitf,
-            __floatunsitf,
+            __fixunssfti, __fixunstfdi, __fixunstfsi, __fixunstfti, __floatdidf, __floatdisf,
+            __floatditf, __floatsidf, __floatsisf, __floatsitf, __floattidf, __floattisf,
+            __floattitf, __floatunsidf, __floatunsisf, __floatunsitf,
         },
         div::*,
         extend::{__extenddftf2, __extendsfdf2, __extendsftf2},
@@ -137,35 +138,35 @@ const ABI_RT_FIXUNSDFTI: usize = 151;
 const ABI_RT_FIXUNSTFTI: usize = 152;
 const ABI_RT_FIXUNSXFTI: usize = 153;
 
-const _ABI_RT_FLOATSISF: usize = 154;
-const _ABI_RT_FLOATSIDF: usize = 155;
+const ABI_RT_FLOATSISF: usize = 154;
+const ABI_RT_FLOATSIDF: usize = 155;
 const ABI_RT_FLOATSITF: usize = 156;
-const _ABI_RT_FLOATSIXF: usize = 157;
+const ABI_RT_FLOATSIXF: usize = 157;
 
-const _ABI_RT_FLOATDISF: usize = 158;
-const _ABI_RT_FLOATDIDF: usize = 159;
+const ABI_RT_FLOATDISF: usize = 158;
+const ABI_RT_FLOATDIDF: usize = 159;
 const ABI_RT_FLOATDITF: usize = 160;
-const _ABI_RT_FLOATDIXF: usize = 161;
+const ABI_RT_FLOATDIXF: usize = 161;
 
-const _ABI_RT_FLOATTISF: usize = 162;
-const _ABI_RT_FLOATTIDF: usize = 163;
-const _ABI_RT_FLOATTITF: usize = 164;
-const _ABI_RT_FLOATTIXF: usize = 165;
+const ABI_RT_FLOATTISF: usize = 162;
+const ABI_RT_FLOATTIDF: usize = 163;
+const ABI_RT_FLOATTITF: usize = 164;
+const ABI_RT_FLOATTIXF: usize = 165;
 
-const _ABI_RT_FLOATUNSISF: usize = 166;
-const _ABI_RT_FLOATUNSIDF: usize = 167;
+const ABI_RT_FLOATUNSISF: usize = 166;
+const ABI_RT_FLOATUNSIDF: usize = 167;
 const ABI_RT_FLOATUNSITF: usize = 168;
-const _ABI_RT_FLOATUNSIXF: usize = 169;
+const ABI_RT_FLOATUNSIXF: usize = 169;
 
 const _ABI_RT_FLOATUNDISF: usize = 170;
 const _ABI_RT_FLOATUNDIDF: usize = 171;
 const _ABI_RT_FLOATUNDITF: usize = 172;
 const _ABI_RT_FLOATUNDIXF: usize = 173;
 
-const _ABI_RTFLOATUNTISF: usize = 174;
-const _ABI_RTFLOATUNTIDF: usize = 175;
-const _ABI_RTFLOATUNTITF: usize = 176;
-const _ABI_RTFLOATUNTIXF: usize = 177;
+const _ABI_RT_FLOATUNTISF: usize = 174;
+const _ABI_RT_FLOATUNTIDF: usize = 175;
+const _ABI_RT_FLOATUNTITF: usize = 176;
+const _ABI_RT_FLOATUNTIXF: usize = 177;
 
 const _ABI_RT_FIXSFBITINT: usize = 178;
 const _ABI_RT_FIXDFBITINT: usize = 179;
@@ -440,11 +441,28 @@ pub fn init_abis() {
     register_abi("rt_fixunstfti", ABI_RT_FIXUNSTFTI, __fixunstfti as usize);
     register_abi("rt_fixunsxfti", ABI_RT_FIXUNSXFTI, __fixunstfti as usize);
 
+    register_abi("rt_floatsisf", ABI_RT_FLOATSISF, __floatsisf as usize);
+    register_abi("rt_floatsidf", ABI_RT_FLOATSIDF, __floatsidf as usize);
+    register_abi("rt_floatsitf", ABI_RT_FLOATSITF, __floatsitf as usize);
+    register_abi("rt_floatsixf", ABI_RT_FLOATSIXF, __floatsitf as usize);
+
+    register_abi("rt_floatdisf", ABI_RT_FLOATDISF, __floatdisf as usize);
+    register_abi("rt_floatdidf", ABI_RT_FLOATDIDF, __floatdidf as usize);
+    register_abi("rt_floatditf", ABI_RT_FLOATDITF, __floatditf as usize);
+    register_abi("rt_floatdixf", ABI_RT_FLOATDIXF, __floatditf as usize);
+
+    register_abi("rt_floattisf", ABI_RT_FLOATTISF, __floattisf as usize);
+    register_abi("rt_floattidf", ABI_RT_FLOATTIDF, __floattidf as usize);
+    register_abi("rt_floattitf", ABI_RT_FLOATTITF, __floattitf as usize);
+    register_abi("rt_floattixf", ABI_RT_FLOATTIXF, __floattitf as usize);
+
+    register_abi("rt_floatunsisf", ABI_RT_FLOATUNSISF, __floatunsisf as usize);
+    register_abi("rt_floatunsidf", ABI_RT_FLOATUNSIDF, __floatunsidf as usize);
+    register_abi("rt_floatunsitf", ABI_RT_FLOATUNSITF, __floatunsitf as usize);
+    register_abi("rt_floatunsixf", ABI_RT_FLOATUNSIXF, __floatunsitf as usize);
+
     // ----------------
 
-    register_abi("rt_floatsitf", ABI_RT_FLOATSITF, __floatsitf as usize);
-    register_abi("rt_floatditf", ABI_RT_FLOATDITF, __floatditf as usize);
-    register_abi("rt_floatunsitf", ABI_RT_FLOATUNSITF, __floatunsitf as usize);
     register_abi("rt_eqtf2", ABI_RT_EQTF2, __eqtf2 as usize);
     register_abi("rt_netf2", ABI_RT_NETF2, __netf2 as usize);
     register_abi("rt_getf2", ABI_RT_GETF2, __getf2 as usize);
