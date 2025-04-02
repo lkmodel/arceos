@@ -84,10 +84,10 @@ unsigned long __fixunsxfdi(long double a);
 // These functions convert a to an unsigned long, rounding toward zero.
 // Negative values all become zero.
 
-// unsigned long long __fixunssfti(float a);
-// unsigned long long __fixunsdfti(double a);
-// unsigned long long __fixunstfti(long double a);
-// unsigned long long __fixunsxfti(long double a);
+unsigned long long __fixunssfti(float a);
+unsigned long long __fixunsdfti(double a);
+unsigned long long __fixunstfti(long double a);
+unsigned long long __fixunsxfti(long double a);
 // These functions convert a to an unsigned long long, rounding toward zero.
 // Negative values all become zero.
 

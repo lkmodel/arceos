@@ -12,8 +12,9 @@ use compiler_builtins::{
         cmp::{__eqtf2, __getf2, __gttf2, __letf2, __lttf2, __nedf2, __nesf2, __netf2},
         conv::{
             __fixdfdi, __fixdfsi, __fixdfti, __fixsfdi, __fixsfsi, __fixsfti, __fixtfdi, __fixtfsi,
-            __fixtfti, __fixunsdfdi, __fixunsdfsi, __fixunssfdi, __fixunssfsi, __fixunstfdi,
-            __fixunstfsi, __floatditf, __floatsitf, __floatunsitf,
+            __fixtfti, __fixunsdfdi, __fixunsdfsi, __fixunsdfti, __fixunssfdi, __fixunssfsi,
+            __fixunssfti, __fixunstfdi, __fixunstfsi, __fixunstfti, __floatditf, __floatsitf,
+            __floatunsitf,
         },
         div::*,
         extend::{__extenddftf2, __extendsfdf2, __extendsftf2},
@@ -131,10 +132,10 @@ const ABI_RT_FIXUNSDFDI: usize = 147;
 const ABI_RT_FIXUNSTFDI: usize = 148;
 const ABI_RT_FIXUNSXFDI: usize = 149;
 
-const _ABI_RT_FIXUNSSFTI: usize = 150;
-const _ABI_RT_FIXUNSDFTI: usize = 151;
-const _ABI_RT_FIXUNSTFTI: usize = 152;
-const _ABI_RT_FIXUNSXFTI: usize = 153;
+const ABI_RT_FIXUNSSFTI: usize = 150;
+const ABI_RT_FIXUNSDFTI: usize = 151;
+const ABI_RT_FIXUNSTFTI: usize = 152;
+const ABI_RT_FIXUNSXFTI: usize = 153;
 
 const _ABI_RT_FLOATSISF: usize = 154;
 const _ABI_RT_FLOATSIDF: usize = 155;
@@ -433,6 +434,11 @@ pub fn init_abis() {
     register_abi("rt_fixunsdfdi", ABI_RT_FIXUNSDFDI, __fixunsdfdi as usize);
     register_abi("rt_fixunstfdi", ABI_RT_FIXUNSTFDI, __fixunstfdi as usize);
     register_abi("rt_fixunsxfdi", ABI_RT_FIXUNSXFDI, __fixunstfdi as usize);
+
+    register_abi("rt_fixunssfti", ABI_RT_FIXUNSSFTI, __fixunssfti as usize);
+    register_abi("rt_fixunsdfti", ABI_RT_FIXUNSDFTI, __fixunsdfti as usize);
+    register_abi("rt_fixunstfti", ABI_RT_FIXUNSTFTI, __fixunstfti as usize);
+    register_abi("rt_fixunsxfti", ABI_RT_FIXUNSXFTI, __fixunstfti as usize);
 
     // ----------------
 
