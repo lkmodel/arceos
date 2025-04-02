@@ -257,3 +257,27 @@ pub fn syscall_setpgid(args: [usize; 6]) -> SyscallResult {
     info!("not support setpgid, try to set {}", pgid);
     Ok(0)
 }
+
+/// 设置tid对应的指针
+/// 返回值为当前的tid
+/// # Arguments
+/// * `tid` - usize
+pub fn syscall_set_tid_address(args: [usize; 6]) -> SyscallResult {
+    #[cfg(feature = "process")]
+    {
+        let tid = args[0];
+        set_child_tid(tid);
+        Ok(current_task().id().as_u64() as isize)
+    }
+    #[cfg(feature = "placeholder_process")]
+    {
+        Ok(current_task().id().as_u64() as isize)
+    }
+}
+
+/// # Arguments
+/// * `new_mask - i32`
+pub fn syscall_umask(args: [usize; 6]) -> SyscallResult {
+    let new_mask = args[0] as i32;
+    Ok(process_api().fd_manager.set_mask(new_mask) as isize)
+}

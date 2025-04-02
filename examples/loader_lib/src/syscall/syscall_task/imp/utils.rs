@@ -1,11 +1,13 @@
 use crate::{
     linux_env::{
-        linux_api::api::{process_api, time_stat_output},
+        linux_api::api::{current_time_nanos, process_api, time_stat_output},
         process_ext::api::sleep_now_task,
     },
-    syscall::{ClockId, SyscallError, SyscallResult, TimeSecs, TimeVal, Tms, UtsName},
+    syscall::{
+        ClockId, ITimerVal, SysInfo, SyscallError, SyscallResult, TimeSecs, TimeVal, Tms, UtsName,
+    },
 };
-use axhal::time::{current_ticks, monotonic_time_nanos, nanos_to_ticks, wall_time};
+use axhal::time::{NANOS_PER_SEC, nanos_to_ticks, wall_time};
 use core::{slice::from_raw_parts_mut, time::Duration};
 use rand::{Fill, SeedableRng, rngs::SmallRng};
 
@@ -32,7 +34,7 @@ use rand::{Fill, SeedableRng, rngs::SmallRng};
 pub fn syscall_get_time_of_day(args: [usize; 6]) -> SyscallResult {
     let ts = args[0] as *mut TimeVal;
 
-    let current_us = monotonic_time_nanos() as usize / 1000;
+    let current_us = current_time_nanos() as usize / 1000;
     unsafe {
         *ts = TimeVal {
             sec: current_us / 1_000_000,
@@ -163,7 +165,7 @@ pub fn syscall_time(args: [usize; 6]) -> SyscallResult {
         }
     }
 
-    Ok(nanos_to_ticks(monotonic_time_nanos()) as isize)
+    Ok(nanos_to_ticks(current_time_nanos()) as isize)
 }
 
 /// 获取系统信息
@@ -200,10 +202,73 @@ pub fn syscall_getrandom(args: [usize; 6]) -> SyscallResult {
     let buf = unsafe { from_raw_parts_mut(buf, len) };
 
     // TODO: flags
-    // - GRND_RANDOM: use /dev/random or /dev/urandom
-    // - GRND_NONBLOCK: EAGAIN when block
+    // - `GRND_RANDOM: use /dev/random or /dev/urandom`
+    // - `GRND_NONBLOCK: EAGAIN when block`
     let mut rng = SmallRng::from_seed([0; 32]);
     buf.try_fill(&mut rng).unwrap();
 
     Ok(buf.len() as isize)
+}
+
+/// 获取系统的启动时间和内存信息，当前仅支持启动时间
+/// # Arguments
+/// * `info - *mut SysInfo`
+pub fn syscall_sysinfo(args: [usize; 6]) -> SyscallResult {
+    let info = args[0] as *mut SysInfo;
+    // let process = current_process();
+    // if process
+    //     .manual_alloc_type_for_lazy(info as *const SysInfo)
+    //     .is_err()
+    // {
+    //     return Err(SyscallError::EFAULT);
+    // }
+
+    unsafe {
+        // 获取以秒为单位的时间
+        (*info).uptime = (current_time_nanos() / NANOS_PER_SEC) as isize;
+    }
+    Ok(0)
+}
+
+/// # Arguments
+/// * `which` - usize
+/// * `new_value` - *const ITimerVal
+/// * `old_value` - *mut ITimerVal
+pub fn syscall_settimer(args: [usize; 6]) -> SyscallResult {
+    unimplemented!()
+    // let which = args[0];
+    // let new_value = args[1] as *const ITimerVal;
+    // let old_value = args[2] as *mut ITimerVal;
+    // let process = process_api();
+
+    // if new_value.is_null() {
+    //     return Err(SyscallError::EFAULT);
+    // }
+
+    // let new_value = match process.manual_alloc_type_for_lazy(new_value) {
+    //     Ok(_) => unsafe { &*new_value },
+    //     Err(_) => return Err(SyscallError::EFAULT),
+    // };
+
+    // if !old_value.is_null() {
+    //     if process.manual_alloc_type_for_lazy(old_value).is_err() {
+    //         return Err(SyscallError::EFAULT);
+    //     }
+
+    //     let (time_interval_us, time_remained_us) = current_task().timer_output();
+    //     unsafe {
+    //         (*old_value).it_interval = TimeVal::from_micro(time_interval_us);
+    //         (*old_value).it_value = TimeVal::from_micro(time_remained_us);
+    //     }
+    // }
+    // let (time_interval_ns, time_remained_ns) = (
+    //     new_value.it_interval.turn_to_nanos(),
+    //     new_value.it_value.turn_to_nanos(),
+    // );
+    // if current_task().set_timer(time_interval_ns, time_remained_ns, which) {
+    //     Ok(0)
+    // } else {
+    //     // 说明which参数错误
+    //     Err(SyscallError::EFAULT)
+    // }
 }

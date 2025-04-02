@@ -474,3 +474,44 @@ pub struct RobustList {
     off: usize,
     pending: usize,
 }
+
+/// syscall_info 用到的 结构体
+#[repr(C)]
+#[derive(Debug)]
+pub struct SysInfo {
+    /// 启动时间(以秒计)
+    pub uptime: isize,
+    /// 1 / 5 / 15 分钟平均负载
+    pub loads: [usize; 3],
+    /// 内存总量，单位为 mem_unit Byte(见下)
+    pub totalram: usize,
+    /// 当前可用内存，单位为 mem_unit Byte(见下)
+    pub freeram: usize,
+    /// 共享内存大小，单位为 mem_unit Byte(见下)
+    pub sharedram: usize,
+    /// 用于缓存的内存大小，单位为 mem_unit Byte(见下)
+    pub bufferram: usize,
+    /// swap空间大小，即主存上用于替换内存中非活跃部分的空间大小，单位为 mem_unit Byte(见下)
+    pub totalswap: usize,
+    /// 可用的swap空间大小，单位为 mem_unit Byte(见下)
+    pub freeswap: usize,
+    /// 当前进程数，单位为 mem_unit Byte(见下)
+    pub procs: u16,
+    /// 高地址段的内存大小，单位为 mem_unit Byte(见下)
+    pub totalhigh: usize,
+    /// 可用的高地址段的内存大小，单位为 mem_unit Byte(见下)
+    pub freehigh: usize,
+    /// 指定 `sys_info` 的结构中用到的内存值的单位。
+    /// 如 mem_unit = 1024, totalram = 100, 则指示总内存为 100K
+    pub mem_unit: u32,
+}
+
+/// `sys_gettimer / sys_settimer` 指定的类型，用户输入输出计时器
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct ITimerVal {
+    /// The cycle of the timer
+    pub it_interval: TimeVal,
+    /// The remaining time of the timer
+    pub it_value: TimeVal,
+}

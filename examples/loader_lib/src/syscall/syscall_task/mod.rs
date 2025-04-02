@@ -42,7 +42,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
         SIGRETURN => syscall_sigreturn(),
         EXIT_GROUP => syscall_exit(args),
-        //        SET_TID_ADDRESS => syscall_set_tid_address(args),
+        SET_TID_ADDRESS => syscall_set_tid_address(args),
         PRLIMIT64 => syscall_prlimit64(args),
         CLOCK_GET_TIME => syscall_clock_get_time(args),
         CLOCK_SET_TIME => unimplemented!(),
@@ -56,12 +56,12 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        SET_ROBUST_LIST => syscall_set_robust_list(args),
         //        #[cfg(feature = "futex")]
         //        GET_ROBUST_LIST => syscall_get_robust_list(args),
-        //        SYSINFO => syscall_sysinfo(args),
-        //        SETITIMER => syscall_settimer(args),
+        SYSINFO => syscall_sysinfo(args),
+        SETITIMER => syscall_settimer(args),
         //        GETTIMER => syscall_gettimer(args),
         //        SETSID => syscall_setsid(),
         //        GETRUSAGE => syscall_getrusage(args),
-        //        UMASK => syscall_umask(args),
+        UMASK => syscall_umask(args),
         // 不做处理即可
         SIGTIMEDWAIT => Ok(0),
         SYSLOG => Ok(0),

@@ -1,5 +1,8 @@
+use core::time::Duration;
+
 use crate::abi::thread::abi_pthread_exit;
 use alloc::{string::String, sync::Arc};
+use axhal::time::{TimeValue, monotonic_time_nanos};
 use axstd::process::exit;
 use axtask::current;
 use lazyinit::LazyInit;
@@ -271,4 +274,26 @@ pub fn exit_current_task(exit_code: i32) -> ! {
 pub fn time_stat_output() -> (usize, usize, usize, usize) {
     let curr_task = current();
     curr_task.time_stat_output()
+}
+
+/// Returns the current clock time in nanoseconds.
+pub fn current_time_nanos() -> u64 {
+    monotonic_time_nanos()
+}
+
+/// Returns the current clock time in [`TimeValue`].
+pub fn current_time() -> TimeValue {
+    TimeValue::from_nanos(current_time_nanos())
+}
+
+/// Busy waiting for the given duration.
+pub fn busy_wait(dur: Duration) {
+    busy_wait_until(current_time() + dur);
+}
+
+/// Busy waiting until reaching the given deadline.
+pub fn busy_wait_until(deadline: TimeValue) {
+    while current_time() < deadline {
+        core::hint::spin_loop();
+    }
 }
