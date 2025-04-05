@@ -31,11 +31,7 @@ else
 	LIB_ARG =
 endif
 
-all: subdir toplash
-
-# 确保在子目录 `$(DIR)` 中已经编译好应用程序文件
-subdir:
-	$(MAKE) -C $(SRC_DIR)
+all: toplash
 
 # 打包头部 + App + Lib + 脚本的最终二进制文件
 toplash:
@@ -72,4 +68,4 @@ toplash:
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all toplash clean subdir
+.PHONY: all toplash clean

@@ -38,7 +38,7 @@ pub fn run_loop() {
         head_decoded.script.0 as usize,
     );
 
-    let lib = if head_decoded.lib.0 != 0 {
+    let lib = if head_decoded.lib.0 != 0 && head_decoded.lib.1 != 0 {
         let lib_elf_slice = unsafe {
             from_raw_parts(
                 (PLASH_START + (head_decoded.lib.1 as usize)) as *const u8,
@@ -63,8 +63,10 @@ pub fn run_loop() {
             elf: lib_elf,
             entry: lib_entry,
         })
-    } else {
+    } else if head_decoded.lib.0 == 0 && head_decoded.lib.1 == 0 {
         None
+    } else {
+        panic!("Error in Lib part");
     };
 
     // 基于 `script_decoded` 进行加载与执行
