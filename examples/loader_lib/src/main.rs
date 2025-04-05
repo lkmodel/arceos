@@ -107,14 +107,14 @@ fn main() {
     #[cfg(not(any(feature = "placeholder_signal", feature = "signal",)))]
     compile_error!("You must enable exactly one of `placeholder_***` or `***`.");
 
-    #[cfg(not(any(feature = "placeholder_process", feature = "process",)))]
-    compile_error!("You must enable exactly one of `placeholder_***` or `***`.");
-
     #[cfg(all(feature = "placeholder_signal", feature = "signal"))]
     compile_error!("You cannot enable both `placeholder_***` and `***` at the same time.");
 
-    #[cfg(all(feature = "placeholder_process", feature = "process"))]
-    compile_error!("You cannot enable both `placeholder_***` and `***` at the same time.");
+    #[cfg(not(any(feature = "multi_process", feature = "uni_process",)))]
+    compile_error!("You must enable exactly one of `multi` or `uni`.");
+
+    #[cfg(all(feature = "multi_process", feature = "uni_process"))]
+    compile_error!("You cannot enable both `multi` and `uni` at the same time.");
 
     #[cfg(feature = "pseudo_multi_process")]
     {
