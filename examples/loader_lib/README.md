@@ -93,6 +93,74 @@
 
 ## 5. `loader_lib` 内部结构
 
+文件树概览：
+
+```txt
+.
+├── batch_apps (冻结)。用于批处理模式使用的应用包，更多的信息可以在目录下的 `README.md` 中获得。
+│   ├── APPS
+│   ├── build
+│   ├── generate_header.py
+│   ├── Makefile
+│   ├── pack_apps.py
+│   ├── README.md
+│   ├── script_encoder.py
+│   └── script.txt
+├── Cargo.lock
+├── Cargo.toml
+├── examples
+│   ├── loader_lib (核心代码，持续开发)
+│   │   ├── Cargo.toml
+│   │   ├── loader_lib_riscv64-qemu-virt.bin
+│   │   ├── loader_lib_riscv64-qemu-virt.elf
+│   │   ├── README.md
+│   │   └── src
+│   │       ├── abi
+│   │       ├── config.rs
+│   │       ├── elf_load
+│   │       │   ├── auxv.rs
+│   │       │   ├── batch
+│   │       │   ├── decoder.rs
+│   │       │   ├── load.rs
+│   │       │   ├── mod.rs
+│   │       │   ├── uni
+│   │       │   ├── uni_load.rs
+│   │       │   └── verify.rs
+│   │       ├── init.rs
+│   │       ├── linux_env
+│   │       │   ├── axfs_ext
+│   │       │   ├── axhal_ext
+│   │       │   ├── eventfd_ext
+│   │       │   ├── linux_api
+│   │       │   ├── mem_ext
+│   │       │   ├── mod.rs
+│   │       │   ├── process_ext
+│   │       │   └── task_ext
+│   │       ├── main.rs
+│   │       └── syscall
+│   │           ├── api.rs
+│   │           ├── ctypes.rs
+│   │           ├── mod.rs
+│   │           ├── syscall_fs
+│   │           ├── syscall_mem
+│   │           ├── syscall.rs
+│   │           └── syscall_task
+├── LICENSE.Apache2
+├── LICENSE.GPLv3
+├── LICENSE.MulanPSL2
+├── LICENSE.MulanPubL2
+├── loader_lib.sh
+├── Makefile
+├── mockc_apps (需要修改)
+├── mocksrc (需要继续开发)
+│   ├── link.ld
+│   └── Makefile
+├── README.md
+├── rust-toolchain.toml
+└── ulib
+    └── mocklibc_lib (Lib库)。是我们自行修改的 `mocklibc` 库，用于给动态编译的 `musl` 应用进行加载的。更多的信息可以在目录下的 `README.md` 获得
+```
+
 `./src/` 目录下的关键子目录：
 
 * **`abi/`**: 实现 `ABI CALL` 和 `ABI-SYS CALL` 机制。
