@@ -1,12 +1,13 @@
 use alloc::ffi::CString;
-use axlog::{debug, info};
-use axstd::{
-    print, println, process::exit, thread::sleep
-};
-use axtask::{current, TaskExtRef};
+use axlog::{debug, error, info};
+use axstd::{print, println, process::exit, thread::sleep};
+use axtask::{TaskExtRef, current};
 
 use core::{
-    ffi::{c_char, c_int}, mem, slice, str, sync::atomic::Ordering, time::Duration
+    ffi::{c_char, c_int},
+    mem, slice, str,
+    sync::atomic::Ordering,
+    time::Duration,
 };
 
 use printf_compat::{format, output};
@@ -14,9 +15,12 @@ use printf_compat::{format, output};
 use alloc::sync::Arc;
 
 use crate::abi::string::abi_strlen;
-use crate::{process::{current_process, PID2PC, TID2TASK}, PROCESS_COUNT};
-use crate::{save_gp, switch_to_gp, APP_GP, FORK_WAIT, KERNEL_GP, MAIN_WAIT_QUEUE};
-use crate::{AbiEntry, ABI_TABLE};
+use crate::{ABI_TABLE, AbiEntry};
+use crate::{APP_GP, FORK_WAIT, KERNEL_GP, MAIN_WAIT_QUEUE, save_gp, switch_to_gp};
+use crate::{
+    PROCESS_COUNT,
+    process::{PID2PC, TID2TASK, current_process},
+};
 use abi_macro::abi;
 use alloc::string::String;
 use core::ffi::CStr;
@@ -26,7 +30,7 @@ type MainFn = unsafe extern "C" fn(argc: i32, argv: *mut *mut i8, envp: *mut *mu
 
 /// Description
 /// The `__libc_start_main()` function shall initialize the process, call the main function with appropriate arguments, and  handle the return from main().
-/// `__libc_start_main()` is not in the source standard; it is only in the binary standard. 
+/// `__libc_start_main()` is not in the source standard; it is only in the binary standard.
 #[abi(__libc_start_main)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_libc_start_main(
@@ -46,14 +50,14 @@ pub extern "C" fn abi_libc_start_main(
 
     let current_process = current_process();
     info!("Current process: {:?}", current_process.pid());
-    
-    info!("[ABI:Init]: abi_libc_start_main");
-    info!("main: {:?}, argc: 0x{:x}, argv: {:x?}, _init: 0x{:x}, _fini: 0x{:x}", 
-           main, argc, argv, _init, _fini);
 
-    let main = unsafe {
-        mem::transmute::<usize, MainFn>( main as usize)
-    };
+    info!("[ABI:Init]: abi_libc_start_main");
+    info!(
+        "main: {:?}, argc: 0x{:x}, argv: {:x?}, _init: 0x{:x}, _fini: 0x{:x}",
+        main, argc, argv, _init, _fini
+    );
+
+    let main = unsafe { mem::transmute::<usize, MainFn>(main as usize) };
 
     unsafe {
         main(argc, argv, core::ptr::null_mut());
@@ -88,7 +92,7 @@ pub extern "C" fn abi_init() {
 #[abi(_fini)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_fini() {
-	info!("[ABI:Fini]: abi_fini");
+    info!("[ABI:Fini]: abi_fini");
 
     // 减少进程计数
     let remaining = PROCESS_COUNT.fetch_sub(1, Ordering::SeqCst) - 1;
@@ -169,7 +173,11 @@ pub extern "C" fn abi_hello() {
 #[abi(exit)]
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_exit(exit_code: i32) {
-    info!("[ABI:Exit] Exit Apps by exit_code: {exit_code}!");
+    if exit_code != 0 {
+        error!("[ABI:Exit] Exit Apps by exit_code: {exit_code}!");
+    } else {
+        info!("[ABI:Exit] Exit Apps by exit_code: {exit_code}!");
+    }
     exit(exit_code);
 }
 
@@ -182,7 +190,7 @@ pub unsafe extern "C" fn abi_printf(fat: *const c_char, mut args: ...) -> c_int 
         return -1;
     }
 
-    let fat = ((fat as usize)) as *const c_char;
+    let fat = (fat as usize) as *const c_char;
 
     info!("fat: {:p}", fat);
 
@@ -200,7 +208,7 @@ pub unsafe extern "C" fn abi_sprintf(str: *mut c_char, fat: *const c_char, mut a
         return -1;
     }
 
-    let fat = ((fat as usize)) as *const c_char;
+    let fat = (fat as usize) as *const c_char;
 
     let mut s = String::new();
     let bytes_written = unsafe { format(fat, args.as_va_list(), output::fmt_write(&mut s)) };
@@ -213,6 +221,12 @@ pub unsafe extern "C" fn abi_sprintf(str: *mut c_char, fat: *const c_char, mut a
         return -1;
     }
     bytes_written as c_int
+}
+
+#[abi(vfprintf)]
+#[unsafe(no_mangle)]
+unsafe extern "C" fn abi_vfprintf(_io: usize, fat: *const c_char, mut args: ...) -> c_int {
+    unsafe { abi_printf(fat, args) }
 }
 
 #[abi(puts)]

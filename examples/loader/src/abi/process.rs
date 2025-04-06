@@ -1,5 +1,5 @@
-use crate::{process::current_process, UserContext};
-use crate::{AbiEntry, ABI_TABLE};
+use crate::{ABI_TABLE, AbiEntry};
+use crate::{UserContext, process::current_process};
 use abi_macro::abi;
 use axlog::{error, info, trace};
 use axtask::current;
@@ -43,7 +43,6 @@ pub unsafe extern "C" fn abi_fork_entry() -> i32 {
     }
 }
 
-
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_fork(task_ctx: UserContext) -> i32 {
     info!("[ABI:Process] Fork a new process!");
@@ -68,7 +67,10 @@ pub unsafe extern "C" fn abi_fork(task_ctx: UserContext) -> i32 {
     let kernel_top = current.as_task_ref().inner().kernel_stack_top().unwrap();
     let stack_size = kernel_top.as_usize() - task_ctx.sp;
 
-    info!("Kernel stack top: {:x?} sp : {:x?}, stack_size {:x?}", kernel_top, task_ctx.sp, stack_size);
+    info!(
+        "Kernel stack top: {:x?} sp : {:x?}, stack_size {:x?}",
+        kernel_top, task_ctx.sp, stack_size
+    );
 
     let stack_data = unsafe { from_raw_parts(task_ctx.sp as *const u8, stack_size) };
 
@@ -81,7 +83,11 @@ pub unsafe extern "C" fn abi_fork(task_ctx: UserContext) -> i32 {
         Ok(child_pid) => {
             // 在父进程中返回子进程的 PID
             // 子进程的返回值在 fork() 内部设置为 0
-            trace!("Fork success! Parent={}, Child={}", curr_process.pid(), child_pid);
+            trace!(
+                "Fork success! Parent={}, Child={}",
+                curr_process.pid(),
+                child_pid
+            );
             child_pid as i32
         }
         Err(err) => {

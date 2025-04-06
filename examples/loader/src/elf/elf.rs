@@ -3,15 +3,19 @@
 //! It will read and parse ELF files.
 //!
 //! Now these apps are loaded into memory as a part of the kernel image.
-use alloc::{collections::btree_map::BTreeMap, string::{String, ToString}, vec::Vec};
+use alloc::{
+    collections::btree_map::BTreeMap,
+    string::{String, ToString},
+    vec::Vec,
+};
 
+use crate::{abi::lookup_abi_call, elf::auxv::get_auxv_vector};
 use axhal::paging::MappingFlags;
 use axlog::{debug, info, trace};
 use axstd::println;
 use memory_addr::{MemoryAddr, VirtAddr};
-use xmas_elf::{sections::SectionData, symbol_table::Entry, ElfFile};
-
-use crate::{abi::lookup_abi_call, elf::auxv::get_auxv_vector};
+use xmas_elf::symbol_table::{DynEntry64, Entry64};
+use xmas_elf::{ElfFile, sections::SectionData, symbol_table::Entry};
 
 /// The segment of the elf file, which is used to map the elf file to the memory space
 pub struct ELFSegment {
@@ -48,7 +52,7 @@ pub struct ELFInfo {
 /// Entry and information about segments of the given ELF file
 pub(crate) fn load_elf(base_addr: VirtAddr, elf_slice: &'static [u8]) -> ELFInfo {
     use xmas_elf::program::{Flags, SegmentData};
-    use xmas_elf::{header, ElfFile};
+    use xmas_elf::{ElfFile, header};
 
     let elf = ElfFile::new(&elf_slice).expect("Failed to parse ELF");
 
@@ -89,13 +93,14 @@ pub(crate) fn load_elf(base_addr: VirtAddr, elf_slice: &'static [u8]) -> ELFInfo
     let elf_offset = get_elf_base_addr(&elf, base_addr.as_usize()).unwrap();
 
     // 加载所有LOAD段
-    for ph in elf.program_iter()
-        .filter(|ph| ph.get_type() == Ok(xmas_elf::program::Type::Load)) {
-        
+    for ph in elf
+        .program_iter()
+        .filter(|ph| ph.get_type() == Ok(xmas_elf::program::Type::Load))
+    {
         let st_vaddr = VirtAddr::from(ph.virtual_addr() as usize) + elf_offset;
         let st_vaddr_align = st_vaddr.align_down_4k();
-        let ed_vaddr_align = VirtAddr::from((ph.virtual_addr() + ph.mem_size()) as usize)
-            .align_up_4k() + elf_offset;
+        let ed_vaddr_align =
+            VirtAddr::from((ph.virtual_addr() + ph.mem_size()) as usize).align_up_4k() + elf_offset;
 
         let mut segment_data = match ph.get_data(&elf).unwrap() {
             SegmentData::Undefined(data) => data.to_vec(),
@@ -103,7 +108,12 @@ pub(crate) fn load_elf(base_addr: VirtAddr, elf_slice: &'static [u8]) -> ELFInfo
         };
 
         // 处理段内的重定位信息
-        process_relocations(&elf, &mut segment_data, elf_offset, ph.virtual_addr() as usize);
+        process_relocations(
+            &elf,
+            &mut segment_data,
+            elf_offset,
+            ph.virtual_addr() as usize,
+        );
 
         segments.push(ELFSegment {
             start_vaddr: st_vaddr_align,
@@ -121,29 +131,58 @@ pub(crate) fn load_elf(base_addr: VirtAddr, elf_slice: &'static [u8]) -> ELFInfo
     }
 }
 
-fn process_relocations(elf: &ElfFile, segment_data: &mut [u8], elf_offset: usize, segment_vaddr: usize) {
+fn process_relocations(
+    elf: &ElfFile,
+    segment_data: &mut [u8],
+    elf_offset: usize,
+    segment_vaddr: usize,
+) {
+    let mut unimpl = Vec::new();
     // 处理 .rela.dyn
-    if let Some(rela_dyn) = elf.find_section_by_name(".rela.dyn") {
-        if let Ok(SectionData::Rela64(rela_data)) = rela_dyn.get_data(elf) {
-            for rela in rela_data {
-                let offset = rela.get_offset() as usize;
-                // 检查重定位是否在当前段内
-                if offset >= segment_vaddr && offset < segment_vaddr + segment_data.len() {
-                    let relative_offset = offset - segment_vaddr;
-                    
-                    match rela.get_type() {
-                        3 => { // R_RISCV_RELATIVE
-                            let new_value = (elf_offset + rela.get_addend() as usize) as u64;
-                            segment_data[relative_offset..relative_offset + 8]
-                                .copy_from_slice(&new_value.to_ne_bytes());
-                        },
-                        _ => debug!("Unsupported relocation type: {}", rela.get_type()),
+    if let Some(dyn_sym) = elf.find_section_by_name(".dynsym") {
+        if let Ok(SectionData::DynSymbolTable64(dynsym)) = dyn_sym.get_data(elf) {
+            if let Some(rela_dyn) = elf.find_section_by_name(".rela.dyn") {
+                if let Ok(SectionData::Rela64(rela_data)) = rela_dyn.get_data(elf) {
+                    for rela in rela_data {
+                        let offset = rela.get_offset() as usize;
+                        // 检查重定位是否在当前段内
+                        if offset >= segment_vaddr && offset < segment_vaddr + segment_data.len() {
+                            let relative_offset = offset - segment_vaddr;
+
+                            match rela.get_type() {
+                                3 => {
+                                    // R_RISCV_RELATIVE
+                                    let new_value =
+                                        (elf_offset + rela.get_addend() as usize) as u64;
+                                    segment_data[relative_offset..relative_offset + 8]
+                                        .copy_from_slice(&new_value.to_ne_bytes());
+                                }
+                                2 => {
+                                    // R_RISCV_64
+                                    let sym = &dynsym[rela.get_symbol_table_index() as usize];
+                                    if let Ok(name) = sym.get_name(elf) {
+                                        trace!("Relocation: {}", name);
+                                        if let Some(func_addr) = lookup_abi_call(name) {
+                                            println!("Found function: 0x{:x}", func_addr);
+                                            let relative_offset = offset - segment_vaddr;
+                                            // 在段数据中修改重定位位置
+
+                                            segment_data[relative_offset..relative_offset + 8]
+                                                .copy_from_slice(&(func_addr as u64).to_ne_bytes());
+                                        } else {
+                                            unimpl.push(name);
+                                        }
+                                    }
+                                }
+                                _ => debug!("Unsupported relocation type: {}", rela.get_type()),
+                            }
+                        }
                     }
                 }
             }
         }
     }
-    let mut unimpl = Vec::new();
+
     // 处理 .rela.plt
     if let Some(rela_plt) = elf.find_section_by_name(".rela.plt") {
         if let Ok(SectionData::Rela64(rela_data)) = rela_plt.get_data(elf) {
@@ -160,16 +199,16 @@ fn process_relocations(elf: &ElfFile, segment_data: &mut [u8], elf_offset: usize
                                     println!("Found function: 0x{:x}", func_addr);
                                     let relative_offset = offset - segment_vaddr;
                                     // 在段数据中修改重定位位置
-                                    
+
                                     segment_data[relative_offset..relative_offset + 8]
                                         .copy_from_slice(&(func_addr as u64).to_ne_bytes());
-                                }else {
+                                } else {
                                     unimpl.push(name);
                                 }
                             }
                         }
                     }
-                    info!("Not be implemented functions:{}",unimpl.join(","));
+                    info!("Not be implemented functions:{}", unimpl.join(","));
                 }
             }
         }
@@ -178,41 +217,41 @@ fn process_relocations(elf: &ElfFile, segment_data: &mut [u8], elf_offset: usize
 
 // fn analyze_load_segments_sections(elf: &ElfFile) {
 //     trace!("Analyzing LOAD segments and their sections:");
-    
+
 //     // 遍历所有LOAD段
 //     let load_segments: Vec<_> = elf.program_iter()
 //         .filter(|ph| ph.get_type() == Ok(program::Type::Load))
 //         .collect();
-        
+
 //     for (i, load_seg) in load_segments.iter().enumerate() {
 //         trace!("\nLOAD Segment #{}", i);
-//         trace!("Virtual Address Range: {:#x} - {:#x}", 
-//             load_seg.virtual_addr(), 
+//         trace!("Virtual Address Range: {:#x} - {:#x}",
+//             load_seg.virtual_addr(),
 //             load_seg.virtual_addr() + load_seg.mem_size());
 //             trace!("Contained sections:");
-        
+
 //         // 遍历所有节，检查哪些节在这个LOAD段内
 //         for section in elf.section_iter() {
 //             let sect_start = section.address();
 //             let sect_end = sect_start + section.size();
 //             let seg_start = load_seg.virtual_addr();
 //             let seg_end = seg_start + load_seg.mem_size();
-            
+
 //             // 检查节是否在LOAD段的地址范围内
 //             if sect_start >= seg_start && sect_end <= seg_end {
-//                 trace!("  - {} (addr: {:#x}, size: {:#x}, type: {:?})", 
+//                 trace!("  - {} (addr: {:#x}, size: {:#x}, type: {:?})",
 //                     section.get_name(elf).unwrap_or("unnamed"),
 //                     section.address(),
 //                     section.size(),
 //                     section.get_type());
 //             }
 //         }
-        
+
 //         // 显示段的权限
 //         let flags = load_seg.flags();
-//         trace!("Segment flags: R:{} W:{} X:{}", 
-//             flags.is_read(), 
-//             flags.is_write(), 
+//         trace!("Segment flags: R:{} W:{} X:{}",
+//             flags.is_read(),
+//             flags.is_write(),
 //             flags.is_execute());
 //     }
 // }

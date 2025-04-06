@@ -155,6 +155,7 @@ dependencies = [
  "axtask",
  "bitflags 2.6.0",
  "cfg-if",
+ "compiler_builtins",
  "kernel-elf-parser",
  "linkme",
  "memory_addr",
@@ -844,6 +845,15 @@ name = "colorchoice"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
+
+[[package]]
+name = "compiler_builtins"
+version = "0.1.152"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2153cf213eb259361567720ce55f6446f17acd0ccca87fb6dc05360578228a58"
+dependencies = [
+ "cc",
+]
 
 [[package]]
 name = "console"

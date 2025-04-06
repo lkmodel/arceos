@@ -5,26 +5,30 @@
 #![feature(naked_functions)]
 #![feature(c_size_t)]
 extern crate alloc;
-
+extern crate compiler_builtins;
 mod abi;
 mod config;
 mod elf;
 mod process;
 
-use core::{fmt::Display, slice::from_raw_parts, sync::atomic::{AtomicUsize, Ordering}};
+use core::{
+    fmt::Display,
+    slice::from_raw_parts,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use alloc::string::ToString;
 use alloc::vec::Vec;
 use axlog::info;
 use axstd::println;
-use axtask::{current, exit, WaitQueue};
+use axtask::{WaitQueue, current, exit};
 use elf::PLASH_START;
 use linkme::distributed_slice;
 use process::Process;
 
 // 全局等待队列
-pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new();    // main线程等待所有进程结束
-pub static FORK_WAIT: WaitQueue = WaitQueue::new();          // 父进程等待子进程开始执行 
+pub static MAIN_WAIT_QUEUE: WaitQueue = WaitQueue::new(); // main线程等待所有进程结束
+pub static FORK_WAIT: WaitQueue = WaitQueue::new(); // 父进程等待子进程开始执行 
 
 // 进程计数
 pub static PROCESS_COUNT: AtomicUsize = AtomicUsize::new(0);
@@ -45,7 +49,10 @@ unsafe impl Sync for AbiEntry {}
 
 #[unsafe(no_mangle)]
 fn main() {
-    let fns = ABI_TABLE.iter().map(|table| table.name).collect::<Vec<&str>>();
+    let fns = ABI_TABLE
+        .iter()
+        .map(|table| table.name)
+        .collect::<Vec<&str>>();
     info!("Existed Abi functions:{}", fns.join(","));
     println!("Load payload ...");
     let elf_size = unsafe { *(PLASH_START as *const usize) };
@@ -61,7 +68,7 @@ fn main() {
     info!("Kernel GP: 0x{:x}", KERNEL_GP.load(Ordering::SeqCst));
 
     info!("Execute payload {:?}", current().id());
-    
+
     Process::init("fork".to_string(), elf_slice);
 
     println!("Execute payload done!");
@@ -157,8 +164,24 @@ impl UserContext {
 
 impl Display for UserContext {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "UserContext {{ ra: 0x{:x}, sp: 0x{:x}, s0: 0x{:x}, s1: 0x{:x}, s2: 0x{:x}, s3: 0x{:x}, s4: 0x{:x}, s5: 0x{:x}, s6: 0x{:x}, s7: 0x{:x}, s8: 0x{:x}, s9: 0x{:x}, s10: 0x{:x}, s11: 0x{:x}, tp: 0x{:x} }}",
-            self.ra, self.sp, self.s0, self.s1, self.s2, self.s3, self.s4, self.s5, self.s6, self.s7, self.s8, self.s9, self.s10, self.s11, self.tp
+        write!(
+            f,
+            "UserContext {{ ra: 0x{:x}, sp: 0x{:x}, s0: 0x{:x}, s1: 0x{:x}, s2: 0x{:x}, s3: 0x{:x}, s4: 0x{:x}, s5: 0x{:x}, s6: 0x{:x}, s7: 0x{:x}, s8: 0x{:x}, s9: 0x{:x}, s10: 0x{:x}, s11: 0x{:x}, tp: 0x{:x} }}",
+            self.ra,
+            self.sp,
+            self.s0,
+            self.s1,
+            self.s2,
+            self.s3,
+            self.s4,
+            self.s5,
+            self.s6,
+            self.s7,
+            self.s8,
+            self.s9,
+            self.s10,
+            self.s11,
+            self.tp
         )
     }
 }

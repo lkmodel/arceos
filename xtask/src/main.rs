@@ -43,6 +43,10 @@ struct Args {
     #[arg(long)]
     skip: bool,
 
+    /// Enable QEMU BLK (y/n)
+    #[arg(long, short, default_value = "n")]
+    blk: String,
+
     /// Which app to run, "all" to run all apps
     app: String,
 }
@@ -63,9 +67,18 @@ struct DevConfig {
 
 fn main() {
     let args = Args::parse();
-    DIR.set(PathBuf::from(env!("CARGO_MANIFEST_DIR").strip_suffix("xtask").unwrap())).unwrap();
+    DIR.set(PathBuf::from(
+        env!("CARGO_MANIFEST_DIR").strip_suffix("xtask").unwrap(),
+    ))
+    .unwrap();
     let current_dir = DIR.get().unwrap();
-    assert_eq!(current_dir.to_path_buf(), env::current_dir().unwrap(), "Should run in ArceOS root path:{:?},but now in:{:?}", current_dir.to_path_buf(), env::current_dir().unwrap());
+    assert_eq!(
+        current_dir.to_path_buf(),
+        env::current_dir().unwrap(),
+        "Should run in ArceOS root path:{:?},but now in:{:?}",
+        current_dir.to_path_buf(),
+        env::current_dir().unwrap()
+    );
 
     Command::new("cargo")
         .args(&["install", "cargo-insta", "--version", "1.39.0"]) // 1.42.1 can not search snaps which not in cargo manifest path
@@ -110,22 +123,26 @@ fn main() {
 
     let is_ci = env::var("CI").is_err();
     if args.app == "all".to_string() || !is_ci {
-        let re = traverse_all_app(&current_dir.join("payload"), &|dir: &PathBuf| -> Result<(), String> {
-            let arg = Args {
-                arch: "riscv64".to_string(),
-                log: "warn".to_string(),
-                qemu_log: "n".to_string(),
-                ttype: None,
-                snapshot: false,
-                skip: false,
-                app: dir.iter().last().unwrap().to_str().unwrap().to_string(),
-            };
-            let config = parse_toml(&current_dir.join("payload").join(&arg.app));
-            println!("APP:{}", arg.app);
-            dynamic_test(&arg, &current_dir, &config)
-        }).expect("Failed to traverse app");
-        re.iter()
-            .for_each(|app| println!("{}\t{}", app[0], app[1]));
+        let re = traverse_all_app(
+            &current_dir.join("payload"),
+            &|dir: &PathBuf| -> Result<(), String> {
+                let arg = Args {
+                    arch: "riscv64".to_string(),
+                    log: "warn".to_string(),
+                    qemu_log: "n".to_string(),
+                    ttype: None,
+                    snapshot: false,
+                    skip: false,
+                    app: dir.iter().last().unwrap().to_str().unwrap().to_string(),
+                    blk: "y".to_string(),
+                };
+                let config = parse_toml(&current_dir.join("payload").join(&arg.app));
+                println!("APP:{}", arg.app);
+                dynamic_test(&arg, &current_dir, &config)
+            },
+        )
+        .expect("Failed to traverse app");
+        re.iter().for_each(|app| println!("{}\t{}", app[0], app[1]));
         if re.iter().any(|app| app[1] != "OK".to_string()) {
             std::process::exit(10);
         }
@@ -177,7 +194,7 @@ fn main() {
         _ => {
             eprintln!("Invalid test type");
             Err("Invalid test type".to_string())
-        },
+        }
     };
     match re {
         Ok(_) => {}
@@ -198,7 +215,10 @@ fn review_snap(app_dir: &PathBuf) {
         .status()
         .expect("Review failed");
 }
-fn traverse_all_app(path: &PathBuf, cb: &dyn Fn(&PathBuf) -> Result<(), String>) -> io::Result<Vec<Vec<String>>> {
+fn traverse_all_app(
+    path: &PathBuf,
+    cb: &dyn Fn(&PathBuf) -> Result<(), String>,
+) -> io::Result<Vec<Vec<String>>> {
     let mut apps = Vec::new();
     if path.is_dir() {
         for entry in fs::read_dir(path)? {
@@ -206,9 +226,15 @@ fn traverse_all_app(path: &PathBuf, cb: &dyn Fn(&PathBuf) -> Result<(), String>)
             let path = entry.path();
             if path.is_dir() {
                 if let Err(e) = cb(&path) {
-                    apps.push(vec![path.iter().last().unwrap().to_str().unwrap().to_string(), e]);
+                    apps.push(vec![
+                        path.iter().last().unwrap().to_str().unwrap().to_string(),
+                        e,
+                    ]);
                 } else {
-                    apps.push(vec![path.iter().last().unwrap().to_str().unwrap().to_string(), String::from("OK")]);
+                    apps.push(vec![
+                        path.iter().last().unwrap().to_str().unwrap().to_string(),
+                        String::from("OK"),
+                    ]);
                 }
             }
         }
@@ -233,7 +259,12 @@ fn check_installation() -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
-        || DIR.get().unwrap().join("xtask").join("riscv64-linux-musl-cross").exists()
+        || DIR
+            .get()
+            .unwrap()
+            .join("xtask")
+            .join("riscv64-linux-musl-cross")
+            .exists()
 }
 
 fn install_musl_riscv64() -> bool {
@@ -263,9 +294,9 @@ fn install_musl_riscv64() -> bool {
         return false;
     }
 
-
     println!("Musl RISC-V64 toolchain installation complete");
-    fs::remove_file(cur_dir.join("riscv64-linux-musl-cross.tgz")).expect("Failed to remove musl-cross-make.tgz");
+    fs::remove_file(cur_dir.join("riscv64-linux-musl-cross.tgz"))
+        .expect("Failed to remove musl-cross-make.tgz");
 
     true
 }
@@ -305,7 +336,7 @@ fn check_branch(branch_name: &str) -> bool {
 fn static_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> Result<(), String> {
     let payload_dir = current_dir.join("payload");
     let app_path = payload_dir.join(args.app.as_str());
-    build(&app_path, false, config).expect("Failed to build dynamic test");
+    build(&app_path, false, config).expect("Failed to build static test");
     run_make(args, current_dir)
 }
 
@@ -314,6 +345,14 @@ fn dynamic_test(args: &Args, current_dir: &PathBuf, config: &Option<Config>) -> 
     let app_path = payload_dir.join(args.app.as_str());
     if !args.skip {
         build(&app_path, true, config).expect("Failed to build dynamic test");
+    } else {
+        // Determine the rename value from the config
+        let rename = config
+            .as_ref()
+            .and_then(|c| c.dev.rename.as_ref())
+            .unwrap()
+            .as_str();
+        generate_bin(&rename, &app_path).expect("Failed to generate binary");
     }
     run_make(args, current_dir)
 }
@@ -326,12 +365,18 @@ fn test_judge(stdout: &[u8]) -> Option<String> {
     for (i, &byte) in stdout.iter().enumerate() {
         if byte == b'\n' {
             let line = &stdout[start..i];
-            if line.windows(fail_flags_bytes.len()).any(|w| w == fail_flags_bytes) {
+            if line
+                .windows(fail_flags_bytes.len())
+                .any(|w| w == fail_flags_bytes)
+            {
                 matched_line = Some(String::from_utf8_lossy(line).to_string());
                 break;
             } else if line.windows(read_bytes.len()).any(|w| w == read_bytes) {
-                matched_line = Some(format!("{}[m", String::from_utf8_lossy(line).to_string()));
-                break;
+                let line_tmp = String::from_utf8_lossy(line).to_string();
+                if !line_tmp.contains("Is a directory") {
+                    matched_line = Some(format!("{}[m", line_tmp));
+                    break;
+                }
             }
             start = i + 1;
         }
@@ -339,7 +384,10 @@ fn test_judge(stdout: &[u8]) -> Option<String> {
 
     if matched_line.is_none() && start < stdout.len() {
         let line = &stdout[start..];
-        if line.windows(fail_flags_bytes.len()).any(|w| w == fail_flags_bytes) {
+        if line
+            .windows(fail_flags_bytes.len())
+            .any(|w| w == fail_flags_bytes)
+        {
             matched_line = Some(String::from_utf8_lossy(line).to_string());
         }
     }
@@ -356,6 +404,16 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
     if !status.success() {
         return Err(String::from("make defconfig failed"));
     }
+    if args.blk == "y".to_string() && !current_dir.join("disk.img").exists() {
+        let status = Command::new("make")
+            .arg("disk_img")
+            .current_dir(&current_dir)
+            .status()
+            .expect("Failed to run make disk img");
+        if !status.success() {
+            return Err(String::from("make disk img failed"));
+        }
+    }
 
     let mut process = Command::new("make")
         .args([
@@ -363,6 +421,8 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
             &format!("ARCH={}", args.arch),
             &format!("LOG={}", args.log),
             &format!("QEMU_LOG={}", args.qemu_log),
+            &format!("BLK={}", args.blk),
+            &format!("APP_PATH={}", args.app),
             "run",
         ])
         .current_dir(&current_dir)
@@ -376,7 +436,9 @@ fn run_make(args: &Args, current_dir: &PathBuf) -> Result<(), String> {
 
     loop {
         let n = stdout.read(&mut chunk).unwrap();
-        if n == 0 { break; }
+        if n == 0 {
+            break;
+        }
 
         buffer.extend_from_slice(&chunk[..n]);
         io::stdout().write_all(&chunk[..n]).unwrap();
@@ -417,9 +479,9 @@ fn generate_bin(elf_file: &str, working_dir: &PathBuf) -> io::Result<()> {
     file.seek(SeekFrom::Start(8))?;
     file.write_all(&buffer)?;
 
-    // Copy the binary file to the parent directory
-    let parent_bin_path = working_dir.parent().unwrap().join("apps.bin");
-    fs::rename(&bin_path, &parent_bin_path)?;
+    // // Copy the binary file to the parent directory
+    // let parent_bin_path = working_dir.parent().unwrap().join("apps.bin");
+    // fs::rename(&bin_path, &parent_bin_path)?;
     Ok(())
 }
 
@@ -463,16 +525,17 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     let cur_dir = DIR.get().unwrap();
     let tools = if !env::var("CC").is_err() {
         env::var("CC").unwrap()
-    } else if (!env::var("CI").is_err()) || (Command::new("which")
-        .arg("riscv64-linux-musl-gcc")
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)) {
+    } else if (!env::var("CI").is_err())
+        || (Command::new("which")
+            .arg("riscv64-linux-musl-gcc")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false))
+    {
         String::new()
     } else {
         format!("{}/{}", cur_dir.to_string_lossy(), MUSL)
     };
-
 
     let gcc = format!("{}riscv64-linux-musl-gcc", tools);
     let output = Command::new(gcc.clone()).arg("--version").output()?;
@@ -480,11 +543,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
     let gcc_version = output_str.lines().next().unwrap();
     // Compile the C file
     let mut gcc = Command::new(gcc);
-    let flags = if ttype {
-        dynamic_flags
-    } else {
-        static_flags
-    };
+    let flags = if ttype { dynamic_flags } else { static_flags };
 
     let output = gcc
         .args(&input_c)
@@ -531,8 +590,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .expect("Failed to run riscv64-linux-musl-objdump");
     let output_file = elf_path.clone();
 
-    if is_insta
-    {
+    if is_insta {
         insta_set.set_snapshot_suffix(format!("{}_{}.S", elf_file, t_type));
         insta_set.bind(|| {
             insta::assert_snapshot!(from_utf8(&output.stdout).unwrap());
@@ -548,8 +606,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .output()
         .expect("Failed to run riscv64-linux-musl-readelf");
     let output_file = elf_path.clone();
-    if is_insta
-    {
+    if is_insta {
         insta_set.set_snapshot_suffix(format!("{}_{}.elf", elf_file, t_type));
         insta_set.bind(|| {
             insta::assert_snapshot!(from_utf8(&output.stdout).unwrap());
@@ -559,7 +616,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         output_file.join(&format!("{}.elf", elf_file)),
         output.stdout,
     )
-        .expect("Failed to write ELF file");
+    .expect("Failed to write ELF file");
 
     // Generate full disassembly and symbol table
     let output = Command::new(format!("{}riscv64-linux-musl-objdump", tools))
@@ -568,8 +625,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         .output()
         .expect("Failed to run riscv64-linux-musl-objdump");
     let output_file = elf_path.clone();
-    if is_insta
-    {
+    if is_insta {
         insta_set.set_snapshot_suffix(format!("{}_{}.dump", elf_file, t_type));
         insta_set.bind(|| {
             insta::assert_snapshot!(from_utf8(&output.stdout).unwrap());
@@ -579,7 +635,7 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
         output_file.join(&format!("{}.dump", elf_file)),
         output.stdout,
     )
-        .expect("Failed to write ELF file");
+    .expect("Failed to write ELF file");
 
     if is_insta {
         review_snap(elf_path);
@@ -590,4 +646,3 @@ fn build(elf_path: &PathBuf, ttype: bool, config: &Option<Config>) -> io::Result
 
     Ok(())
 }
-

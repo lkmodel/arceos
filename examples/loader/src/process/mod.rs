@@ -1,12 +1,12 @@
 //! This module provides the process management API for the operating system.
 
 mod api;
+pub mod flags;
 mod process;
 mod task_ext;
-pub mod flags;
 
 pub use api::*;
-pub use process::{Process, PID2PC, TID2TASK};
+pub use process::{PID2PC, Process, TID2TASK};
 
 use axhal::arch::TrapFrame;
 

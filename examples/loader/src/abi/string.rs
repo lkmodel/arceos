@@ -1,7 +1,8 @@
-use crate::{AbiEntry, ABI_TABLE};
+use crate::{ABI_TABLE, AbiEntry};
 use abi_macro::abi;
 use alloc::ffi::CString;
-use core::ffi::{c_char, c_int, c_size_t, c_void, CStr};
+use axerrno::LinuxError;
+use core::ffi::{CStr, c_char, c_int, c_size_t, c_void};
 use core::str::FromStr;
 
 #[abi(strlen)]
@@ -17,8 +18,14 @@ pub unsafe extern "C" fn abi_strlen(s: *const c_char) -> usize {
 #[abi(strerror)]
 #[unsafe(no_mangle)]
 extern "C" fn abi_strerror(e: c_int) -> *const c_char {
-    let s = "Abi error";
-    CString::from_str(s).unwrap().as_ptr()
+    let err_str = if e == 0 {
+        "Success"
+    } else {
+        LinuxError::try_from(e)
+            .map(|e| e.as_str())
+            .unwrap_or("Unknown error")
+    };
+    CString::from_str(err_str).unwrap().as_ptr()
 }
 
 #[abi(memmove)]
@@ -26,7 +33,9 @@ extern "C" fn abi_strerror(e: c_int) -> *const c_char {
 extern "C" fn abi_memmove(dest: *mut c_void, src: *const c_void, n: c_size_t) -> *mut c_void {
     let d = dest as *mut u8;
     let s = src as *const u8;
-    unsafe { core::ptr::copy(s, d, n); }
+    unsafe {
+        core::ptr::copy(s, d, n);
+    }
     dest
 }
 
@@ -85,9 +94,7 @@ extern "C" fn abi_memset(dest: *mut c_void, c: c_int, n: c_size_t) -> *mut c_voi
 #[abi(strrchr)]
 #[unsafe(no_mangle)]
 extern "C" fn abi_strrchr(s: *const c_char, c: c_int) -> *mut c_char {
-    unsafe {
-        __memrchr(s.cast::<c_void>(), c, abi_strlen(s) + 1) as *mut _
-    }
+    unsafe { __memrchr(s.cast::<c_void>(), c, abi_strlen(s) + 1) as *mut _ }
 }
 
 #[unsafe(no_mangle)]
@@ -106,8 +113,8 @@ extern "C" fn __memrchr(m: *const c_void, c: c_int, n: c_size_t) -> *mut c_void 
 
 #[abi(strncmp)]
 #[unsafe(no_mangle)]
-extern "C" fn abi_strncmp(_l: *const c_char, _r: *const c_char, mut n: c_size_t) -> c_int {
-    let (mut l, mut r) = (_l.cast::<u8>(), _r.cast::<u8>());
+extern "C" fn abi_strncmp(l: *const c_char, r: *const c_char, mut n: c_size_t) -> c_int {
+    let (mut l, mut r) = (l.cast::<u8>(), r.cast::<u8>());
     if n == 0 {
         return 0;
     }
@@ -147,4 +154,53 @@ fn _strcmp(s1: &[u8], s2: &[u8]) -> i32 {
     }
 
     s1.len().cmp(&s2.len()) as i32
+}
+
+#[abi(strcspn)]
+#[unsafe(no_mangle)]
+extern "C" fn abi_strcspn(s: *const c_char, c: *const c_char) -> c_size_t {
+    if s.is_null() || c.is_null() {
+        return 0;
+    }
+    let ss = unsafe { CStr::from_ptr(s).to_bytes() };
+    let sc = unsafe { CStr::from_ptr(c).to_bytes() };
+    ss.iter().position(|&c| sc.contains(&c)).unwrap_or(sc.len())
+}
+
+#[abi(strspn)]
+#[unsafe(no_mangle)]
+extern "C" fn abi_strspn(s: *const c_char, c: *const c_char) -> c_size_t {
+    if s.is_null() || c.is_null() {
+        return 0;
+    }
+    let ss = unsafe { CStr::from_ptr(s).to_bytes() };
+    let sc = unsafe { CStr::from_ptr(c).to_bytes() };
+    ss.iter().take_while(|&&c| sc.contains(&c)).count() as c_size_t
+}
+
+#[abi(strchr)]
+#[unsafe(no_mangle)]
+extern "C" fn abi_strchr(s: *const c_char, c: c_int) -> *const c_char {
+    if s.is_null() {
+        return core::ptr::null();
+    }
+    let t = c as u8;
+    let ss = unsafe { CStr::from_ptr(s) }.to_bytes();
+
+    match ss.iter().position(|&c| c == t) {
+        None => core::ptr::null(),
+        Some(pos) => unsafe { s.add(pos) },
+    }
+}
+
+#[abi(strcpy)]
+#[unsafe(no_mangle)]
+extern "C" fn abi_strcpy(dest: *mut c_char, src: *const c_char) -> *mut c_char {
+    let src_data = unsafe { CStr::from_ptr(src) }.to_bytes_with_nul();
+    let dest_slice = core::ptr::slice_from_raw_parts_mut(dest.cast::<u8>(), src_data.len());
+
+    unsafe {
+        (*dest_slice).copy_from_slice(src_data);
+    }
+    dest
 }

@@ -1,19 +1,24 @@
 extern crate alloc;
+use crate::elf::{EXEC_ZONE_START, elf::load_elf};
 use alloc::{string::ToString, sync::Arc};
 use axerrno::AxResult;
 use axhal::{mem::VirtAddr, paging::MappingFlags};
 use axlog::{debug, info};
 use axmm::AddrSpace;
-use axtask::{current, AxTaskRef, CurrentTask, TaskExtRef};
-use crate::elf::{elf::load_elf, EXEC_ZONE_START};
+use axtask::{AxTaskRef, CurrentTask, TaskExtRef, current};
 
-use super::{Process, PID2PC, TID2TASK};
+use super::{PID2PC, Process, TID2TASK};
 
 /// return the `Arc<Process>` of the current process
 #[allow(unused)]
 pub fn current_process() -> Arc<Process> {
     let current_task = current();
-    let current_process = Arc::clone(PID2PC.lock().get(&current_task.task_ext().get_process_id()).unwrap());
+    let current_process = Arc::clone(
+        PID2PC
+            .lock()
+            .get(&current_task.task_ext().get_process_id())
+            .unwrap(),
+    );
 
     current_process
 }
@@ -27,9 +32,8 @@ pub fn current_process() -> Arc<Process> {
 pub fn load_user_app(
     memory_set: &mut AddrSpace,
     app_name: &str,
-    elf_file: &'static [u8]
+    elf_file: &'static [u8],
 ) -> AxResult<(VirtAddr, VirtAddr)> {
-
     let elf_info = load_elf(VirtAddr::from(EXEC_ZONE_START), elf_file);
     for segement in elf_info.segments {
         debug!(

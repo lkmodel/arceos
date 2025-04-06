@@ -4,10 +4,11 @@ use arceos_posix_api::ctypes;
 
 use axlog::info;
 
+use crate::{ABI_TABLE, AbiEntry};
+use abi_macro::abi;
 use alloc::alloc::{alloc, dealloc};
 use core::alloc::Layout;
-use abi_macro::abi;
-use crate::{ABI_TABLE,AbiEntry};
+use core::ffi::c_int;
 
 struct MemoryControlBlock {
     size: usize,
@@ -42,7 +43,7 @@ pub unsafe extern "C" fn abi_malloc(size: ctypes::size_t) -> *mut c_void {
 #[abi(free)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_free(ptr: *mut c_void) {
-    info!("ABI:Mem] free");
+    info!("[ABI:Mem] free");
     if ptr.is_null() {
         return;
     }
@@ -65,12 +66,12 @@ pub unsafe extern "C" fn abi_free(ptr: *mut c_void) {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_realloc(ptr: *mut c_void, size: ctypes::size_t) -> *mut c_void {
     info!("[ABI:Mem] realloc");
-    
+
     // 如果 ptr 为空,相当于 malloc
     if ptr.is_null() {
         return unsafe { abi_malloc(size) };
     }
-    
+
     // 如果 size 为 0,相当于 free
     if size == 0 {
         unsafe { abi_free(ptr) };
@@ -90,16 +91,12 @@ pub unsafe extern "C" fn abi_realloc(ptr: *mut c_void, size: ctypes::size_t) -> 
     // 复制数据,使用较小的大小
     let copy_size = core::cmp::min(old_size, size);
     unsafe {
-        core::ptr::copy_nonoverlapping(
-            ptr,
-            new_ptr,
-            copy_size,
-        );
+        core::ptr::copy_nonoverlapping(ptr, new_ptr, copy_size);
     }
 
     // 释放旧内存
     unsafe { abi_free(ptr) };
-    
+
     new_ptr
 }
 
@@ -111,23 +108,29 @@ pub unsafe extern "C" fn abi_realloc(ptr: *mut c_void, size: ctypes::size_t) -> 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn abi_calloc(nmemb: ctypes::size_t, size: ctypes::size_t) -> *mut c_void {
     info!("[ABI:Mem] calloc");
-    
+
     // 检查乘法溢出
     let total_size = match nmemb.checked_mul(size) {
         Some(size) => size,
         None => return ptr::null_mut(),
     };
-    
+
     // 分配内存
     let ptr = unsafe { abi_malloc(total_size) };
     if ptr.is_null() {
         return ptr::null_mut();
     }
-    
+
     // 清零
     unsafe {
         ptr::write_bytes(ptr, 0, total_size);
     }
-    
+
     ptr
+}
+
+#[abi(mmap)]
+#[unsafe(no_mangle)]
+extern "C" fn abi_mmap() -> c_int {
+    0
 }

@@ -1,20 +1,26 @@
 //! 规定进程控制块内容
 extern crate alloc;
 use alloc::vec;
-use alloc::{collections::BTreeMap, format, string::{String, ToString}, sync::Arc, vec::Vec};
-use axsync::Mutex;
-use axstd::println;
+use alloc::{
+    collections::BTreeMap,
+    format,
+    string::{String, ToString},
+    sync::Arc,
+    vec::Vec,
+};
 use axerrno::AxResult;
 use axlog::{info, trace};
-use axmm::{new_kernel_aspace, AddrSpace, Backend};
-use axtask::{current, spawn_task, AxTaskRef, TaskInner};
-use memory_addr::{PhysAddr, VirtAddr, PAGE_SIZE_4K};
+use axmm::{AddrSpace, Backend, new_kernel_aspace};
+use axstd::println;
+use axsync::Mutex;
+use axtask::{AxTaskRef, TaskInner, current, spawn_task};
 use core::sync::atomic::{AtomicU64, Ordering};
+use memory_addr::{PAGE_SIZE_4K, PhysAddr, VirtAddr};
 
+use crate::config::TASK_STACK_SIZE;
 use crate::process::load_user_app;
 use crate::process::task_ext::TaskExt;
-use crate::{UserContext, FORK_WAIT, MAIN_WAIT_QUEUE, PROCESS_COUNT};
-use crate::config::TASK_STACK_SIZE;
+use crate::{FORK_WAIT, MAIN_WAIT_QUEUE, PROCESS_COUNT, UserContext};
 
 /// Map from task id to arc pointer of task
 pub static TID2TASK: Mutex<BTreeMap<u64, AxTaskRef>> = Mutex::new(BTreeMap::new());
@@ -27,7 +33,7 @@ pub static PID2PC: Mutex<BTreeMap<u64, Arc<Process>>> = Mutex::new(BTreeMap::new
 pub struct Process {
     /// 进程号
     pub pid: AtomicU64,
-    /// 父进程号 
+    /// 父进程号
     pub parent: AtomicU64,
     /// 子进程
     pub children: Mutex<Vec<Arc<Process>>>,
@@ -42,11 +48,8 @@ pub struct Process {
 impl Process {
     /// 创建一个新的进程
     #[allow(unused)]
-    pub fn new(
-        parent: u64,
-        memory_set: Mutex<Arc<Mutex<AddrSpace>>>,
-    ) -> Self {
-        let page_table_token = { 
+    pub fn new(parent: u64, memory_set: Mutex<Arc<Mutex<AddrSpace>>>) -> Self {
+        let page_table_token = {
             let ms = memory_set.lock();
             let token = ms.as_ref().lock().page_table_root().as_usize();
             AtomicU64::new(token as u64)
@@ -70,9 +73,9 @@ impl Process {
         let page_table_token = memory_set.page_table_root();
 
         info!("page_table_token: 0x{:x}", page_table_token);
-        
+
         let (entry, usp) = load_user_app(&mut memory_set, "fork", elf_file).unwrap();
-    
+
         let mut new_process = Arc::new(Self::new(
             current().id().as_u64(),
             Mutex::new(Arc::new(Mutex::new(memory_set))),
@@ -81,7 +84,9 @@ impl Process {
         let mut task_inner = TaskInner::new(
             move || {
                 // 设置用户程序入口点
-                unsafe { user_entry(entry.as_usize(), usp); }
+                unsafe {
+                    user_entry(entry.as_usize(), usp);
+                }
             },
             path.to_string(),
             TASK_STACK_SIZE,
@@ -100,7 +105,9 @@ impl Process {
 
         let new_task = spawn_task(task_inner);
 
-        TID2TASK.lock().insert(new_task.id().as_u64(), Arc::clone(&new_task));
+        TID2TASK
+            .lock()
+            .insert(new_task.id().as_u64(), Arc::clone(&new_task));
         new_process.tasks.lock().push(Arc::clone(&new_task));
         PID2PC.lock().insert(proc_id, Arc::clone(&new_process));
 
@@ -111,10 +118,9 @@ impl Process {
     }
 
     pub fn fork(
-        &self, 
+        &self,
         stack_data: &'static [u8],
-        #[allow(unused)]
-        user_ctx: UserContext
+        #[allow(unused)] user_ctx: UserContext,
     ) -> AxResult<u64> {
         // 创建新的地址空间
         let parent_memory_set = self.memory_set.lock();
@@ -122,34 +128,28 @@ impl Process {
 
         let (start, end) = (parent_ms.base(), parent_ms.end());
 
-        let mut child_memory_set = AddrSpace::new_empty(start, end.as_usize() - start.as_usize()).unwrap();
+        let mut child_memory_set =
+            AddrSpace::new_empty(start, end.as_usize() - start.as_usize()).unwrap();
 
         // 遍历并复制所有内存区域
         for area in parent_ms.areas.iter() {
             let start = area.start();
             let size = area.size();
             let flags = area.flags();
-            trace!("fork: start = {:#x}, size = {:#x}, flags = {:?}", start, size, flags);
-            
+            trace!(
+                "fork: start = {:#x}, size = {:#x}, flags = {:?}",
+                start, size, flags
+            );
+
             match area.backend() {
                 Backend::Linear { pa_va_offset } => {
                     let paddr = PhysAddr::from(start.as_usize() - pa_va_offset);
 
-                    child_memory_set.map_linear(
-                        start,
-                        paddr,
-                        size,
-                        flags
-                    )?;
-                },
+                    child_memory_set.map_linear(start, paddr, size, flags)?;
+                }
                 Backend::Alloc { populate: _ } => {
-                    child_memory_set.map_alloc(
-                        start,
-                        size,
-                        flags,
-                        true
-                    )?;
-                    
+                    child_memory_set.map_alloc(start, size, flags, true)?;
+
                     let mut buffer = vec![0u8; PAGE_SIZE_4K];
                     for offset in (0..size).step_by(PAGE_SIZE_4K) {
                         let curr_size = PAGE_SIZE_4K.min(size - offset);
@@ -177,7 +177,7 @@ impl Process {
         let mut child_inner = TaskInner::new(
             move || {
                 info!("Jump to sub_task ...");
-                
+
                 // 在子进程中
                 FORK_WAIT.notify_one(true);
 
@@ -194,7 +194,7 @@ impl Process {
                             "auipc {}, 0",  // 将当前PC值加载到寄存器中
                             out(reg) pc,
                         );
-                    
+
                         info!("Current PC: 0x{:x}", pc);
 
                         info!("{:x?}", current.ctx());
@@ -208,14 +208,19 @@ impl Process {
 
         let sub_kstack_top = child_inner.kernel_stack_top().unwrap().as_usize();
         let sub_sp = sub_kstack_top - stack_data.len();
-        info!("sub_sp : {:x?}, sub_kstack_top: {:x?}, stack_size : {:x?}", sub_sp, sub_kstack_top, sub_kstack_top - sub_sp);
-        
+        info!(
+            "sub_sp : {:x?}, sub_kstack_top: {:x?}, stack_size : {:x?}",
+            sub_sp,
+            sub_kstack_top,
+            sub_kstack_top - sub_sp
+        );
+
         // 复制栈内容
         unsafe {
             core::ptr::copy_nonoverlapping(
                 stack_data.as_ptr(),
                 sub_sp as *mut u8,
-                stack_data.len()
+                stack_data.len(),
             );
         }
 
@@ -228,7 +233,7 @@ impl Process {
         //         out(reg) pc,
         //     );
         // }
-        
+
         // info!("Current PC: 0x{:x}", pc);
 
         #[cfg(target_arch = "riscv64")]
@@ -239,7 +244,7 @@ impl Process {
             child_inner.ctx_mut().s1 = user_ctx.s1;
             child_inner.ctx_mut().s2 = user_ctx.s2;
             child_inner.ctx_mut().s3 = user_ctx.s3;
-            child_inner.ctx_mut().s4 = user_ctx.s4; 
+            child_inner.ctx_mut().s4 = user_ctx.s4;
             child_inner.ctx_mut().s5 = user_ctx.s5;
             child_inner.ctx_mut().s6 = user_ctx.s6;
             child_inner.ctx_mut().s7 = user_ctx.s7;
@@ -256,15 +261,19 @@ impl Process {
 
         // 设置任务扩展信息
         child_inner.init_task_ext(TaskExt::init(child_pid, true));
-        
+
         // 创建子进程任务
         let child_task = spawn_task(child_inner);
-    
+
         // 添加到全局表
         child_process.tasks.lock().push(Arc::clone(&child_task));
-        TID2TASK.lock().insert(child_task.id().as_u64(), Arc::clone(&child_task));
-        PID2PC.lock().insert(child_process.pid(), Arc::clone(&child_process));
-        
+        TID2TASK
+            .lock()
+            .insert(child_task.id().as_u64(), Arc::clone(&child_task));
+        PID2PC
+            .lock()
+            .insert(child_process.pid(), Arc::clone(&child_process));
+
         // 添加到进程计数
         PROCESS_COUNT.fetch_add(1, Ordering::SeqCst);
 
@@ -286,7 +295,7 @@ impl Process {
     /// get the page table token
     #[allow(unused)]
     pub fn page_table_token(&self) -> u64 {
-        self.page_table_token.load(Ordering::Acquire) 
+        self.page_table_token.load(Ordering::Acquire)
     }
 
     /// set the page table token of the process
@@ -315,10 +324,10 @@ pub unsafe extern "C" fn user_entry(entry: usize, _usp: VirtAddr) -> () {
 pub unsafe extern "C" fn fork_entry(sp: usize, s0: usize, ra: usize) {
     unsafe {
         core::arch::naked_asm!(
-            "mv sp, a0",   // 第一个参数作为 sp
-            "mv s0, a1",   // 第二个参数作为 s0
-            "li a0, 0",    // 子进程返回值为 0
-            "jr a2",       // 跳转到第三个参数（ra）
+            "mv sp, a0", // 第一个参数作为 sp
+            "mv s0, a1", // 第二个参数作为 s0
+            "li a0, 0",  // 子进程返回值为 0
+            "jr a2",     // 跳转到第三个参数（ra）
         );
     }
 }

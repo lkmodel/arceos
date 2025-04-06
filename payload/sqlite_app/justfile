@@ -1,0 +1,10 @@
+sqlite_version := env_var("SQLITEVERSION")
+zip := ".zip"
+sqlite_src := "sqlite-src-" + sqlite_version
+sqlite_url := "https://www.sqlite.org/2025/" + sqlite_src + zip
+cc := "gcc"
+
+build:
+    echo 'Build SQLite3 speedtest'
+    {{cc}} -g -Isqlite3_src -DSQLITE_ENABLE_MEMSYS5 -DSQLITE_ENABLE_RTREE -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_THREADSAFE=0 -Os test/speedtest1.c sqlite3.c -o speedtest1
+    ./speedtest1 > speedtest

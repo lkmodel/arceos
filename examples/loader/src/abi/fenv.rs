@@ -1,7 +1,7 @@
+use crate::{ABI_TABLE, AbiEntry};
+use abi_macro::abi;
 use core::arch::asm;
 use core::ffi::c_int;
-use abi_macro::abi;
-use crate::{AbiEntry, ABI_TABLE};
 
 const FE_INVALID: c_int = 16;
 const FE_DIVBYZERO: c_int = 8;
@@ -14,7 +14,6 @@ const FE_TONEAREST: c_int = 0;
 const FE_DOWNWARD: c_int = 2;
 const FE_UPWARD: c_int = 3;
 const FE_TOWARDZERO: c_int = 1;
-
 
 #[abi(fetestexcept)]
 #[unsafe(no_mangle)]

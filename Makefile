@@ -44,6 +44,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 # App options
 A ?= examples/helloworld
 APP ?= $(A)
+APP_PATH ?=
 FEATURES ?=
 APP_FEATURES ?=
 

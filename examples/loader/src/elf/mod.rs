@@ -1,8 +1,8 @@
-pub mod elf;
 pub mod auxv;
+pub mod elf;
 
-use core::fmt;
 use axlog::debug;
+use core::fmt;
 use xmas_elf::{ElfFile, header};
 
 pub const PLASH_START: usize = 0xffff_ffc0_2200_0000;
@@ -17,7 +17,10 @@ pub fn verify_elf_header(elf: &ElfFile) -> Result<(), LoadError> {
 
     // 1. 验证目标架构
     if header.pt2.machine().as_machine() != header::Machine::RISC_V {
-        debug!("Wrong architecture: expected RISC-V, got {:?}", header.pt2.machine());
+        debug!(
+            "Wrong architecture: expected RISC-V, got {:?}",
+            header.pt2.machine()
+        );
         return Err(LoadError::WrongArchitecture);
     }
 

@@ -5,7 +5,7 @@ use axtask::def_task_ext;
 pub struct TaskExt {
     process_id: AtomicU64,
     /// 是否是所属进程下的主线程
-    is_leader: AtomicBool,    
+    is_leader: AtomicBool,
 }
 
 impl TaskExt {

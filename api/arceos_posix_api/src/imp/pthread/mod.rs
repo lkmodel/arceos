@@ -3,7 +3,7 @@ use core::cell::UnsafeCell;
 use core::ffi::{c_int, c_void};
 
 use axerrno::{LinuxError, LinuxResult};
-use axtask::AxTaskRef;
+use axtask::{AxTaskRef, TaskInner};
 use spin::RwLock;
 
 use crate::ctypes;
@@ -59,7 +59,20 @@ impl Pthread {
             drop(their_packet);
         };
 
-        let task_inner = axtask::spawn(main);
+        let mut task_inner = TaskInner::new(main, "".into(), axconfig::TASK_STACK_SIZE);
+
+        // let mut task_inner = axtask::spawn(main);
+
+        #[cfg(target_arch = "riscv64")] {
+            let current_task = axtask::current();
+            let page_table_root = current_task.ctx().satp;
+            info!("page_table_root: {:?}", page_table_root);
+            task_inner.ctx_mut().set_page_table_root(page_table_root);
+        }
+
+        let task_inner = axtask::spawn_task(task_inner);
+
+        info!("task_inner: {:?}", task_inner.ctx());
 
         let tid = task_inner.id().as_u64();
         let thread = Pthread {
