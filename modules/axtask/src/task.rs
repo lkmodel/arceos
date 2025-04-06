@@ -13,6 +13,7 @@ use axhal::arch::TaskContext;
 #[cfg(feature = "tls")]
 use axhal::tls::TlsArea;
 
+use crate::stat::TimeStat;
 use crate::task_ext::AxTaskExt;
 use crate::{AxCpuMask, AxTask, AxTaskRef, WaitQueue};
 
@@ -73,12 +74,16 @@ pub struct TaskInner {
     ctx: UnsafeCell<TaskContext>,
     task_ext: AxTaskExt,
 
+    /// TimeStat
+    #[allow(unused)]
+    time: UnsafeCell<TimeStat>,
+
     #[cfg(feature = "tls")]
     tls: TlsArea,
 }
 
 impl TaskId {
-    fn new() -> Self {
+    pub fn new() -> Self {
         static ID_COUNTER: AtomicU64 = AtomicU64::new(1);
         Self(ID_COUNTER.fetch_add(1, Ordering::Relaxed))
     }
@@ -184,11 +189,26 @@ impl TaskInner {
         self.ctx.get_mut()
     }
 
+    /// Returns a reference to the task context.
+    #[inline]
+    pub const fn ctx(&self) -> &TaskContext {
+        unsafe { &*self.ctx.get() }
+    }
+
     /// Returns the top address of the kernel stack.
     #[inline]
     pub const fn kernel_stack_top(&self) -> Option<VirtAddr> {
         match &self.kstack {
             Some(s) => Some(s.top()),
+            None => None,
+        }
+    }
+
+    /// Returns the top address of the kernel stack.
+    #[inline]
+    pub const fn kernel_stack_bottom(&self) -> Option<VirtAddr> {
+        match &self.kstack {
+            Some(s) => Some(s.bottom()),
             None => None,
         }
     }
@@ -208,6 +228,82 @@ impl TaskInner {
     #[inline]
     pub fn set_cpumask(&self, cpumask: AxCpuMask) {
         *self.cpumask.lock() = cpumask
+    }
+
+    #[inline]
+    /// update the time information when the task is switched from user mode to kernel mode
+    pub fn time_stat_from_user_to_kernel(&self) {
+        let time = self.time.get();
+        unsafe {
+            (*time).switch_into_kernel_mode(self.id.as_u64() as isize);
+        }
+    }
+
+    #[inline]
+    /// update the time information when the task is switched from kernel mode to user mode
+    pub fn time_stat_from_kernel_to_user(&self) {
+        let time = self.time.get();
+        unsafe {
+            (*time).switch_into_user_mode(self.id.as_u64() as isize);
+        }
+    }
+
+    #[inline]
+    /// update the time information when the task is switched out
+    pub fn time_stat_when_switch_from(&self) {
+        let time = self.time.get();
+        unsafe {
+            (*time).swtich_from_old_task(self.id.as_u64() as isize);
+        }
+    }
+
+    #[inline]
+    /// update the time information when the task is ready to be switched in
+    pub fn time_stat_when_switch_to(&self) {
+        let time = self.time.get();
+        unsafe {
+            (*time).switch_to_new_task(self.id.as_u64() as isize);
+        }
+    }
+
+    #[inline]
+    /// 将内核统计的运行时时间转为秒与微妙的形式输出，方便进行sys_time
+    /// (用户态秒，用户态微妙，内核态秒，内核态微妙)
+    pub fn time_stat_output(&self) -> (usize, usize, usize, usize) {
+        let time = self.time.get();
+        unsafe { (*time).output_as_us() }
+    }
+
+    #[inline]
+    /// 输出计时器信息
+    /// (计时器周期，当前计时器剩余时间)
+    /// 单位为us
+    pub fn timer_output(&self) -> (usize, usize) {
+        let time = self.time.get();
+        unsafe { (*time).output_timer_as_us() }
+    }
+
+    #[inline]
+    /// 设置计时器信息
+    ///
+    /// 若type不为None则返回成功
+    pub fn set_timer(
+        &self,
+        timer_interval_ns: usize,
+        timer_remained_ns: usize,
+        timer_type: usize,
+    ) -> bool {
+        let time = self.time.get();
+        unsafe { (*time).set_timer(timer_interval_ns, timer_remained_ns, timer_type) }
+    }
+
+    #[inline]
+    /// 重置统计时间
+    pub fn time_stat_clear(&self) {
+        let time = self.time.get();
+        unsafe {
+            (*time).clear();
+        }
     }
 }
 
@@ -236,6 +332,7 @@ impl TaskInner {
             wait_for_exit: WaitQueue::new(),
             kstack: None,
             ctx: UnsafeCell::new(TaskContext::new()),
+            time: UnsafeCell::new(TimeStat::new()),
             task_ext: AxTaskExt::empty(),
             #[cfg(feature = "tls")]
             tls: TlsArea::alloc(),
@@ -261,7 +358,7 @@ impl TaskInner {
         t
     }
 
-    pub(crate) fn into_arc(self) -> AxTaskRef {
+    pub fn into_arc(self) -> AxTaskRef {
         Arc::new(AxTask::new(self))
     }
 
@@ -451,6 +548,10 @@ impl TaskStack {
     pub const fn top(&self) -> VirtAddr {
         unsafe { core::mem::transmute(self.ptr.as_ptr().add(self.layout.size())) }
     }
+
+    pub const fn bottom(&self) -> VirtAddr {
+        unsafe { core::mem::transmute(self.ptr.as_ptr()) }
+    }
 }
 
 impl Drop for TaskStack {
@@ -485,7 +586,7 @@ impl CurrentTask {
         &self.0
     }
 
-    pub(crate) fn clone(&self) -> AxTaskRef {
+    pub fn clone(&self) -> AxTaskRef {
         self.0.deref().clone()
     }
 
@@ -498,14 +599,18 @@ impl CurrentTask {
         #[cfg(feature = "tls")]
         axhal::arch::write_thread_pointer(init_task.tls.tls_ptr() as usize);
         let ptr = Arc::into_raw(init_task);
-        axhal::cpu::set_current_task_ptr(ptr);
+        unsafe {
+            axhal::cpu::set_current_task_ptr(ptr);
+        }
     }
 
     pub(crate) unsafe fn set_current(prev: Self, next: AxTaskRef) {
         let Self(arc) = prev;
         ManuallyDrop::into_inner(arc); // `call Arc::drop()` to decrease prev task reference count.
         let ptr = Arc::into_raw(next);
-        axhal::cpu::set_current_task_ptr(ptr);
+        unsafe {
+            axhal::cpu::set_current_task_ptr(ptr);
+        }
     }
 }
 

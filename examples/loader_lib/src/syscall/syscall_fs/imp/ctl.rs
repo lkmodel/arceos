@@ -1,19 +1,21 @@
+use core::ptr::copy_nonoverlapping;
+
 use crate::{
     linux_env::{
-        axfs_ext::api::{FileIO, OpenFlags},
-        linux_fs::{
-            fd_manager::{FDM, alloc_fd},
+        axfs_ext::api::OpenFlags,
+        linux_api::{
+            api::process_api,
             link::{AT_FDCWD, FilePath, deal_with_path},
             utils::{UtilsError, deal_path},
         },
     },
     syscall::{
-        SyscallError, SyscallResult, TimeSecs,
+        DirEnt, DirEntType, SyscallError, SyscallResult, TimeSecs,
         ctypes::{Fcntl64Cmd, RenameFlags},
         syscall_fs::ctype::file::{FileDesc, new_fd},
     },
 };
-use alloc::{string::ToString, sync::Arc, vec};
+use alloc::string::ToString;
 use axerrno::AxError;
 use axfs::api::{
     Permissions, create_dir, metadata, remove_dir, remove_file, rename, set_current_dir,
@@ -32,10 +34,11 @@ use axlog::{debug, error, info, warn};
 pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
     let buf = args[0] as *mut u8;
     let len = args[1];
-    debug!("Into syscall_getcwd. buf: {}, len: {}", buf as usize, len);
+    info!("Into syscall_getcwd. buf: {}, len: {}", buf as usize, len);
     let cwd = axfs::api::current_dir().unwrap();
 
     // TODO: 如果buf为NULL,则系统分配缓存区
+    // ```
     // let process = current_process();
     // let process_inner = process.inner.lock();
     // if buf.is_null() {
@@ -51,6 +54,7 @@ pub fn syscall_getcwd(args: [usize; 6]) -> SyscallResult {
         }
         Ok(buf as isize)
     } else {
+        info!("getcwd: buf size is too small");
         Err(SyscallError::ERANGE)
     }
 }
@@ -189,8 +193,110 @@ pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
 /// # Return
 /// * On success, the number of bytes read is returned. On end of directory, 0 is returned.
 /// * On error, -1 is returned.
-pub fn syscall_getdents64(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let buf = args[1] as *mut u8;
+    let len = args[2];
+    let path = match deal_path(fd, None, false) {
+        Ok(path) => path,
+        Err(e) => match e {
+            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
+            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
+            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
+            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
+            UtilsError::PanicMe => {
+                panic!("{:?}", e);
+            }
+            _ => {
+                panic!("{:?}", e);
+            }
+        },
+    };
+
+    // ```
+    // let process = process_api();
+    // // 注意是否分配地址
+    // let start: VirtAddr = (buf as usize).into();
+    // let end = start + len;
+    //     if process.manual_alloc_range_for_lazy(start, end).is_err() {
+    //         return Err(SyscallError::EFAULT);
+    //     }
+
+    if len < DirEnt::fixed_size() {
+        return Err(SyscallError::EINVAL);
+    }
+    // ```
+    // let entry_id_from = unsafe { (*(buf as *const DirEnt)).d_off };
+    // error!("entry_id_from: {}", entry_id_from);
+    // 先获取buffer里面最后一个长度
+    let mut all_offset = 0; // 记录上一次调用时进行到的目录项距离文件夹开始时的偏移量
+    let mut buf_offset = 0; // 记录当前buf里面的目录项的指针偏移量
+    loop {
+        if buf_offset + DirEnt::fixed_size() >= len {
+            break;
+        }
+        let dir_ent = unsafe { *(buf.add(buf_offset) as *const DirEnt) };
+        if dir_ent.d_reclen == 0 {
+            break;
+        }
+        buf_offset += dir_ent.d_reclen as usize;
+        // all_offset = dir_ent.d_off; // 记录最新的 offset
+        if all_offset < dir_ent.d_off {
+            all_offset = dir_ent.d_off;
+        } else {
+            break;
+        }
+    }
+
+    let buf = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+    let dir_iter = axfs::api::read_dir(path.path()).unwrap();
+    let mut count = 0; // buf中已经写入的字节数
+    let mut offset: u64 = 0; // 当前目录项在文件夹中的偏移
+    for entry in dir_iter {
+        let entry = entry.unwrap();
+        let mut name = entry.file_name();
+        name.push('\0');
+        let name = name.as_bytes();
+        let name_len = name.len();
+        let file_type = entry.file_type();
+        let entry_size = DirEnt::fixed_size() + name_len + 1;
+
+        // buf不够大，写不下新的entry
+        if count + entry_size + DirEnt::fixed_size() + 1 > len {
+            debug!("buf not big enough");
+            break;
+        }
+        offset += entry_size as u64;
+        if offset <= all_offset {
+            continue;
+        }
+        // 转换为DirEnt
+        let dirent: &mut DirEnt = unsafe { &mut *(buf.as_mut_ptr().add(count) as *mut DirEnt) };
+        // 设置定长部分
+        if file_type.is_dir() {
+            dirent.set_fixed_part(1, offset, entry_size, DirEntType::Dir);
+        } else if file_type.is_file() {
+            dirent.set_fixed_part(1, offset, entry_size, DirEntType::Reg);
+        } else {
+            dirent.set_fixed_part(1, offset, entry_size, DirEntType::Unknown);
+        }
+
+        // 写入文件名
+        unsafe { copy_nonoverlapping(name.as_ptr(), dirent.d_name.as_mut_ptr(), name_len) };
+
+        count += entry_size;
+    }
+
+    // 为了保证下一次访问的时候边界是存在的，因此需要手动写入一个空的目录项
+    if count != 0 && count + DirEnt::fixed_size() <= len {
+        // 转换为DirEnt
+        let dirent: &mut DirEnt = unsafe { &mut *(buf.as_mut_ptr().add(count) as *mut DirEnt) };
+        // 设置定长部分
+        dirent.set_fixed_part(1, offset, DirEnt::fixed_size(), DirEntType::Reg);
+        count += DirEnt::fixed_size();
+        return Ok((count - DirEnt::fixed_size()) as isize);
+    }
+    Ok(count as isize)
 }
 
 /// 276
@@ -370,7 +476,8 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let cmd = args[1];
     let arg = args[2];
-    let mut fd_table = FDM.fd_table.lock();
+    let process = process_api();
+    let mut fd_table = process.fd_manager.fd_table.lock();
 
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
@@ -384,7 +491,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     info!("fd: {}, cmd: {}", fd, cmd);
     match Fcntl64Cmd::try_from(cmd) {
         Ok(Fcntl64Cmd::F_DUPFD) => {
-            let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+            let new_fd = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
                 fd
             } else {
                 // 文件描述符达到上限了
@@ -417,7 +524,7 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
             Err(SyscallError::EINVAL)
         }
         Ok(Fcntl64Cmd::F_DUPFD_CLOEXEC) => {
-            let new_fd = if let Ok(fd) = alloc_fd(&mut fd_table) {
+            let new_fd = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
                 fd
             } else {
                 // 文件描述符达到上限了
@@ -435,10 +542,10 @@ pub fn syscall_fcntl64(args: [usize; 6]) -> SyscallResult {
     }
 }
 
-// FIXME: fatfs文件系统不支持设置权限，会直接当作0o755返回。
+// FIX: `fatfs`文件系统不支持设置权限，会直接当作`0o755`返回。
 /// 53
 /// 修改文件权限
-/// mode: 0o777, 3位八进制数字
+/// mode: `0o777`, 3位八进制数字
 /// path为相对路径:
 ///     1. 若`dir_fd`为`AT_FDCWD`,则相对于当前工作目录
 ///     2. 若`dir_fd`为`AT_FDCWD`以外的值,则相对于`dir_fd`所指的目录
@@ -511,6 +618,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let mode = args[1];
+    let process = process_api();
 
     // 将模式转换为 Permissions 类型
     let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
@@ -520,7 +628,7 @@ pub fn syscall_fchmod(args: [usize; 6]) -> SyscallResult {
     };
 
     // 获取文件描述符对应的文件
-    let file_io = match FDM.fd_table.lock().get(fd) {
+    let file_io = match process.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
         _ => return Err(SyscallError::EBADF), // 文件描述符无效
     };
@@ -634,8 +742,9 @@ pub fn syscall_ioctl(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let request = args[1];
     let argp = args[2];
-    let fd_table = FDM.fd_table.lock();
-    warn!("fd: {}, request: {}, argp: {}", fd, request, argp);
+    let process = process_api();
+    let fd_table = process.fd_manager.fd_table.lock();
+    debug!("fd: {}, request: {}, argp: {}", fd, request, argp);
     if fd >= fd_table.len() {
         debug!("fd {} is out of range", fd);
         return Err(SyscallError::EBADF);
@@ -670,8 +779,8 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let times = args[2] as *const TimeSecs;
     let _flags = args[3];
-    //    let process = current_process();
-    // info!("dir_fd: {}, path: {}", dir_fd as usize, path as usize);
+    let process = process_api();
+    info!("dir_fd: {}, path: {}", dir_fd as usize, path as usize);
     if dir_fd != AT_FDCWD && (dir_fd as isize) < 0 {
         return Err(SyscallError::EBADF); // 错误的文件描述符
     }
@@ -699,8 +808,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         //     error!("Set time failed: unknown reason.");
         //     return ErrorNo::EPERM as isize;
         // }
-        //        let fd_table = process.fd_manager.fd_table.lock();
-        let fd_table = FDM.fd_table.lock();
+        let fd_table = process.fd_manager.fd_table.lock();
         if dir_fd > fd_table.len() || fd_table[dir_fd].is_none() {
             return Err(SyscallError::EBADF);
         }

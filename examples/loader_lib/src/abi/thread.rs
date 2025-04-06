@@ -3,7 +3,7 @@ use api::{
     sys_pthread_mutex_lock, sys_pthread_mutex_unlock, sys_pthread_self,
 };
 use arceos_posix_api::{self as api, ctypes};
-use axlog::{debug, info};
+use axlog::{debug, info, warn};
 use axstd::thread::sleep;
 use core::ffi::{c_int, c_void};
 use core::time::Duration;
@@ -40,6 +40,9 @@ pub extern "C" fn abi_pthread_exit(retval: *mut c_void) -> ! {
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_pthread_self() -> ctypes::pthread_t {
     info!("[ABI:Thread] Get the `pthread` struct of current thread!");
+    warn!(
+        "Associated with bug: `__nl_langinfo_l`error, please fix it, re impl this abicall as syscall"
+    );
     sys_pthread_self()
 }
 

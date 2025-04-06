@@ -27,6 +27,7 @@ pub enum FsSyscallId {
     FTRUNCATE64 = 46,
     FACCESSAT = 48,
     CHDIR = 49,
+    CHROOT = 51,
     FCHMOD = 52,
     FCHMODAT = 53,
     FCHOWNAT = 54,
@@ -50,8 +51,12 @@ pub enum FsSyscallId {
     FSTAT = 80,
     SYNC = 81,
     FSYNC = 82,
+    FDATASYNC = 83,
     UTIMENSAT = 88,
+    SETPRIORITY = 140,
+    GETPRIORITY = 141,
     RENAMEAT2 = 276,
     COPYFILERANGE = 285,
+    FACCESSAT2 = 439,
 }
 }

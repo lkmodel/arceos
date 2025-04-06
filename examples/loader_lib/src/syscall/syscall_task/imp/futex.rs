@@ -1,7 +1,7 @@
 //! 支持 futex 相关的 syscall
 
 use crate::{
-    linux_env::linux_fs::futex::{FUTEX_WAIT_TASK, FutexKey, WAIT_FOR_FUTEX, get_futex_key},
+    linux_env::linux_api::futex::{FUTEX_WAIT_TASK, FutexKey, WAIT_FOR_FUTEX, get_futex_key},
     syscall::{FutexFlags, SyscallError, SyscallResult, TimeSecs},
 };
 use alloc::collections::VecDeque;

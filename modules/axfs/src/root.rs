@@ -161,9 +161,7 @@ pub(crate) fn init_rootfs(disk: crate::dev::Disk) {
         } else if #[cfg(feature = "ext4_rs")] {
             warn!("EXT4 FS RS");
             static EXT4_FS: LazyInit<Arc<fs::ext4::Ext4FileSystem>> = LazyInit::new();
-            warn!("CHECKPOINT 0.1");
             EXT4_FS.init_once(Arc::new(fs::ext4::Ext4FileSystem::new(disk)));
-            warn!("CHECKPOINT 0.2");
             let main_fs = EXT4_FS.clone();
         }
     }

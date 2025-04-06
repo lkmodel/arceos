@@ -39,14 +39,15 @@ void srand(unsigned);
 
 void *malloc(size_t);
 void *calloc(size_t, size_t);
+void *__libc_calloc(size_t, size_t);
 void *realloc(void *, size_t);
 void free(void *);
 // void *aligned_alloc(size_t, size_t);
 
-// _Noreturn void abort(void);
+_Noreturn void abort(void);
 // int atexit(void (*)(void));
 // _Noreturn void exit(int);
-// _Noreturn void _Exit(int);
+_Noreturn void _Exit(int);
 // int at_quick_exit(void (*)(void));
 // _Noreturn void quick_exit(int);
 
@@ -54,8 +55,8 @@ char *getenv(const char *);
 
 // int system(const char *);
 
-// void *bsearch(const void *, const void *, size_t, size_t, int (*)(const void *, const void *));
-// void qsort(void *, size_t, size_t, int (*)(const void *, const void *));
+void *bsearch(const void *, const void *, size_t, size_t, int (*)(const void *, const void *));
+void qsort(void *, size_t, size_t, int (*)(const void *, const void *));
 
 int abs(int);
 long labs(long);
@@ -103,8 +104,8 @@ size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
 #define WIFSIGNALED(s) (((s) & 0xffff) - 1U < 0xffu)
 
 // int posix_memalign(void **, size_t, size_t);
-// int setenv(const char *, const char *, int);
-// int unsetenv(const char *);
+int setenv(const char *, const char *, int);
+int unsetenv(const char *);
 // int mkstemp(char *);
 // int mkostemp(char *, int);
 // char *mkdtemp(char *);
@@ -119,7 +120,7 @@ long int random(void);
 void srandom(unsigned int);
 // char *initstate(unsigned int, char *, size_t);
 // char *setstate(char *);
-// int putenv(char *);
+int putenv(char *);
 // int posix_openpt(int);
 // int grantpt(int);
 // int unlockpt(int);
@@ -146,7 +147,7 @@ void lcong48(unsigned short[7]);
 // void *valloc(size_t);
 // void *memalign(size_t, size_t);
 // int getloadavg(double *, int);
-// int clearenv(void);
+int clearenv(void);
 #define WCOREDUMP(s)    ((s) & 0x80)
 #define WIFCONTINUED(s) ((s) == 0xffff)
 // void *reallocarray(void *, size_t, size_t);

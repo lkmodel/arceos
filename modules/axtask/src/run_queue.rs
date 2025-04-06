@@ -528,11 +528,13 @@ impl AxRunQueue {
             !axhal::arch::irqs_enabled(),
             "IRQs must be disabled during scheduling"
         );
-        trace!(
-            "context switch: {} -> {}",
-            prev_task.id_name(),
-            next_task.id_name()
-        );
+        info!("context prev_task: {}", prev_task.id_name());
+        info!("context next_task: {}", next_task.id_name());
+        // trace!(
+        //     "context switch: {} -> {}",
+        //     prev_task.id_name(),
+        //     next_task.id_name()
+        // );
         #[cfg(feature = "preempt")]
         next_task.set_preempt_pending(false);
         next_task.set_state(TaskState::Running);

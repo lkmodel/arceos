@@ -5,13 +5,30 @@ authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
 [features]
-default = ["fs", "driver-ramdisk"]
+default = ["fs", "driver-ramdisk", "batch"]
+
+# 一级可选项目
+
+# 单进程模式
+unikernel = ["placeholder_signal", "uni_process"]
+# 单进程，但是批处理模式
+batch = ["placeholder_signal", "uni_process"]
+# `WIP` 不要使用，正在开发！
+# 无特权级的多进程模式
+pseudo_multi_process = ["signal", "multi_process"]
+
+## 二级可选项目（不应该直接选择，可以包含三级）
 fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
-alloc = ["axalloc", "axruntime/alloc"]
-# TODO: 添加"axruntime/paging", 修正PAGE_FAULT
-# paging = ["alloc", "axhal/paging", "axruntime/paging"]
 paging = ["alloc", "axhal/paging"]
 
+### 三级可选特性（只能包含依赖，不应该包含其他特性）
+
+uni_process = [] # 假装支持
+multi_process = ["axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process"] # 开启这个选项后，将会实质上支持（伪）多进程。`WIP`
+signal = [] # 开启这个选项后，将会实质上支持signal模式。 `WIP`
+placeholder_signal = [] # 假装支持
+
+alloc = ["axalloc", "axruntime/alloc"]
 driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]
 
 [dependencies]
@@ -24,17 +41,24 @@ axsync = { workspace = true, features = ["multitask"] }
 axfs = { workspace = true, features = ["default"] }
 arceos_posix_api = { workspace = true, features = ["multitask", "alloc"] }
 axruntime = { workspace = true }
-# axconfig = { workspace = true }
-
+axmm = { workspace = true }
 axdriver = { workspace = true, optional = true }
 axalloc = { workspace = true , optional = true }
 
 # Other crates
+kernel-elf-parser = "0.1"
+kspin = "0.1"
+axfs_vfs = "0.1"
 elf = { version = "0.7.4", default-features = false }
-# printf-compat = { version = "0.1.1", default-features = false }
 axio = { version = "0.1", features = ["alloc"] }
 cty = "0.2.2"
 axerrno = "0.1.0"
 numeric-enum-macro = "0.2.0"
 bitflags = "2.0"
 lazyinit = "0.2"
+memory_addr = "0.3"
+rand = { version = "0.8.5" , default-features = false, features = [
+    "small_rng",
+]}
+# compiler_builtins的cc特性打开的时候，得注意下会不会编译报错说浮点类型不一致
+compiler_builtins = "0.1.152"

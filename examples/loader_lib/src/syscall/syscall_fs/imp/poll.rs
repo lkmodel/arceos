@@ -1,18 +1,64 @@
-use axhal::{mem::VirtAddr, time::current_ticks};
+use axhal::time::current_ticks;
 use axtask::yield_now;
 use bitflags::bitflags;
 
 use crate::{
-    linux_env::{axfs_ext::api::FileIO, linux_fs::fd_manager::FDM},
+    linux_env::{axfs_ext::api::FileIO, linux_api::api::process_api},
     syscall::{SyscallError, SyscallResult, TimeSecs},
 };
 
-use alloc::{
-    string::{String, ToString},
-    sync::Arc,
-    vec,
-    vec::Vec,
-};
+use alloc::{sync::Arc, vec::Vec};
+
+// FIX: 测试
+/// 实现ppoll系统调用
+///
+/// `fds`：一个PollFd列表
+/// expire_time：时间戳,用来记录是否超时
+///
+/// 返回值：(usize, Vec<PollFd>) 第一个参数遵守 ppoll 系统调用的返回值约定,第二个参数为返回的 `PollFd` 列表
+fn ppoll(mut fds: Vec<PollFd>, expire_time: usize) -> (isize, Vec<PollFd>) {
+    loop {
+        // 满足事件要求而被触发的事件描述符数量
+        let mut set: isize = 0;
+        let process = process_api();
+        for poll_fd in &mut fds {
+            let fd_table = process.fd_manager.fd_table.lock();
+            if let Some(file) = fd_table[poll_fd.fd as usize].as_ref() {
+                poll_fd.revents = PollEvents::empty();
+                //```
+                // let file = file.lock();
+                if file.in_exceptional_conditions() {
+                    poll_fd.revents |= PollEvents::ERR;
+                }
+                if file.is_hang_up() {
+                    poll_fd.revents |= PollEvents::HUP;
+                }
+                if poll_fd.events.contains(PollEvents::IN) && file.ready_to_read() {
+                    poll_fd.revents |= PollEvents::IN;
+                }
+                if poll_fd.events.contains(PollEvents::OUT) && file.ready_to_write() {
+                    poll_fd.revents |= PollEvents::OUT;
+                }
+                // 如果返回事件不为空,代表有响应
+                if !poll_fd.revents.is_empty() {
+                    set += 1;
+                }
+            } else {
+                // 不存在也是一种响应
+                poll_fd.revents = PollEvents::ERR;
+                set += 1;
+            }
+        }
+        if set > 0 {
+            return (set, fds);
+        }
+        if current_ticks() as usize > expire_time {
+            // 过期了,直接返回
+            return (0, fds);
+        }
+        yield_now();
+    }
+}
 
 /// 实现`ppoll`系统调用
 ///
@@ -23,8 +69,45 @@ use alloc::{
 /// * `nfds - usize`
 /// * `timeout - *const TimeSecs`
 /// * `mask - usize`
-pub fn syscall_ppoll(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
+pub fn syscall_ppoll(args: [usize; 6]) -> SyscallResult {
+    let ufds = args[0] as *mut PollFd;
+    let nfds = args[1];
+    let timeout = args[2] as *const TimeSecs;
+    let _mask = args[3];
+
+    //```
+    // let start: VirtAddr = (ufds as usize).into();
+    // let end = start + nfds * core::mem::size_of::<PollFd>();
+    // if process.manual_alloc_range_for_lazy(start, end).is_err() {
+    //     return Err(SyscallError::EFAULT);
+    // }
+
+    let mut fds: Vec<PollFd> = Vec::new();
+
+    for i in 0..nfds {
+        unsafe {
+            fds.push(*(ufds.add(i)));
+        }
+    }
+
+    let expire_time = if timeout as usize != 0 {
+        //```
+        // if process.manual_alloc_type_for_lazy(timeout).is_err() {
+        //     return Err(SyscallError::EFAULT);
+        // }
+        current_ticks() as usize + unsafe { (*timeout).get_ticks() }
+    } else {
+        usize::MAX
+    };
+
+    let (set, ret_fds) = ppoll(fds, expire_time);
+    // 将得到的fd存储到原先的指针中
+    for (i, fd) in ret_fds.iter().enumerate() {
+        unsafe {
+            *(ufds.add(i)) = *fd;
+        }
+    }
+    Ok(set)
 }
 
 /// 实现`pselect6`系统调用
@@ -54,10 +137,10 @@ pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
         Ok(ans) => (ans.files, ans.fds, ans.shadow_bitset),
         Err(e) => return Err(e),
     };
-    //    let process = current_process();
 
     let expire_time = if !timeout.is_null() {
         // FIX:
+        // ```
         //        if process
         //            .memory_set
         //            .lock()
@@ -85,9 +168,8 @@ pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
         //
         // 因此先 yield 避免其他进程 starvation。
         //
-        // 可见 iperf 测例。
+        // 可见`iperf`测例。
         yield_now();
-        //        yield_now_task();
 
         let mut set = 0;
         if rset.valid() {
@@ -120,22 +202,17 @@ pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
         if current_ticks() as usize > expire_time {
             return Ok(0);
         }
-        // TODO: fix this and use mask to ignore specific signal
-        #[cfg(feature = "signal")]
-        if let Some(signalno) = process.have_signals() {
-            if signalno == SignalNo::SIGKILL as usize {
-                return Err(SyscallError::EINTR);
-            }
-        }
     }
 }
 
-/// 根据给定的地址和长度新建一个fd set,包括文件描述符指针数组,文件描述符数值数组,以及一个bitset
+/// 根据给定的地址和长度新建一个fd set,包括文件描述符指针数组,文件描述符数值数组,以及一个`bitset`
 fn init_fd_set(addr: *mut usize, len: usize) -> Result<PpollFdSet, SyscallError> {
-    //    let process = current_process();
-    //   if len >= process.fd_manager.get_limit() as usize {
-    if len >= FDM.get_limit() as usize {
-        axlog::error!("[pselect6()] len {len} >= limit {}", FDM.get_limit());
+    let process = process_api();
+    if len >= process.fd_manager.get_limit() as usize {
+        axlog::error!(
+            "[pselect6()] len {len} >= limit {}",
+            process.fd_manager.get_limit()
+        );
         return Err(SyscallError::EINVAL);
     }
 
@@ -147,7 +224,8 @@ fn init_fd_set(addr: *mut usize, len: usize) -> Result<PpollFdSet, SyscallError>
         });
     }
 
-    // FIXME:
+    // FIX:
+    // ```
     //    let start: VirtAddr = (addr as usize).into();
     //    let end = start + (len + 7) / 8;
     //    if process.manual_alloc_range_for_lazy(start, end).is_err() {
@@ -159,7 +237,7 @@ fn init_fd_set(addr: *mut usize, len: usize) -> Result<PpollFdSet, SyscallError>
     let mut files = Vec::new();
     for fd in 0..len {
         if shadow_bitset.check(fd) {
-            let fd_table = FDM.fd_table.lock();
+            let fd_table = process.fd_manager.fd_table.lock();
             if let Some(file) = fd_table[fd].as_ref() {
                 files.push(Arc::clone(file));
                 fds.push(fd);
@@ -196,7 +274,7 @@ bitflags! {
 }
 
 #[derive(Default)]
-/// file set used for ppoll
+/// File set used for ppoll
 struct PpollFdSet {
     files: Vec<Arc<dyn FileIO>>,
     fds: Vec<usize>,
@@ -205,7 +283,7 @@ struct PpollFdSet {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-/// file descriptor used for poll
+/// File descriptor used for poll
 pub struct PollFd {
     /// 等待的fd
     pub fd: i32,
@@ -216,7 +294,7 @@ pub struct PollFd {
 }
 
 struct ShadowBitset {
-    /// start address of the bitset which is in user space
+    /// Start address of the `bitset` which is in user space
     addr: *mut usize,
     /// 是包含的bit数目,而不是字节数目
     len: usize,
@@ -232,12 +310,12 @@ impl Default for ShadowBitset {
 }
 
 impl ShadowBitset {
-    /// create a new bitset
+    /// Create a new `bitset`
     pub fn new(addr: *mut usize, len: usize) -> Self {
         Self { addr, len }
     }
 
-    /// check if the index is set
+    /// Check if the index is set
     pub fn check(&self, index: usize) -> bool {
         if index >= self.len {
             return false;
@@ -248,7 +326,7 @@ impl ShadowBitset {
         unsafe { *self.addr.add(byte_index) & (1 << bit_index) != 0 }
     }
 
-    /// set the index in the bitset
+    /// Set the index in the `bitset`
     pub fn set(&mut self, index: usize) {
         if index >= self.len {
             return;
@@ -269,9 +347,9 @@ impl ShadowBitset {
         }
     }
 
-    /// check if the bitset is valid
+    /// Check if the `bitset` is valid
     ///
-    /// if the addr is null, it is invalid
+    /// If the addr is null, it is invalid
     pub fn valid(&self) -> bool {
         self.addr as usize != 0
     }

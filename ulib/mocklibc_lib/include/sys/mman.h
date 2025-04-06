@@ -138,8 +138,8 @@ void *mremap (void *, size_t, size_t, int, ...);
 // int mincore (void *, size_t, unsigned char *);
 #endif
 
-// int shm_open (const char *, int, mode_t);
-// int shm_unlink (const char *);
+int shm_open (const char *, int, mode_t);
+int shm_unlink (const char *);
 
 #if defined(_LARGEFILE64_SOURCE)
 #define mmap64 mmap

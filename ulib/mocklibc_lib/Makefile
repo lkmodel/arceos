@@ -10,8 +10,6 @@ STRIP=$(PLATFORM)-strip
 OBJCOPY=$(PLATFORM)-objcopy
 
 CFLAGS += -nostartfiles -ffreestanding -nostdlib -nostdinc -mcmodel=medany $(INTERNAL_INCLUDE) -fPIC -pie
-CFLAGS += # -Wno-builtin-macro-redefined
-CFLAGS += # -L./rela/libgcc.c -lgcc
 # CFLAGS += -fvisibility=hidden # 尝试修正compile-rt被-nolib屏蔽的问题，也就是__getf2符号没有的问题。
 ASFLAGS = 
 LDFLAGS := #"$($(CC) -print-libgcc-file-name)"# -T link.ld
@@ -25,10 +23,15 @@ LIB_DIR = lib
 STATIC_LIB = $(LIB_DIR)/libmock.a
 DYNAMIC_LIB = $(LIB_DIR)/libmock.so
 LIBSRC += $(wildcard $(SRC_DIR)/__rt_float/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/__rt_integer/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/__rt_tmp/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/complex/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/conf/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/ctype/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/dirent/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/env/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/errno/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/exit/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/fcntl/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/fenv/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/internal/*.c)
@@ -44,14 +47,22 @@ LIBSRC += $(wildcard $(SRC_DIR)/math/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/misc/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/mman/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/multibyte/*.c)
-LIBSRC += # $(wildcard $(SRC_DIR)/network/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/network/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/passwd/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/prng/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/process/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/regex/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/select/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/setjmp_riscv64/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/signal/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/signal_riscv64/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stat/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stdio/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/stdlib/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/string/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/termios/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/thread/*.c)
+LIBSRC += $(wildcard $(SRC_DIR)/thread_riscv64/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/time/*.c)
 LIBSRC += $(wildcard $(SRC_DIR)/unistd/*.c)
 
@@ -81,11 +92,11 @@ else
 	CFLAGS += -Os
 endif
 
-all: clean makedir $(STATIC_LIB) $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
+all: makedir $(STATIC_LIB) $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
 
-static: clean makedir $(STATIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
+static: makedir $(STATIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
 
-dynamic: clean makedir $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
+dynamic: makedir $(DYNAMIC_LIB) $(CRT_OBJ) $(LIB_OBJ)
 
 $(LIB_OBJ): | $(dir $(LIB_OBJ))
 $(CRT_OBJ): | $(dir $(CRT_OBJ))

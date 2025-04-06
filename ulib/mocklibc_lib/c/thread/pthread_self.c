@@ -13,6 +13,8 @@ static pthread_t __pthread_self_internal()
 
 pthread_t __pthread_self_impl()
 {
+    CHECKPOINT
+    ASM_CHECKPOINT(0x0b)
     typedef pthread_t (*FnABI)();
     long *abi_ptr = (long *)(abi_entry + 8 * ABI_PTHREAD_SELF);
     FnABI func = (FnABI)(*abi_ptr);

@@ -6,8 +6,14 @@
 //
 // use axprocess::current_process;
 
-use crate::syscall::{SyscallError, SyscallResult};
+use alloc::boxed::Box;
+use axhal::{arch::flush_tlb, mem::VirtAddr, paging::MappingFlags};
+use axlog::debug;
 use bitflags::bitflags;
+
+use crate::syscall::{
+    MMAPFlags, MMAPPROT, SyscallError, SyscallResult, syscall_fs::ctype::file::FileDesc,
+};
 
 const MAX_HEAP_SIZE: usize = 0x20000;
 /// 修改用户堆大小，
@@ -42,7 +48,7 @@ pub fn syscall_brk(_args: [usize; 6]) -> SyscallResult {
 /// * `flags - MMAPFlags`
 /// * `fd - i32`
 /// * `offset - usize`
-pub fn syscall_mmap(_args: [usize; 6]) -> SyscallResult {
+pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
     unimplemented!();
     //    let start = args[0];
     //    let len = args[1];
@@ -50,36 +56,39 @@ pub fn syscall_mmap(_args: [usize; 6]) -> SyscallResult {
     //    let flags = MMAPFlags::from_bits_truncate(args[3] as u32);
     //    let fd = args[4] as i32;
     //    let offset = args[5];
-    //    use axlog::debug;
-    //    use axmem::MemBackend;
     //
     //    let fixed = flags.contains(MMAPFlags::MAP_FIXED);
-    //    // try to map to NULL
+    //    // Try to map to NULL
     //    if fixed && start == 0 {
     //        return Err(SyscallError::EINVAL);
     //    }
     //
-    //    let process = current_process();
-    //
     //    let addr = if flags.contains(MMAPFlags::MAP_ANONYMOUS) {
-    //        // no file
+    //        // No file
     //        if !(fd == -1 && offset == 0) {
     //            return Err(SyscallError::EINVAL);
     //        }
-    //        process
+    //        UNI_API
     //            .memory_set
     //            .lock()
     //            .lock()
     //            .mmap(start.into(), len, prot.into(), fixed, None)
     //    } else {
-    //        // file backend
+    //        // File backend
     //        debug!("[mmap] fd: {}, offset: 0x{:x}", fd, offset);
-    //        if fd >= process.fd_manager.fd_table.lock().len() as i32 || fd < 0 {
+    //        if fd >= UNI_API.fd_manager.fd_table.lock().len() as i32 || fd < 0 {
     //            return Err(SyscallError::EINVAL);
     //        }
-    //        let file = match &process.fd_manager.fd_table.lock()[fd as usize] {
+    //        let file = match &UNI_API.fd_manager.fd_table.lock()[fd as usize] {
     //            // 文件描述符表里面存的是文件描述符，这很合理罢
-    //            Some(file) => alloc::boxed::Box::new(
+    //            // Some(file) => Box::new(
+    //            //     file.as_any()
+    //            //         .downcast_ref::<FileDesc>()
+    //            //         .expect("Try to mmap with a non-file backend")
+    //            //         .file
+    //            //         .lock(),
+    //            // ),
+    //            Some(file) => Box::new(
     //                file.as_any()
     //                    .downcast_ref::<FileDesc>()
     //                    .expect("Try to mmap with a non-file backend")
@@ -92,7 +101,7 @@ pub fn syscall_mmap(_args: [usize; 6]) -> SyscallResult {
     //        };
     //
     //        let backend = MemBackend::new(file, offset as u64);
-    //        process
+    //        UNI_API
     //            .memory_set
     //            .lock()
     //            .lock()
@@ -101,55 +110,51 @@ pub fn syscall_mmap(_args: [usize; 6]) -> SyscallResult {
     //
     //    flush_tlb(None);
     //    debug!("mmap: 0x{:x}", addr);
-    //    // info!("val: {}", unsafe { *(addr as *const usize) });
     //    Ok(addr)
 }
 
 /// # Arguments
 /// * `start - usize`
 /// * `len - usize`
-pub fn syscall_munmap(_args: [usize; 6]) -> SyscallResult {
+pub fn syscall_munmap(args: [usize; 6]) -> SyscallResult {
     unimplemented!();
-    //    let start = args[0];
-    //    let len = args[1];
-    //    let process = current_process();
-    //    process.memory_set.lock().lock().munmap(start.into(), len);
-    //    flush_tlb(None);
-    //    Ok(0)
+    // let start = args[0];
+    // let len = args[1];
+    // UNI_API.memory_set.lock().lock().munmap(start.into(), len);
+    // flush_tlb(None);
+    // Ok(0)
 }
 
 /// # Arguments
 /// * `start - usize`
 /// * `len - usize`
-pub fn syscall_msync(_args: [usize; 6]) -> SyscallResult {
+pub fn syscall_msync(args: [usize; 6]) -> SyscallResult {
     unimplemented!();
-    //    let start = args[0];
-    //    let len = args[1];
-    //    let process = current_process();
-    //    process.memory_set.lock().lock().msync(start.into(), len);
-    //
-    //    Ok(0)
+    // let start = args[0];
+    // let len = args[1];
+    // UNI_API.memory_set.lock().lock().msync(start.into(), len);
+
+    // Ok(0)
 }
 
 /// # Arguments
 /// * `start - usize`
 /// * `len - usize`
 /// * `prot - MMAPPROT`
-pub fn syscall_mprotect(_args: [usize; 6]) -> SyscallResult {
+pub fn syscall_mprotect(args: [usize; 6]) -> SyscallResult {
     unimplemented!();
-    //    let start = args[0];
-    //    let len = args[1];
-    //    let prot = MMAPPROT::from_bits_truncate(args[2] as u32);
-    //    let process = current_process();
-    //
-    //    process
-    //        .memory_set
-    //        .lock()
-    //        .lock()
-    //        .mprotect(VirtAddr::from(start), len, prot.into());
-    //
-    //    flush_tlb(None);
-    //    Ok(0)
+    // let start = args[0];
+    // let len = args[1];
+    // let prot = MMAPPROT::from_bits_truncate(args[2] as u32);
+
+    // UNI_API
+    //     .memory_set
+    //     .lock()
+    //     .lock()
+    //     .mprotect(VirtAddr::from(start), len, prot.into());
+
+    // flush_tlb(None);
+    // Ok(0)
 }
 
 /// # Arguments

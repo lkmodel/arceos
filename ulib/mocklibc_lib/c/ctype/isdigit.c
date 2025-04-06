@@ -1,15 +1,14 @@
-// NOTE: `Std C impl based on musl 1.2.5`
 #include <ctype.h>
 #undef isdigit
 
 int isdigit(int c)
 {
-    return (unsigned)c - '0' < 10;
+	return (unsigned)c-'0' < 10;
 }
 
 int __isdigit_l(int c, locale_t l)
 {
-    return isdigit(c);
+	return isdigit(c);
 }
 
 weak_alias(__isdigit_l, isdigit_l);

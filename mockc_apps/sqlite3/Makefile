@@ -5,6 +5,7 @@ LD=$(PLATFORM)-ld
 STRIP=$(PLATFORM)-strip
 OBJCOPY=$(PLATFORM)-objcopy
 
+APP_CHOICE?=
 READELF := riscv64-unknown-elf-readelf
 HEADER_FILE=header.bin
 OUTPUT_BIN?=apps.bin
@@ -27,11 +28,14 @@ default_build: dynamic
 static:
 	$(CC) $(CFLAGS) $(DEFINE_FLAGS) $(STATIC_CFLAGS) -I$(MOCK_LIBC)/include -I./ -c main.c -o main.o
 	$(CC) $(CFLAGS) $(DEFINE_FLAGS) $(STATIC_CFLAGS) -I$(MOCK_LIBC)/include -I./ -c sqlite3.c -o sqlite3.o
-	$(LD) main.o sqlite3.o $(MOCK_LIBC)/obj/crt1.o $(MOCK_LIBC)/lib/libmock.a $(LINK_FLAGS) -T$(ARCEOS_HOME)/mockc_apps/link.ld -o $(SRC_BIN)
+	$(LD) main.o sqlite3.o $(MOCK_LIBC)/obj/crt1.o $(MOCK_LIBC)/lib/libmock.a $(LINK_FLAGS) -T./link.ld -o $(SRC_BIN)
 	$(STRIP) -s $(SRC_BIN)
 
 dynamic:
 	$(CC) $(SRC_F) $(DEFINE_FLAGS) -o $(SRC_BIN) -I./
 	$(STRIP) -s $(SRC_BIN)
+
+gcc: 
+	gcc $(SRC_F) $(DEFINE_FLAGS) -o gcc.out -I./
 
 .PHONY: all build

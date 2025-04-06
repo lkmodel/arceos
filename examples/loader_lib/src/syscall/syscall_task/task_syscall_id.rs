@@ -45,6 +45,7 @@ pub enum TaskSyscallId {
     WAIT4 = 260,
     GETRANDOM = 278,
     SCHED_YIELD = 124,
+    CLOCK_SET_TIME = 112,
     CLOCK_GET_TIME = 113,
     SIGTIMEDWAIT = 137,
     TIMES = 153,
@@ -59,5 +60,8 @@ pub enum TaskSyscallId {
     SIGACTION = 134,
     SIGPROCMASK = 135,
     SIGRETURN = 139,
+    SETRLIMIT = 164,
+    GETGROUPS = 158,
+    SETGROUPS = 159,
 }
 }
