@@ -58,7 +58,7 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         //        GET_ROBUST_LIST => syscall_get_robust_list(args),
         SYSINFO => syscall_sysinfo(args),
         SETITIMER => syscall_settimer(args),
-        //        GETTIMER => syscall_gettimer(args),
+        //        GETITIMER => syscall_gettimer(args),
         //        SETSID => syscall_setsid(),
         //        GETRUSAGE => syscall_getrusage(args),
         UMASK => syscall_umask(args),

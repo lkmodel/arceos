@@ -7,7 +7,7 @@ use crate::{
         linux_api::api::{exit_current_task, process_api},
         process_ext::api::current_task,
     },
-    syscall::{RLIMIT_AS, RLIMIT_NOFILE, RLIMIT_STACK, RLimit, SyscallResult},
+    syscall::{RLIMIT_AS, RLIMIT_NOFILE, RLIMIT_STACK, RLimit, SyscallResult, WaitFlags},
 };
 
 /// # Arguments
@@ -97,42 +97,42 @@ pub fn syscall_geteuid() -> SyscallResult {
 /// * `exit_code_ptr` - *mut i32
 /// * `option` - WaitFlags
 pub fn syscall_wait4(args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    //     let pid = args[0] as isize;
-    //     let exit_code_ptr = args[1] as *mut i32;
-    //     let option = WaitFlags::from_bits(args[2] as u32).unwrap();
-    //     loop {
-    //         let answer = unsafe { wait_pid(pid, exit_code_ptr) };
-    //         match answer {
-    //             Ok(pid) => {
-    //                 return Ok(pid as isize);
-    //             }
-    //             Err(status) => {
-    //                 match status {
-    //                     WaitStatus::NotExist => {
-    //                         return Err(SyscallError::EPERM);
-    //                     }
-    //                     WaitStatus::Running => {
-    //                         if option.contains(WaitFlags::WNOHANG) {
-    //                             // 不予等待，直接返回0
-    //                             return Ok(0);
-    //                         } else {
-    //                             // wait回来之后，如果还需要wait，先检查是否有信号未处理
-    //                             #[cfg(feature = "signal")]
-    //                             if current_process().have_signals().is_some() {
-    //                                 return Err(SyscallError::EINTR);
-    //                             }
-    //                             // 执行yield操作，切换任务
-    //                             yield_now_task();
-    //                         }
-    //                     }
-    //                     _ => {
-    //                         panic!("Shouldn't reach here!");
-    //                     }
-    //                 }
-    //             }
-    //         };
-    //     }
+    let pid = args[0] as isize;
+    let exit_code_ptr = args[1] as *mut i32;
+    let option = WaitFlags::from_bits(args[2] as u32).unwrap();
+    loop {
+        unimplemented!();
+        // let answer = unsafe { wait_pid(pid, exit_code_ptr) };
+        // match answer {
+        //     Ok(pid) => {
+        //         return Ok(pid as isize);
+        //     }
+        //     Err(status) => {
+        //         match status {
+        //             WaitStatus::NotExist => {
+        //                 return Err(SyscallError::EPERM);
+        //             }
+        //             WaitStatus::Running => {
+        //                 if option.contains(WaitFlags::WNOHANG) {
+        //                     // 不予等待，直接返回0
+        //                     return Ok(0);
+        //                 } else {
+        //                     // wait回来之后，如果还需要wait，先检查是否有信号未处理
+        //                     #[cfg(feature = "signal")]
+        //                     if current_process().have_signals().is_some() {
+        //                         return Err(SyscallError::EINTR);
+        //                     }
+        //                     // 执行yield操作，切换任务
+        //                     yield_now_task();
+        //                 }
+        //             }
+        //             _ => {
+        //                 panic!("Shouldn't reach here!");
+        //             }
+        //         }
+        //     }
+        // };
+    }
 }
 
 /// 获取用户组 id。在实现多用户权限前默认为最高权限

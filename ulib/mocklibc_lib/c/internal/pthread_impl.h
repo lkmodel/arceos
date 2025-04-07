@@ -151,26 +151,26 @@ pthread_t __pthread_self_impl();
 // hidden int __init_tp(void *);
 // hidden void *__copy_tls(unsigned char *);
 // hidden void __reset_tls();
-//
+
 // hidden void __membarrier_init(void);
 // hidden void __dl_thread_cleanup(void);
 // hidden void __testcancel();
 // hidden void __do_cleanup_push(struct __ptcb *);
 // hidden void __do_cleanup_pop(struct __ptcb *);
 // hidden void __pthread_tsd_run_dtors();
-//
+
 // hidden void __pthread_key_delete_synccall(void (*)(void *), void *);
 // hidden int __pthread_key_delete_impl(pthread_key_t);
-//
+
 // extern hidden volatile size_t __pthread_tsd_size;
 // extern hidden void *__pthread_tsd_main[];
 // extern hidden volatile int __eintr_valid_flag;
-//
-// hidden int __clone(int (*)(void *), void *, int, void *, ...);
+
+hidden int __clone(int (*)(void *), void *, int, void *, ...);
 // hidden int __set_thread_area(void *);
 hidden int __libc_sigaction(int, const struct sigaction *, struct sigaction *);
 // hidden void __unmapself(void *, size_t);
-//
+
 // hidden int __timedwait(volatile int *, int, clockid_t, const struct timespec *, int);
 hidden int __timedwait_cp(volatile int *, int, clockid_t, const struct timespec *, int);
 // hidden void __wait(volatile int *, volatile int *, int, int);

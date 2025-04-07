@@ -596,9 +596,6 @@ fn abi_terminate() -> ! {
 #[unsafe(no_mangle)]
 fn abi_checkpoint() {
     info!("[ABI: SYS CTL] abi_checkpoint");
-    // FIXME: BUG
-    // ".".to_string();
-    // warn!("[ABI: SYS CTL] CHECKPOINT 2");
 }
 
 #[repr(C)]

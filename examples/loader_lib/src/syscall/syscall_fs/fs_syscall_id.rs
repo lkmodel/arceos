@@ -24,9 +24,12 @@ pub enum FsSyscallId {
     UNMOUNT = 39,
     MOUNT = 40,
     STATFS = 43,
+    FSTATFS = 44,
+    TRUNCATE = 45,
     FTRUNCATE64 = 46,
     FACCESSAT = 48,
     CHDIR = 49,
+    FCHDIR = 50,
     CHROOT = 51,
     FCHMOD = 52,
     FCHMODAT = 53,
@@ -58,5 +61,6 @@ pub enum FsSyscallId {
     RENAMEAT2 = 276,
     COPYFILERANGE = 285,
     FACCESSAT2 = 439,
+    SYNCFS = 267,
 }
 }

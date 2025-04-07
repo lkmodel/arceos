@@ -1,13 +1,4 @@
-busybox_WHOAMI --version
-busybox_ASH
-busybox_ECHO TREE
-busybox_PWD
-busybox_ENV
-busybox_TOUCH fff.txt
-busybox_XZ fff.txt
-busybox_XZ --help
-busybox_UNAME
-busybox_TOUCH --help
-busybox_NICE
+busybox echo test
+busybox ash
 sqlite3_startup init
-busybox_CAT
+sqlite3_startup run

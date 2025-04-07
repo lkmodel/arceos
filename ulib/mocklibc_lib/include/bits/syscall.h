@@ -339,23 +339,23 @@
 // #define SYS_mount 40
 // #define SYS_pivot_root 41
 // #define SYS_nfsservctl 42
-// #define SYS_statfs 43
-// #define SYS_fstatfs 44
-// #define SYS_truncate 45
+#define SYS_statfs    43
+#define SYS_fstatfs   44
+#define SYS_truncate  45
 #define SYS_ftruncate 46
 // #define SYS_fallocate 47
 #define SYS_faccessat 48
 #define SYS_chdir     49
-// #define SYS_fchdir 50
-#define SYS_chroot   51
-#define SYS_fchmod   52
-#define SYS_fchmodat 53
-#define SYS_fchownat 54
-#define SYS_fchown   55
-#define SYS_openat   56
-#define SYS_close    57
-// #define SYS_vhangup 58
-#define SYS_pipe2 59
+#define SYS_fchdir    50
+#define SYS_chroot    51
+#define SYS_fchmod    52
+#define SYS_fchmodat  53
+#define SYS_fchownat  54
+#define SYS_fchown    55
+#define SYS_openat    56
+#define SYS_close     57
+#define SYS_vhangup   58
+#define SYS_pipe2     59
 // #define SYS_quotactl 60
 #define SYS_getdents64 61
 #define SYS_lseek      62
@@ -377,9 +377,9 @@
 #define SYS_readlinkat 78
 #define SYS_newfstatat 79
 #define SYS_fstat      80
-// #define SYS_sync 81
-#define SYS_fsync     82
-#define SYS_fdatasync 83
+#define SYS_sync       81
+#define SYS_fsync      82
+#define SYS_fdatasync  83
 // #define SYS_sync_file_range 84
 // #define SYS_timerfd_create 85
 // #define SYS_timerfd_settime 86
@@ -398,8 +398,8 @@
 // #define SYS_set_robust_list 99
 // #define SYS_get_robust_list 100
 #define SYS_nanosleep 101
-// #define SYS_getitimer 102
-// #define SYS_setitimer 103
+#define SYS_getitimer 102
+#define SYS_setitimer 103
 // #define SYS_kexec_load 104
 // #define SYS_init_module 105
 // #define SYS_delete_module 106
@@ -418,23 +418,23 @@
 // #define SYS_sched_setscheduler 119
 // #define SYS_sched_getscheduler 120
 // #define SYS_sched_getparam 121
-// #define SYS_sched_setaffinity 122
+#define SYS_sched_setaffinity 122
 #define SYS_sched_getaffinity 123
 // #define SYS_sched_yield 124
 // #define SYS_sched_get_priority_max 125
 // #define SYS_sched_get_priority_min 126
 // #define SYS_sched_rr_get_interval 127
 // #define SYS_restart_syscall 128
-#define SYS_kill  129
-#define SYS_tkill 130
-// #define SYS_tgkill 131
-// #define SYS_sigaltstack 132
-#define SYS_rt_sigsuspend 133
-#define SYS_rt_sigaction   134
-#define SYS_rt_sigprocmask 135
-// #define SYS_rt_sigpending 136
-// #define SYS_rt_sigtimedwait 137
-// #define SYS_rt_sigqueueinfo 138
+#define SYS_kill            129
+#define SYS_tkill           130
+#define SYS_tgkill          131
+#define SYS_sigaltstack     132
+#define SYS_rt_sigsuspend   133
+#define SYS_rt_sigaction    134
+#define SYS_rt_sigprocmask  135
+#define SYS_rt_sigpending   136
+#define SYS_rt_sigtimedwait 137
+#define SYS_rt_sigqueueinfo 138
 // #define SYS_rt_sigreturn 139
 #define SYS_setpriority 140
 #define SYS_getpriority 141
@@ -447,13 +447,13 @@
 // #define SYS_getresuid 148
 #define SYS_setresgid 149
 // #define SYS_getresgid 150
-#define SYS_setfsuid 151
-#define SYS_setfsgid 152
-#define SYS_times    153
-#define SYS_setpgid  154
-#define SYS_getpgid 155
-// #define SYS_getsid 156
-#define SYS_setsid 157
+#define SYS_setfsuid  151
+#define SYS_setfsgid  152
+#define SYS_times     153
+#define SYS_setpgid   154
+#define SYS_getpgid   155
+#define SYS_getsid    156
+#define SYS_setsid    157
 #define SYS_getgroups 158
 // #define SYS_setgroups 159
 #define SYS_uname 160
@@ -468,7 +468,7 @@
 #define SYS_gettimeofday 169
 // #define SYS_settimeofday 170
 // #define SYS_adjtimex 171
-#define SYS_getpid 172
+#define SYS_getpid  172
 #define SYS_getppid 173
 #define SYS_getuid  174
 #define SYS_geteuid 175
@@ -516,7 +516,7 @@
 // #define SYS_add_key 217
 // #define SYS_request_key 218
 // #define SYS_keyctl 219
-// #define SYS_clone 220
+#define SYS_clone  220
 #define SYS_execve 221
 #define SYS_mmap   222
 // #define SYS_fadvise64 223
@@ -548,7 +548,7 @@
 // #define SYS_name_to_handle_at 264
 // #define SYS_open_by_handle_at 265
 // #define SYS_clock_adjtime 266
-// #define SYS_syncfs 267
+#define SYS_syncfs 267
 // #define SYS_setns 268
 // #define SYS_sendmmsg 269
 // #define SYS_process_vm_readv 270
@@ -562,11 +562,11 @@
 // #define SYS_getrandom 278
 // #define SYS_memfd_create 279
 // #define SYS_bpf 280
-// #define SYS_execveat 281
+#define SYS_execveat 281
 // #define SYS_userfaultfd 282
 // #define SYS_membarrier 283
 // #define SYS_mlock2 284
-// #define SYS_copy_file_range 285
+#define SYS_copy_file_range 285
 // #define SYS_preadv2 286
 // #define SYS_pwritev2 287
 // #define SYS_pkey_mprotect 288
@@ -591,7 +591,7 @@
 // #define SYS_close_range	436
 // #define SYS_openat2		437
 // #define SYS_pidfd_getfd	438
-// #define SYS_faccessat2		439
+#define SYS_faccessat2 439
 // #define SYS_process_madvise	440
 // #define SYS_sysriscv __NR_arch_specific_syscall
 // #define SYS_riscv_flush_icache (__NR_sysriscv + 15)
