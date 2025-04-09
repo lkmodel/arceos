@@ -1,4 +1,5 @@
 busybox echo test
+micropython
 busybox ash
 sqlite3_startup init
 sqlite3_startup run
