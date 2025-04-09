@@ -577,7 +577,7 @@ fn register_abi(name: &str, num: usize, handle: usize) {
     unsafe {
         ABI_TABLE[num] = handle;
     }
-    info!("[ABI]{}: 0x{:x}", name, handle);
+    debug!("[ABI]{}: 0x{:x}", name, handle);
 }
 
 pub fn abi_init_scheduler() {

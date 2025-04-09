@@ -1,4 +1,4 @@
-use core::{ffi::c_void, ptr};
+use core::{ffi::c_void, hint::black_box, ptr};
 
 use arceos_posix_api::ctypes;
 
@@ -19,6 +19,7 @@ struct AllocatedBlock {
     next: *mut AllocatedBlock,
 }
 
+static mut ALLOCATED_WARMUP: *mut u8 = ptr::null_mut();
 static mut ALLOCATED_BLOCKS: *mut AllocatedBlock = ptr::null_mut();
 
 /// 清理函数，使用 abi_free 释放所有已分配的内存块
@@ -40,12 +41,23 @@ pub fn cleanup_memory() {
 /// Returns 0 on failure (the current implementation does not trigger an exception)
 #[unsafe(no_mangle)]
 pub extern "C" fn abi_malloc(size: ctypes::size_t) -> *mut c_void {
-    info!("[ABI:Mem] malloc");
+    info!("[ABI:Mem] malloc entry; size 0x{:x}", size);
     // Allocate `(actual length) + 8`. The lowest 8 Bytes are stored in the actual allocated space size.
     // This is because free(`uintptr_t`) has only one parameter representing the address,
     // So we need to save in advance to know the size of the memory space that needs to be released
     let layout = Layout::from_size_align(size + CTRL_BLK_SIZE, 8).unwrap();
+
     unsafe {
+        if !ALLOCATED_WARMUP.is_null() {
+            dealloc(ALLOCATED_WARMUP, Layout::new::<AllocatedBlock>());
+        }
+        // FIX: 初始化分配器热身，在分配过大内存的时候，可能会导致block的分配报错。
+        // 猜测原因：
+        // 分配过大块的时候，写爆之后，再分配就会出现`S mode page fault`
+        // 因此，手动触发堆或页分配的`lazy`初始化逻辑
+        let warmup = black_box(alloc(Layout::new::<AllocatedBlock>()));
+        ALLOCATED_WARMUP = warmup;
+
         let ptr = alloc(layout).cast::<MemoryControlBlock>();
         assert!(!ptr.is_null(), "malloc failed");
         ptr.write(MemoryControlBlock { size });
@@ -57,6 +69,8 @@ pub extern "C" fn abi_malloc(size: ctypes::size_t) -> *mut c_void {
         (*block).ptr = ptr;
         (*block).next = ALLOCATED_BLOCKS;
         ALLOCATED_BLOCKS = block;
+
+        info!("[ABI:Mem] malloc return; ptr {:?}", ptr);
 
         ptr
     }
