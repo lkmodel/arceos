@@ -1,5 +1,53 @@
 busybox echo test
-micropython
+busybox --help
+busybox echo Test[env]...
+busybox env
+busybox echo Test[env]done
+busybox echo Test[false]...
+busybox false
+busybox echo Test[false]done
+busybox echo Test[true]...
+busybox true
+busybox echo Test[true]done
+busybox echo Test[nice]...
+busybox nice
+busybox echo Test[nice]done
+busybox echo Test[uname]...
+busybox uname
+busybox echo Test[uname] done
+busybox echo Test[whoami]...
+busybox whoami
+busybox echo Test[whoami] done
+busybox echo Test[xz]...
+busybox xz
+busybox echo Test[xz] done
+busybox echo Test[touch]...
+busybox touch
+busybox echo Test[touch] done
+busybox echo Test[mv]...
+busybox mv --help
+busybox echo Test[mv] done
+busybox echo Test[tar]...
+busybox tar
+busybox_TAR
+busybox echo Test[tar] done
+busybox echo Test[pwd]...
+busybox pwd
+busybox echo Test[pwd] done
+busybox echo Test[unzip]...
+busybox unzip
+busybox echo Test[unzip]done
+busybox echo Test[basename]...
+busybox basename
+busybox echo Test[basename]done
+busybox echo Test[chgrp]...
+busybox chgrp
+busybox echo Test[chgrp]done
+busybox echo Test[chown]...
+busybox chown
+busybox echo Test[chown]done
+
 busybox ash
+micropython
 sqlite3_startup init
 sqlite3_startup run
