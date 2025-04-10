@@ -106,7 +106,7 @@ hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 	: __overflow((f),(unsigned char)(c)) )
 
 /* Caller-allocated FILE * operations */
-// hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
-// hidden int __fclose_ca(FILE *);
+hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
+hidden int __fclose_ca(FILE *);
 
 #endif
