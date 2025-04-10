@@ -55,11 +55,9 @@ ssize_t getdelim(char **restrict s, size_t *restrict n, int delim, FILE *restric
 			*s = tmp;
 			*n = m;
 		}
-		if (k) {
-			memcpy(*s+i, f->rpos, k);
-			f->rpos += k;
-			i += k;
-		}
+		memcpy(*s+i, f->rpos, k);
+		f->rpos += k;
+		i += k;
 		if (z) break;
 		if ((c = getc_unlocked(f)) == EOF) {
 			if (!i || !feof(f)) {

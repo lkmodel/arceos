@@ -63,8 +63,8 @@ int __stdio_close(FILE *);
 int __toread(FILE *);
 int __towrite(FILE *);
 
-// hidden void __stdio_exit(void);
-// hidden void __stdio_exit_needed(void);
+hidden void __stdio_exit(void);
+hidden void __stdio_exit_needed(void);
 
 #if defined(__PIC__) && (100*__GNUC__+__GNUC_MINOR__ >= 303)
 __attribute__((visibility("protected")))

@@ -8,7 +8,6 @@ int __lockfile(FILE *f)
 		return 0;
 	owner = a_cas(&f->lock, 0, tid);
 	if (!owner) return 1;
-	__asm__ __volatile__(".word 0"); // Mark point - no operation
 	while ((owner = a_cas(&f->lock, 0, tid|MAYBE_WAITERS))) {
 		if ((owner & MAYBE_WAITERS) ||
 		    a_cas(&f->lock, owner, owner|MAYBE_WAITERS)==owner)
