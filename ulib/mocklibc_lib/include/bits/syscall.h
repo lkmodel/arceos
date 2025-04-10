@@ -365,8 +365,8 @@
 #define SYS_writev     66
 #define SYS_pread64    67
 #define SYS_pwrite64   68
-// #define SYS_preadv 69
-// #define SYS_pwritev 70
+#define SYS_preadv 69
+#define SYS_pwritev 70
 #define SYS_sendfile 71
 #define SYS_pselect6 72
 #define SYS_ppoll    73
@@ -385,7 +385,7 @@
 // #define SYS_timerfd_settime 86
 // #define SYS_timerfd_gettime 87
 #define SYS_utimensat 88
-// #define SYS_acct 89
+#define SYS_acct 89
 // #define SYS_capget 90
 // #define SYS_capset 91
 // #define SYS_personality 92
