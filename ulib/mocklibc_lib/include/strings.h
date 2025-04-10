@@ -13,11 +13,11 @@ extern "C" {
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || defined(_POSIX_SOURCE) \
  || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE+0 < 200809L) \
  || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE+0 < 700)
-// int bcmp (const void *, const void *, size_t);
-// void bcopy (const void *, void *, size_t);
-// void bzero (void *, size_t);
-// char *index (const char *, int);
-// char *rindex (const char *, int);
+int bcmp (const void *, const void *, size_t);
+void bcopy (const void *, void *, size_t);
+void bzero (void *, size_t);
+char *index (const char *, int);
+char *rindex (const char *, int);
 #endif
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE)  || defined(_BSD_SOURCE)
