@@ -128,8 +128,8 @@ void perror(const char *);
 int setvbuf(FILE *__restrict, char *__restrict, int, size_t);
 void setbuf(FILE *__restrict, char *__restrict);
 
-// char *tmpnam(char *);
-// FILE *tmpfile(void);
+char *tmpnam(char *);
+FILE *tmpfile(void);
 
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
@@ -161,8 +161,8 @@ int renameat(int, const char *, int, const char *);
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
  || defined(_BSD_SOURCE)
-// #define P_tmpdir "/tmp"
-// char *tempnam(const char *, const char *);
+#define P_tmpdir "/tmp"
+char *tempnam(const char *, const char *);
 #endif
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
