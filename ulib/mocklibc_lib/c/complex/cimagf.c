@@ -1,6 +1,6 @@
 #include "complex_impl.h"
 
-float(cimagf)(float complex z)
+float (cimagf)(float complex z)
 {
-    return cimagf(z);
+	return cimagf(z);
 }

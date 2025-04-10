@@ -68,40 +68,40 @@ static const double DP3 = 1.14423774522196636802E-17;
 
 static double _redupi(double x)
 {
-    double t;
-    long i;
+	double t;
+	long i;
 
-    t = x / M_PI;
-    if (t >= 0.0)
-        t += 0.5;
-    else
-        t -= 0.5;
+	t = x/M_PI;
+	if (t >= 0.0)
+		t += 0.5;
+	else
+		t -= 0.5;
 
-    i = t; /* the multiple */
-    t = i;
-    t = ((x - t * DP1) - t * DP2) - t * DP3;
-    return t;
+	i = t;  /* the multiple */
+	t = i;
+	t = ((x - t * DP1) - t * DP2) - t * DP3;
+	return t;
 }
 
 double complex catan(double complex z)
 {
-    double complex w;
-    double a, t, x, x2, y;
+	double complex w;
+	double a, t, x, x2, y;
 
-    x = creal(z);
-    y = cimag(z);
+	x = creal(z);
+	y = cimag(z);
 
-    x2 = x * x;
-    a = 1.0 - x2 - (y * y);
+	x2 = x * x;
+	a = 1.0 - x2 - (y * y);
 
-    t = 0.5 * atan2(2.0 * x, a);
-    w = _redupi(t);
+	t = 0.5 * atan2(2.0 * x, a);
+	w = _redupi(t);
 
-    t = y - 1.0;
-    a = x2 + (t * t);
+	t = y - 1.0;
+	a = x2 + (t * t);
 
-    t = y + 1.0;
-    a = (x2 + t * t) / a;
-    w = CMPLX(w, 0.25 * log(a));
-    return w;
+	t = y + 1.0;
+	a = (x2 + t * t)/a;
+	w = CMPLX(w, 0.25 * log(a));
+	return w;
 }

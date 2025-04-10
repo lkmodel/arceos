@@ -1,6 +1,6 @@
 #include <complex.h>
 
-float(crealf)(float complex z)
+float (crealf)(float complex z)
 {
-    return crealf(z);
+	return crealf(z);
 }
