@@ -1,4 +1,3 @@
-// NOTE: `Std C impl based on musl 1.2.5`
 /*
  * Data for the log part of pow.
  *
