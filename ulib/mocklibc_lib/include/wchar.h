@@ -113,13 +113,13 @@ int vwprintf(const wchar_t *__restrict, __isoc_va_list);
 int vfwprintf(FILE *__restrict, const wchar_t *__restrict, __isoc_va_list);
 int vswprintf(wchar_t *__restrict, size_t, const wchar_t *__restrict, __isoc_va_list);
 
-// int wscanf(const wchar_t *__restrict, ...);
-// int fwscanf(FILE *__restrict, const wchar_t *__restrict, ...);
-// int swscanf(const wchar_t *__restrict, const wchar_t *__restrict, ...);
-//
-// int vwscanf(const wchar_t *__restrict, __isoc_va_list);
-// int vfwscanf(FILE *__restrict, const wchar_t *__restrict, __isoc_va_list);
-// int vswscanf(const wchar_t *__restrict, const wchar_t *__restrict, __isoc_va_list);
+int wscanf(const wchar_t *__restrict, ...);
+int fwscanf(FILE *__restrict, const wchar_t *__restrict, ...);
+int swscanf(const wchar_t *__restrict, const wchar_t *__restrict, ...);
+
+int vwscanf(const wchar_t *__restrict, __isoc_va_list);
+int vfwscanf(FILE *__restrict, const wchar_t *__restrict, __isoc_va_list);
+int vswscanf(const wchar_t *__restrict, const wchar_t *__restrict, __isoc_va_list);
 
 wint_t fgetwc(FILE *);
 wint_t getwc(FILE *);
@@ -129,11 +129,11 @@ wint_t fputwc(wchar_t, FILE *);
 wint_t putwc(wchar_t, FILE *);
 wint_t putwchar(wchar_t);
 
-// wchar_t *fgetws(wchar_t *__restrict, int, FILE *__restrict);
-// int fputws(const wchar_t *__restrict, FILE *__restrict);
-//
-// wint_t ungetwc(wint_t, FILE *);
-//
+wchar_t *fgetws(wchar_t *__restrict, int, FILE *__restrict);
+int fputws(const wchar_t *__restrict, FILE *__restrict);
+
+wint_t ungetwc(wint_t, FILE *);
+
 // struct tm;
 // size_t wcsftime(wchar_t *__restrict, size_t, const wchar_t *__restrict,
 //                 const struct tm *__restrict);
