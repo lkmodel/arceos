@@ -58,7 +58,7 @@ struct tm *gmtime(const time_t *);
 struct tm *localtime(const time_t *);
 char *asctime(const struct tm *);
 char *ctime(const time_t *);
-// int timespec_get(struct timespec *, int);
+int timespec_get(struct timespec *, int);
 
 #define CLOCKS_PER_SEC 1000000L
 
@@ -67,15 +67,15 @@ char *ctime(const time_t *);
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE) || \
     defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 
-// size_t strftime_l(char *__restrict, size_t, const char *__restrict, const struct tm *__restrict,
-//                   locale_t);
+size_t strftime_l(char *__restrict, size_t, const char *__restrict, const struct tm *__restrict,
+                  locale_t);
 
 struct tm *gmtime_r(const time_t *__restrict, struct tm *__restrict);
-// struct tm *localtime_r(const time_t *__restrict, struct tm *__restrict);
-// char *asctime_r(const struct tm *__restrict, char *__restrict);
-// char *ctime_r(const time_t *, char *);
-//
-// void tzset(void);
+struct tm *localtime_r(const time_t *__restrict, struct tm *__restrict);
+char *asctime_r(const struct tm *__restrict, char *__restrict);
+char *ctime_r(const time_t *, char *);
+
+void tzset(void);
 
 struct itimerspec {
     struct timespec it_interval;
