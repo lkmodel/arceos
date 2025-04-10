@@ -103,16 +103,16 @@ unsigned long wcstoul(const wchar_t *__restrict, wchar_t **__restrict, int);
 long long wcstoll(const wchar_t *__restrict, wchar_t **__restrict, int);
 unsigned long long wcstoull(const wchar_t *__restrict, wchar_t **__restrict, int);
 
-// int fwide(FILE *, int);
-//
-// int wprintf(const wchar_t *__restrict, ...);
-// int fwprintf(FILE *__restrict, const wchar_t *__restrict, ...);
-// int swprintf(wchar_t *__restrict, size_t, const wchar_t *__restrict, ...);
-//
-// int vwprintf(const wchar_t *__restrict, __isoc_va_list);
-// int vfwprintf(FILE *__restrict, const wchar_t *__restrict, __isoc_va_list);
-// int vswprintf(wchar_t *__restrict, size_t, const wchar_t *__restrict, __isoc_va_list);
-//
+int fwide(FILE *, int);
+
+int wprintf(const wchar_t *__restrict, ...);
+int fwprintf(FILE *__restrict, const wchar_t *__restrict, ...);
+int swprintf(wchar_t *__restrict, size_t, const wchar_t *__restrict, ...);
+
+int vwprintf(const wchar_t *__restrict, __isoc_va_list);
+int vfwprintf(FILE *__restrict, const wchar_t *__restrict, __isoc_va_list);
+int vswprintf(wchar_t *__restrict, size_t, const wchar_t *__restrict, __isoc_va_list);
+
 // int wscanf(const wchar_t *__restrict, ...);
 // int fwscanf(FILE *__restrict, const wchar_t *__restrict, ...);
 // int swscanf(const wchar_t *__restrict, const wchar_t *__restrict, ...);
@@ -120,15 +120,15 @@ unsigned long long wcstoull(const wchar_t *__restrict, wchar_t **__restrict, int
 // int vwscanf(const wchar_t *__restrict, __isoc_va_list);
 // int vfwscanf(FILE *__restrict, const wchar_t *__restrict, __isoc_va_list);
 // int vswscanf(const wchar_t *__restrict, const wchar_t *__restrict, __isoc_va_list);
-//
-// wint_t fgetwc(FILE *);
-// wint_t getwc(FILE *);
-// wint_t getwchar(void);
-//
-// wint_t fputwc(wchar_t, FILE *);
-// wint_t putwc(wchar_t, FILE *);
-// wint_t putwchar(wchar_t);
-//
+
+wint_t fgetwc(FILE *);
+wint_t getwc(FILE *);
+wint_t getwchar(void);
+
+wint_t fputwc(wchar_t, FILE *);
+wint_t putwc(wchar_t, FILE *);
+wint_t putwchar(wchar_t);
+
 // wchar_t *fgetws(wchar_t *__restrict, int, FILE *__restrict);
 // int fputws(const wchar_t *__restrict, FILE *__restrict);
 //
@@ -177,24 +177,24 @@ int wcsncasecmp_l(const wchar_t *, const wchar_t *, size_t, locale_t);
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 int wcwidth(wchar_t);
-// int wcswidth(const wchar_t *, size_t);
-// int iswalnum(wint_t);
-// int iswalpha(wint_t);
-// int iswblank(wint_t);
-// int iswcntrl(wint_t);
-// int iswdigit(wint_t);
-// int iswgraph(wint_t);
-// int iswlower(wint_t);
-// int iswprint(wint_t);
-// int iswpunct(wint_t);
-// int iswspace(wint_t);
-// int iswupper(wint_t);
-// int iswxdigit(wint_t);
-// int iswctype(wint_t, wctype_t);
-// wint_t towlower(wint_t);
-// wint_t towupper(wint_t);
-// wctype_t wctype(const char *);
-//
+int wcswidth(const wchar_t *, size_t);
+int iswalnum(wint_t);
+int iswalpha(wint_t);
+int iswblank(wint_t);
+int iswcntrl(wint_t);
+int iswdigit(wint_t);
+int iswgraph(wint_t);
+int iswlower(wint_t);
+int iswprint(wint_t);
+int iswpunct(wint_t);
+int iswspace(wint_t);
+int iswupper(wint_t);
+int iswxdigit(wint_t);
+int iswctype(wint_t, wctype_t);
+wint_t towlower(wint_t);
+wint_t towupper(wint_t);
+wctype_t wctype(const char *);
+
 #ifndef __cplusplus
 #undef iswdigit
 #define iswdigit(a) (0 ? iswdigit(a) : ((unsigned)(a) - '0') < 10)

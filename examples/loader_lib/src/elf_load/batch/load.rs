@@ -235,7 +235,9 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
                         "[Lib-rela.plt R_RISCV_JUMP_SLOT] @0x{:x}=0x{:x} st_name {}",
                         relative_offset, new_value, rela_name,
                     );
-                    sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
+                    sym.st_value
+                        .eq(&0)
+                        .then(|| panic!("Bad st_value = 0, st_name = {}", rela_name));
                     unsafe { *(relative_offset as *mut usize) = new_value };
                 }
             }
@@ -272,7 +274,10 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
                     "[Lib-rela.dyn R_RISCV_RELATIVE] @0x{:x}=0x{:x}",
                     relative_offset, new_value,
                 );
-                rela_dyn.r_addend.eq(&0).then(|| panic!("Bad st_value"));
+                rela_dyn
+                    .r_addend
+                    .eq(&0)
+                    .then(|| panic!("Bad st_value = 0, R_RISCV_RELATIVE"));
                 unsafe { *(relative_offset as *mut usize) = new_value };
             }
             // 64-bit relocation: `S + A`.
@@ -283,7 +288,9 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
                     "[Lib-rela.dyn R_RISCV_64] @0x{:x}=0x{:x} name {}",
                     relative_offset, new_value, rela_name,
                 );
-                sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
+                sym.st_value
+                    .eq(&0)
+                    .then(|| panic!("Bad st_value = 0, R_RISCV_64"));
                 unsafe { *(relative_offset as *mut usize) = new_value };
             }
             _ => {
@@ -413,7 +420,10 @@ fn modify_app(
                     "[App-rela.plt R_RISCV_JUMP_SLOT] @0x{:x}=0x{:x} st_name {}",
                     relative_offset, new_value, app_rela_name,
                 );
-                lib_sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
+                lib_sym
+                    .st_value
+                    .eq(&0)
+                    .then(|| panic!("Bad st_value = 0, st_name = {}", app_rela_name));
                 unsafe { *(relative_offset as *mut usize) = new_value };
             }
             _ => {
