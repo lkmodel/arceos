@@ -1,4 +1,3 @@
-// NOTE: `Std C impl based on musl 1.2.5`
 /* origin: FreeBSD /usr/src/lib/msun/src/s_fmaf.c */
 /*-
  * Copyright (c) 2005-2011 David Schultz <das@FreeBSD.ORG>
@@ -39,58 +38,56 @@
  */
 float fmaf(float x, float y, float z)
 {
-#pragma STDC FENV_ACCESS ON
-    double xy, result;
-    union {
-        double f;
-        uint64_t i;
-    } u;
-    int e;
+	#pragma STDC FENV_ACCESS ON
+	double xy, result;
+	union {double f; uint64_t i;} u;
+	int e;
 
-    xy = (double)x * y;
-    result = xy + z;
-    u.f = result;
-    e = u.i >> 52 & 0x7ff;
-    /* Common case: The double precision result is fine. */
-    if ((u.i & 0x1fffffff) != 0x10000000 ||       /* not a halfway case */
-        e == 0x7ff ||                             /* NaN */
-        (result - xy == z && result - z == xy) || /* exact */
-        fegetround() != FE_TONEAREST)             /* not round-to-nearest */
-    {
-        /*
-        underflow may not be raised correctly, example:
-        fmaf(0x1p-120f, 0x1p-120f, 0x1p-149f)
-        */
+	xy = (double)x * y;
+	result = xy + z;
+	u.f = result;
+	e = u.i>>52 & 0x7ff;
+	/* Common case: The double precision result is fine. */
+	if ((u.i & 0x1fffffff) != 0x10000000 || /* not a halfway case */
+		e == 0x7ff ||                   /* NaN */
+		(result - xy == z && result - z == xy) || /* exact */
+		fegetround() != FE_TONEAREST)       /* not round-to-nearest */
+	{
+		/*
+		underflow may not be raised correctly, example:
+		fmaf(0x1p-120f, 0x1p-120f, 0x1p-149f)
+		*/
 #if defined(FE_INEXACT) && defined(FE_UNDERFLOW)
-        if (e < 0x3ff - 126 && e >= 0x3ff - 149 && fetestexcept(FE_INEXACT)) {
-            feclearexcept(FE_INEXACT);
-            /* TODO: gcc and clang bug workaround */
-            volatile float vz = z;
-            result = xy + vz;
-            if (fetestexcept(FE_INEXACT))
-                feraiseexcept(FE_UNDERFLOW);
-            else
-                feraiseexcept(FE_INEXACT);
-        }
+		if (e < 0x3ff-126 && e >= 0x3ff-149 && fetestexcept(FE_INEXACT)) {
+			feclearexcept(FE_INEXACT);
+			/* TODO: gcc and clang bug workaround */
+			volatile float vz = z;
+			result = xy + vz;
+			if (fetestexcept(FE_INEXACT))
+				feraiseexcept(FE_UNDERFLOW);
+			else
+				feraiseexcept(FE_INEXACT);
+		}
 #endif
-        z = result;
-        return z;
-    }
+		z = result;
+		return z;
+	}
 
-    /*
-     * If result is inexact, and exactly halfway between two float values,
-     * we need to adjust the low-order bit in the direction of the error.
-     */
-    double err;
-    int neg = u.i >> 63;
-    if (neg == (z > xy))
-        err = xy - result + z;
-    else
-        err = z - result + xy;
-    if (neg == (err < 0))
-        u.i++;
-    else
-        u.i--;
-    z = u.f;
-    return z;
+	/*
+	 * If result is inexact, and exactly halfway between two float values,
+	 * we need to adjust the low-order bit in the direction of the error.
+	 */
+#ifdef FE_TOWARDZERO
+	fesetround(FE_TOWARDZERO);
+#endif
+	volatile double vxy = xy;  /* XXX work around gcc CSE bug */
+	double adjusted_result = vxy + z;
+	fesetround(FE_TONEAREST);
+	if (result == adjusted_result) {
+		u.f = adjusted_result;
+		u.i++;
+		adjusted_result = u.f;
+	}
+	z = adjusted_result;
+	return z;
 }
