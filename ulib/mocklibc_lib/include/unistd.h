@@ -147,7 +147,7 @@ void sync(void);
 pid_t setpgrp(void);
 // char *crypt(const char *, const char *);
 // void encrypt(char *, int);
-// void swab(const void *__restrict, void *__restrict, ssize_t);
+void swab(const void *__restrict, void *__restrict, ssize_t);
 #endif
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || \
