@@ -155,7 +155,6 @@ busybox echo Test[usleep]done
 busybox foo
 busybox builtin_test
 
-busybox ash
 micropython
 sqlite3_startup init
 sqlite3_startup run
