@@ -306,6 +306,7 @@
   * **PMP 模式改进:** 探索基于 `hypervisor` 支持实现更健壮的进程与信号功能 (`hyper-process`/`hyper-signal`?)，克服当前 PMP 模式的限制（低效且不安全）。
     * ==基于此，我们可以尝试展望一个更复杂的，基于 `hypervisor` 的操作系统。==
   * **工具链支持:** 在完善 musl 支持基础上，逐步添加对 `GCC` 工具链编译应用的支持。
+  * 支持多lib运行，特别是支持应用自依赖的Lib库。
 * **项目结构调整:**
   * 将 `batch mode` 的参数传递等完善功能迁移到 `uni mode`。
   * 将 `mockc_apps` 目录更名为 `uni_apps`，专门负责 `uni mode` 打包。
