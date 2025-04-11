@@ -171,6 +171,15 @@ busybox echo Test[ctype test]...
 CTYPE_TEST
 busybox echo Test[ctype test]done
 
+busybox echo Test[math test]...
+MATH_TEST
+busybox echo Test[math test]done
+
+busybox echo Test[complex test]...
+COMPLEX_TEST
+busybox echo Test[complex test]done
+
+
 micropython
 sqlite3_startup run
 sqlite3_startup init

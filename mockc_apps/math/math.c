@@ -19,64 +19,64 @@ bool compare_float(float a, float b)
 }
 
 // 测试宏定义
-#define TEST_FUNC(func, input, expected)                                                  \
-    do {                                                                                  \
-        double result = func(input);                                                      \
-        if (compare_double(result, expected)) {                                           \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                      \
-        } else {                                                                          \
-            printf(RED "%s: BAD - expected %f, got %f\n" RESET, #func, expected, result); \
-        }                                                                                 \
+#define TEST_FUNC(func, input, expected)                                                     \
+    do {                                                                                     \
+        double result = func(input);                                                         \
+        if (compare_double(result, expected)) {                                              \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                      \
+        } else {                                                                             \
+            printf(RED "%s: BAD - expected %f, got %f" RESET "\n", #func, expected, result); \
+        }                                                                                    \
     } while (0)
 
-#define TEST_FUNC_F(func, input, expected)                                                \
-    do {                                                                                  \
-        float result = func(input);                                                       \
-        if (compare_float(result, expected)) {                                            \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                      \
-        } else {                                                                          \
-            printf(RED "%s: BAD - expected %f, got %f\n" RESET, #func, expected, result); \
-        }                                                                                 \
+#define TEST_FUNC_F(func, input, expected)                                                   \
+    do {                                                                                     \
+        float result = func(input);                                                          \
+        if (compare_float(result, expected)) {                                               \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                      \
+        } else {                                                                             \
+            printf(RED "%s: BAD - expected %f, got %f" RESET "\n", #func, expected, result); \
+        }                                                                                    \
     } while (0)
 
-#define TEST_FUNC_2(func, input1, input2, expected)                                       \
-    do {                                                                                  \
-        double result = func(input1, input2);                                             \
-        if (compare_double(result, expected)) {                                           \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                      \
-        } else {                                                                          \
-            printf(RED "%s: BAD - expected %f, got %f\n" RESET, #func, expected, result); \
-        }                                                                                 \
+#define TEST_FUNC_2(func, input1, input2, expected)                                          \
+    do {                                                                                     \
+        double result = func(input1, input2);                                                \
+        if (compare_double(result, expected)) {                                              \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                      \
+        } else {                                                                             \
+            printf(RED "%s: BAD - expected %f, got %f" RESET "\n", #func, expected, result); \
+        }                                                                                    \
     } while (0)
 
-#define TEST_FUNC_F_2(func, input1, input2, expected)                                     \
-    do {                                                                                  \
-        float result = func(input1, input2);                                              \
-        if (compare_float(result, expected)) {                                            \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                      \
-        } else {                                                                          \
-            printf(RED "%s: BAD - expected %f, got %f\n" RESET, #func, expected, result); \
-        }                                                                                 \
+#define TEST_FUNC_F_2(func, input1, input2, expected)                                        \
+    do {                                                                                     \
+        float result = func(input1, input2);                                                 \
+        if (compare_float(result, expected)) {                                               \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                      \
+        } else {                                                                             \
+            printf(RED "%s: BAD - expected %f, got %f" RESET "\n", #func, expected, result); \
+        }                                                                                    \
     } while (0)
 
-#define TEST_FUNC_3(func, input1, input2, input3, expected)                               \
-    do {                                                                                  \
-        double result = func(input1, input2, input3);                                     \
-        if (compare_double(result, expected)) {                                           \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                      \
-        } else {                                                                          \
-            printf(RED "%s: BAD - expected %f, got %f\n" RESET, #func, expected, result); \
-        }                                                                                 \
+#define TEST_FUNC_3(func, input1, input2, input3, expected)                                  \
+    do {                                                                                     \
+        double result = func(input1, input2, input3);                                        \
+        if (compare_double(result, expected)) {                                              \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                      \
+        } else {                                                                             \
+            printf(RED "%s: BAD - expected %f, got %f" RESET "\n", #func, expected, result); \
+        }                                                                                    \
     } while (0)
 
-#define TEST_FUNC_F_3(func, input1, input2, input3, expected)                             \
-    do {                                                                                  \
-        float result = func(input1, input2, input3);                                      \
-        if (compare_float(result, expected)) {                                            \
-            printf(GREEN "%s: PASS" RESET, #func);                                        \
-        } else {                                                                          \
-            printf(RED "%s: BAD - expected %f, got %f\n" RESET, #func, expected, result); \
-        }                                                                                 \
+#define TEST_FUNC_F_3(func, input1, input2, input3, expected)                                \
+    do {                                                                                     \
+        float result = func(input1, input2, input3);                                         \
+        if (compare_float(result, expected)) {                                               \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                      \
+        } else {                                                                             \
+            printf(RED "%s: BAD - expected %f, got %f" RESET "\n", #func, expected, result); \
+        }                                                                                    \
     } while (0)
 
 // 测试函数
@@ -365,8 +365,8 @@ void test_nextafter()
 void test_nexttoward()
 {
     TEST_FUNC_2(nexttoward, 1.0, 2.0, 1.0);
-    TEST_FUNC_2(nexttoward, 2.0, 1.0, 1.0);
-    TEST_FUNC_2(nexttoward, 0.0, 1.0, 1.0);
+    TEST_FUNC_2(nexttoward, 2.0, 1.0, 2.0);
+    TEST_FUNC_2(nexttoward, 0.0, 1.0, 0.0);
 }
 
 void test_pow()
