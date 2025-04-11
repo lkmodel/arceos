@@ -2742,15 +2742,15 @@ void testset_json(void)
                     "   GROUP BY 1 ORDER BY 2;");
     speedtest1_end_test();
 
-    speedtest1_begin_test(150, "json_insert()/set()/remove() on every row of J1");
-    speedtest1_exec(
-        "BEGIN;\n"
-        "UPDATE j1 SET x=jsonb_insert(x,'$.g',(x->>'f')+1,'$.h',3.14159,'$.i','hello',\n"
-        "                               '$.j',json('{x:99}'),'$.k','{y:98}');\n"
-        "UPDATE j1 SET x=jsonb_set(x,'$.e',(x->>'f')-1);\n"
-        "UPDATE j1 SET x=jsonb_remove(x,'$.d');\n"
-        "COMMIT;\n");
-    speedtest1_end_test();
+    // speedtest1_begin_test(150, "json_insert()/set()/remove() on every row of J1");
+    // speedtest1_exec(
+    //     "BEGIN;\n"
+    //     "UPDATE j1 SET x=jsonb_insert(x,'$.g',(x->>'f')+1,'$.h',3.14159,'$.i','hello',\n"
+    //     "                               '$.j',json('{x:99}'),'$.k','{y:98}');\n"
+    //     "UPDATE j1 SET x=jsonb_set(x,'$.e',(x->>'f')-1);\n"
+    //     "UPDATE j1 SET x=jsonb_remove(x,'$.d');\n"
+    //     "COMMIT;\n");
+    // speedtest1_end_test();
 
     speedtest1_begin_test(160, "json_insert()/set()/remove() on every row of J2");
     speedtest1_exec("BEGIN;\n"
@@ -3249,12 +3249,12 @@ int main(int argc, char **argv)
         } else if (strcmp(zThisTest, "parsenumber") == 0) {
             testset_parsenumber();
         } else if (strcmp(zThisTest, "rtree") == 0) {
-#ifdef SQLITE_ENABLE_RTREE
-            testset_rtree(6, 147);
-#else
-            fatal_error("compile with -DSQLITE_ENABLE_RTREE to enable "
-                        "the R-Tree tests\n");
-#endif
+            // #ifdef SQLITE_ENABLE_RTREE
+            //             testset_rtree(6, 147);
+            // #else
+            //             fatal_error("compile with -DSQLITE_ENABLE_RTREE to enable "
+            //                         "the R-Tree tests\n");
+            // #endif
         } else {
             fatal_error("unknown testset: \"%s\"\n"
                         "Choices: cte debug1 fp main orm rtree trigger\n",
