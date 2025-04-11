@@ -20,3 +20,6 @@ pub const FILE_NAME_LENGTH: usize = 255usize;
 /// 可用内存区域
 pub const SPACE_BOTTOM: usize = 0xffff_ffc0_8000_0000;
 pub const SPACE_TOP: usize = 0xffff_ffc0_8800_0000;
+
+/// 最大堆体积
+pub const MAX_HEAP_SIZE: usize = 0x20000;

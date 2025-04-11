@@ -6,16 +6,27 @@
 //
 // use axprocess::current_process;
 
-use alloc::boxed::Box;
+use core::alloc::Layout;
+
+use alloc::{
+    alloc::{alloc, dealloc},
+    boxed::Box,
+};
 use axhal::{arch::flush_tlb, mem::VirtAddr, paging::MappingFlags};
-use axlog::debug;
+use axlog::{debug, error, info};
 use bitflags::bitflags;
 
-use crate::syscall::{
-    MMAPFlags, MMAPPROT, SyscallError, SyscallResult, syscall_fs::ctype::file::FileDesc,
+use crate::{
+    config::MAX_HEAP_SIZE,
+    linux_env::linux_api::api::process_api,
+    syscall::{
+        MMAPFlags, MMAPPROT, SyscallError, SyscallResult, syscall_fs::ctype::file::FileDesc,
+    },
 };
 
-const MAX_HEAP_SIZE: usize = 0x20000;
+static mut HEAP_BASE: usize = 0;
+static mut HEAP_TOP: usize = 0;
+
 /// 修改用户堆大小，
 ///
 /// - 如输入`brk`为`0`，则返回堆顶地址
@@ -23,224 +34,232 @@ const MAX_HEAP_SIZE: usize = 0x20000;
 ///
 /// # Arguments
 /// * `brk - usize`
-pub fn syscall_brk(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    //    let brk = args[0];
-    //    let curr_process = current_process();
-    //    let mut return_val: isize = curr_process.get_heap_top() as isize;
-    //    let heap_bottom = curr_process.get_heap_bottom() as usize;
-    //    if brk != 0 && brk >= heap_bottom && brk <= heap_bottom + MAX_HEAP_SIZE {
-    //        curr_process.set_heap_top(brk as u64);
-    //        return_val = brk as isize;
-    //    }
-    //    Ok(return_val)
+pub fn syscall_brk(args: [usize; 6]) -> SyscallResult {
+    let brk = args[0];
+    unsafe {
+        if HEAP_BASE == 0 {
+            error!("Unikernel Heap not initialized!");
+            return Err(SyscallError::ENOMEM);
+        }
+        if brk == 0 {
+            return Ok(HEAP_TOP as isize);
+        }
+        if brk >= HEAP_BASE && brk <= HEAP_BASE + MAX_HEAP_SIZE {
+            HEAP_TOP = brk;
+            Ok(HEAP_TOP as isize)
+        } else {
+            // 在物理内存模型下，超出范围的 brk 请求通常是无效的
+            Err(SyscallError::EINVAL)
+        }
+    }
 }
 
-/// 将文件内容映射到内存中
-/// offset参数指定了从文件区域中的哪个字节开始映射，它必须是系统分页大小的倍数
-/// len指定了映射文件的长度
-/// prot指定了页面的权限
-/// flags指定了映射的方法
+/// 将文件内容映射到内存中 (`Unikernel` 版本)
+/// 在 `Unikernel` 中，由于没有独立的进程地址空间和 `MMU`，
+/// `mmap` 的概念会简化为直接在某个物理地址范围内分配内存，
+/// 并将文件内容拷贝到该内存中。权限管理也会失效。
+/// 这里我们假设文件系统是可直接访问的。
+///
 /// # Arguments
-/// * `start - usize`
-/// * `len - usize`
-/// * `prot - MMAPPROT`
-/// * `flags - MMAPFlags`
-/// * `fd - i32`
-/// * `offset - usize`
+/// * `start` - `usize` (期望的物理地址，如果为 `0` 则由系统分配)
+/// * `len` - `usize` (映射长度)
+/// * `prot` - `usize` (权限，在 `Unikernel` 中通常忽略)
+/// * `flags` - `usize` (标志，`MAP_FIXED` 如果 `start != 0` 则强制使用，`MAP_ANONYMOUS` 表示匿名映射)
+/// * `fd` - `i32` (文件描述符，用于标识要映射的文件)
+/// * `offset` - `usize` (文件偏移)
 pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
     unimplemented!();
-    //    let start = args[0];
-    //    let len = args[1];
-    //    let prot = MMAPPROT::from_bits_truncate(args[2] as u32);
-    //    let flags = MMAPFlags::from_bits_truncate(args[3] as u32);
-    //    let fd = args[4] as i32;
-    //    let offset = args[5];
-    //
-    //    let fixed = flags.contains(MMAPFlags::MAP_FIXED);
-    //    // Try to map to NULL
-    //    if fixed && start == 0 {
-    //        return Err(SyscallError::EINVAL);
-    //    }
-    //
-    //    let addr = if flags.contains(MMAPFlags::MAP_ANONYMOUS) {
-    //        // No file
-    //        if !(fd == -1 && offset == 0) {
-    //            return Err(SyscallError::EINVAL);
-    //        }
-    //        UNI_API
-    //            .memory_set
-    //            .lock()
-    //            .lock()
-    //            .mmap(start.into(), len, prot.into(), fixed, None)
-    //    } else {
-    //        // File backend
-    //        debug!("[mmap] fd: {}, offset: 0x{:x}", fd, offset);
-    //        if fd >= UNI_API.fd_manager.fd_table.lock().len() as i32 || fd < 0 {
-    //            return Err(SyscallError::EINVAL);
-    //        }
-    //        let file = match &UNI_API.fd_manager.fd_table.lock()[fd as usize] {
-    //            // 文件描述符表里面存的是文件描述符，这很合理罢
-    //            // Some(file) => Box::new(
-    //            //     file.as_any()
-    //            //         .downcast_ref::<FileDesc>()
-    //            //         .expect("Try to mmap with a non-file backend")
-    //            //         .file
-    //            //         .lock(),
-    //            // ),
-    //            Some(file) => Box::new(
-    //                file.as_any()
-    //                    .downcast_ref::<FileDesc>()
-    //                    .expect("Try to mmap with a non-file backend")
-    //                    .file
-    //                    .lock()
-    //                    .clone(),
-    //            ),
-    //            // fd not found
-    //            None => return Err(SyscallError::EINVAL),
-    //        };
-    //
-    //        let backend = MemBackend::new(file, offset as u64);
-    //        UNI_API
-    //            .memory_set
-    //            .lock()
-    //            .lock()
-    //            .mmap(start.into(), len, prot.into(), fixed, Some(backend))
-    //    };
-    //
-    //    flush_tlb(None);
-    //    debug!("mmap: 0x{:x}", addr);
-    //    Ok(addr)
+    // let start = args[0];
+    // let len = args[1];
+    // let _prot = MMAPPROT::from_bits_truncate(args[2] as u32);
+    // let flags = MMAPFlags::from_bits_truncate(args[3] as u32);
+    // let fd = args[4] as i32;
+    // let offset = args[5];
+
+    // let map_fixed = flags.contains(MMAPFlags::MAP_FIXED);
+    // let map_anonymous = flags.contains(MMAPFlags::MAP_ANONYMOUS);
+
+    // let process = process_api();
+
+    // /if map_fixed && start == 0 {
+    //     return Err(SyscallError::EINVAL);
+    // }
+
+    // if map_anonymous {
+    //     // 匿名映射，直接分配物理内存
+    //     let addr = if start == 0 {
+    //         unsafe {
+    //             let layout = Layout::from_size_align(len, 8).map_err(|_| SyscallError::ENOMEM)?;
+    //             let ptr = alloc(layout);
+    //             if ptr.is_null() {
+    //                 return Err(SyscallError::ENOMEM);
+    //             }
+    //             ptr as usize
+    //         }
+    //     } else if map_fixed {
+    //         // MAP_FIXED 的匿名映射，直接使用指定的物理地址
+    //         start
+    //     } else {
+    //         return Err(SyscallError::EINVAL); // `start != 0` 但不是 `MAP_FIXED`
+    //     };
+    //     info!(
+    //         "Unikernel mmap (anonymous) at 0x{:x}, len 0x{:x}",
+    //         addr, len
+    //     );
+    //     Ok(addr as isize)
+    // } else {
+    //     // file backend
+    //     debug!("[mmap] fd: {}, offset: 0x{:x}", fd, offset);
+    //     if fd >= process.fd_manager.fd_table.lock().len() as i32 || fd < 0 {
+    //         return Err(SyscallError::EINVAL);
+    //     }
+
+    //     let file = match &process.fd_manager.fd_table.lock()[fd as usize] {
+    //         // 文件描述符表里面存的是文件描述符，这很合理罢
+    //         Some(file) => alloc::boxed::Box::new(
+    //             file.as_any()
+    //                 .downcast_ref::<FileDesc>()
+    //                 .expect("Try to mmap with a non-file backend")
+    //                 .file
+    //                 .lock()
+    //                 .clone(),
+    //         ),
+    //         // fd not found
+    //         None => return Err(SyscallError::EINVAL),
+    //     };
+
+    //     let addr = if start == 0 {
+    //         unsafe {
+    //             let layout = Layout::from_size_align(len, 8).map_err(|_| SyscallError::ENOMEM)?;
+    //             let ptr = alloc(layout);
+    //             if ptr.is_null() {
+    //                 return Err(SyscallError::ENOMEM);
+    //             }
+    //             ptr as usize
+    //         }
+    //     } else if map_fixed {
+    //         start
+    //     } else {
+    //         return Err(SyscallError::EINVAL); // start != 0 但不是 MAP_FIXED
+    //     };
+
+    //     unsafe {
+    //         let bytes_read = unikernel_read_file(fd, offset, addr as *mut u8, len);
+    //         if bytes_read < 0 {
+    //             // 模拟读取错误
+    //             dealloc(addr as *mut u8, Layout::from_size_align(len, 8).unwrap());
+    //             return Err(SyscallError::EIO);
+    //         }
+    //         info!(
+    //             "Unikernel mmap (file, fd {}) at 0x{:x}, len 0x{:x}, read {} bytes",
+    //             fd, addr, len, bytes_read
+    //         );
+    //         Ok(addr as isize)
+    //     }
+    // }
 }
 
-/// # Arguments
-/// * `start - usize`
-/// * `len - usize`
+/// 释放内存映射 (`Unikernel` 版本)
 pub fn syscall_munmap(args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    // let start = args[0];
-    // let len = args[1];
-    // UNI_API.memory_set.lock().lock().munmap(start.into(), len);
-    // flush_tlb(None);
-    // Ok(0)
+    let start = args[0];
+    let len = args[1];
+    unsafe {
+        if start != 0 && len > 0 {
+            let layout = Layout::from_size_align(len, 8).map_err(|_| SyscallError::EINVAL)?;
+            dealloc(start as *mut u8, layout);
+            info!("Unikernel munmap at 0x{:x}, len 0x{:x}", start, len);
+        }
+        Ok(0)
+    }
 }
 
-/// # Arguments
-/// * `start - usize`
-/// * `len - usize`
+/// 同步内存映射到文件 (`Unikernel` 版本)
+/// 在没有独立进程和虚拟内存的情况下，`msync` 的意义不大，
+/// 因为所有修改都直接发生在物理内存上。
+/// 这里我们简单地返回成功。
 pub fn syscall_msync(args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    // let start = args[0];
-    // let len = args[1];
-    // UNI_API.memory_set.lock().lock().msync(start.into(), len);
-
-    // Ok(0)
+    let start = args[0];
+    let len = args[1];
+    info!("Unikernel msync at 0x{:x}, len 0x{:x} (no-op)", start, len);
+    Ok(0)
 }
 
-/// # Arguments
-/// * `start - usize`
-/// * `len - usize`
-/// * `prot - MMAPPROT`
+/// 修改内存映射的保护属性 (`Unikernel` 版本)
+/// 在没有特权级和 `MMU` 的情况下，`mprotect` 无法实现。
+/// 这里我们简单地返回成功。
 pub fn syscall_mprotect(args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    // let start = args[0];
-    // let len = args[1];
-    // let prot = MMAPPROT::from_bits_truncate(args[2] as u32);
-
-    // UNI_API
-    //     .memory_set
-    //     .lock()
-    //     .lock()
-    //     .mprotect(VirtAddr::from(start), len, prot.into());
-
-    // flush_tlb(None);
-    // Ok(0)
+    let start = args[0];
+    let len = args[1];
+    let prot = args[2];
+    info!(
+        "Unikernel mprotect at 0x{:x}, len 0x{:x}, prot {} (no-op)",
+        start, len, prot
+    );
+    Ok(0)
 }
 
-/// # Arguments
-/// * `old_addr - usize`
-/// * `old_size - usize`
-/// * `new_size - usize`
-/// * `flags - usize`
-/// * `new_addr - usize`
-pub fn syscall_mremap(_args: [usize; 6]) -> SyscallResult {
+/// 重新映射内存段 (Unikernel 版本)
+/// 在物理内存模型下，mremap 的实现会比较直接的物理内存块移动或调整大小。
+pub fn syscall_mremap(args: [usize; 6]) -> SyscallResult {
     unimplemented!();
-    //    use axlog::info;
-    //
-    //    let old_addr = args[0];
-    //    let old_size = args[1];
-    //    let new_size = args[2];
-    //    let flags = args[3];
-    //    let new_addr = args[4];
-    //
-    //    info!(
-    //        "[mremap] old_addr: 0x{:x}, old_size: 0x{:x}, new_size: 0x{:x}, flags: {}, new_addr: {}",
-    //        old_addr, old_size, new_size, flags, new_addr,
-    //    );
-    //
-    //    // old_addr must be aligned
-    //    // new_size must be greater than 0
-    //    if !(VirtAddr::from(old_addr).is_aligned_4k()) || new_size == 0 {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    // (new_addr, new_addr + size) must not overlap with (old_addr, old_addr + old_size)
-    //    if !(new_addr + new_size <= old_addr || new_addr >= old_addr + old_size) {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    let flags = MREMAPFlags::from_bits_truncate(args[3] as u32);
-    //    let maymove = flags.contains(MREMAPFlags::MREMAP_MAYMOVE);
-    //    let fixed = flags.contains(MREMAPFlags::MREMAP_FIXED);
-    //    let dontunmap = flags.contains(MREMAPFlags::MREMAP_DONTUNMAP);
-    //
-    //    // MREMAP_FIXED was specified without MREMAP_MAYMOVE
-    //    if fixed && !maymove {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    // MREMAP_DONTUNMAP was specified without MREMAP_MAYMOVE
-    //    if dontunmap && !maymove {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    // MREMAP_DONTUNMAP was specified with a size change
-    //    if dontunmap && old_size != new_size {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    // old_size was 0 and MREMAP_MAYMOVE was not specified
-    //    if old_size == 0 && !maymove {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    // MREMAP_FIXED is not implemented
-    //    if fixed {
-    //        unimplemented!();
-    //    }
-    //
-    //    let process = current_process();
-    //    let old_start: VirtAddr = old_addr.into();
-    //    if old_size > new_size {
-    //        let old_end = old_start + new_size;
-    //        process
-    //            .memory_set
-    //            .lock()
-    //            .lock()
-    //            .munmap(old_end, old_size - new_size);
-    //        flush_tlb(None);
-    //
-    //        return Ok(old_start.as_usize() as isize);
-    //    }
-    //
-    //    // Only deal with MREMAP_MAYMOVE now
-    //    let new_addr = process
-    //        .memory_set
-    //        .lock()
-    //        .lock()
-    //        .mremap(old_start, old_size, new_size);
-    //    flush_tlb(None);
-    //    Ok(new_addr)
+    // let old_addr = args[0];
+    // let old_size = args[1];
+    // let new_size = args[2];
+    // let flags = args[3];
+    // let new_addr = args[4];
+
+    // info!(
+    //     "Unikernel mremap old: 0x{:x} sz 0x{:x}, new: 0x{:x} sz 0x{:x}, flags {}",
+    //     old_addr, old_size, new_addr, new_size, flags
+    // );
+
+    // if old_addr == 0 || old_size == 0 || new_size == 0 {
+    //     return Err(SyscallError::EINVAL);
+    // }
+
+    // let may_move = (flags & 0x1) != 0; // 对应 MREMAPFlags::MREMAP_MAYMOVE
+    // let fixed = (flags & 0x2) != 0; // 对应 MREMAPFlags::MREMAP_FIXED
+
+    // unsafe {
+    //     let old_layout = Layout::from_size_align(old_size, 8).map_err(|_| SyscallError::EINVAL)?;
+    //     let new_layout = Layout::from_size_align(new_size, 8).map_err(|_| SyscallError::EINVAL)?;
+
+    //     if new_size <= old_size {
+    //         // 缩小内存，可以直接返回旧地址
+    //         info!(
+    //             "Unikernel mremap: shrinking memory at 0x{:x} from 0x{:x} to 0x{:x}",
+    //             old_addr, old_size, new_size
+    //         );
+    //         Ok(old_addr as isize)
+    //     } else if may_move {
+    //         // 尝试分配新的内存并拷贝数据
+    //         let new_ptr = alloc(new_layout);
+    //         if new_ptr.is_null() {
+    //             return Err(SyscallError::ENOMEM);
+    //         }
+    //         core::ptr::copy_nonoverlapping(old_addr as *const u8, new_ptr as *mut u8, old_size);
+    //         dealloc(old_addr as *mut u8, old_layout);
+    //         info!(
+    //             "Unikernel mremap: moved memory from 0x{:x} to 0x{:x}, new size 0x{:x}",
+    //             old_addr, new_ptr as usize, new_size
+    //         );
+    //         Ok(new_ptr as usize as isize)
+    //     } else if fixed && new_addr != 0 {
+    //         // 在固定地址重新分配（需要确保新地址可用，这里简化处理）
+    //         // 注意：这可能覆盖原有数据，需要谨慎处理
+    //         let new_ptr = new_addr as *mut u8;
+    //         // 假设新地址有足够的空间，并且可以安全覆盖
+    //         core::ptr::copy_nonoverlapping(old_addr as *const u8, new_ptr, old_size);
+    //         dealloc(old_addr as *mut u8, old_layout);
+    //         info!(
+    //             "Unikernel mremap: moved (fixed) memory from 0x{:x} to 0x{:x}, new size 0x{:x}",
+    //             old_addr, new_addr, new_size
+    //         );
+    //         Ok(new_addr as isize)
+    //     } else {
+    //         Err(SyscallError::ENOMEM) // 无法在原位置扩展，也不允许移动
+    //     }
+    // }
 }
 const IPC_PRIVATE: i32 = 0;
 
@@ -255,66 +274,29 @@ bitflags! {
     }
 }
 
-// TODO: `uid` and `gid` support
-/// # Arguments
-/// * `key - i32`
-/// * `size - usize`
-/// * `flags - i32`
-pub fn syscall_shmget(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    //    let key = args[0] as i32;
-    //    let size = args[1];
-    //    let flags = args[2] as i32;
-    //
-    //    let pid = current_process().pid();
-    //
-    //    // 9 bits for permission
-    //    let mode: u16 = (flags as u16) & ((1 << 10) - 1);
-    //
-    //    let Some(flags) = ShmFlags::from_bits(flags - mode as i32) else {
-    //        // return -1;
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //
-    //    if key == IPC_PRIVATE {
-    //        let Ok((shmid, mem)) = MemorySet::create_shared_mem(key, size, pid, 0, 0, mode) else {
-    //            return Err(SyscallError::EINVAL);
-    //        };
-    //
-    //        current_process()
-    //            .memory_set
-    //            .lock()
-    //            .lock()
-    //            .add_private_shared_mem(shmid, mem);
-    //
-    //        Ok(shmid as isize)
-    //    } else {
-    //        let mut key_map = axmem::KEY_TO_SHMID.lock();
-    //
-    //        match key_map.get(&key) {
-    //            Some(shmid) => {
-    //                if flags.contains(ShmFlags::IPC_CREAT) && flags.contains(ShmFlags::IPC_EXCL) {
-    //                    Err(SyscallError::EEXIST)
-    //                } else {
-    //                    Ok(*shmid as isize)
-    //                }
-    //            }
-    //            None => {
-    //                if flags.contains(ShmFlags::IPC_CREAT) {
-    //                    let Ok((shmid, mem)) = MemorySet::create_shared_mem(key, size, pid, 0, 0, mode)
-    //                    else {
-    //                        return Err(SyscallError::EINVAL);
-    //                    };
-    //
-    //                    key_map.insert(key, shmid);
-    //                    MemorySet::add_shared_mem(shmid, mem);
-    //                    Ok(shmid as isize)
-    //                } else {
-    //                    Err(SyscallError::ENOENT)
-    //                }
-    //            }
-    //        }
-    //    }
+/// 获取共享内存段 (`Unikernel` 版本)
+/// 在单地址空间模型下，共享内存的概念变得简单，
+/// 只需要分配一块物理内存，并返回其地址即可。
+/// key 和 flags 的处理也会简化。
+pub fn syscall_shmget(args: [usize; 6]) -> SyscallResult {
+    let key = args[0] as i32;
+    let size = args[1];
+    let flags = args[2] as i32;
+
+    info!(
+        "Unikernel shmget key {}, size 0x{:x}, flags {}",
+        key, size, flags
+    );
+
+    unsafe {
+        let layout = Layout::from_size_align(size, 8).map_err(|_| SyscallError::ENOMEM)?;
+        let ptr = alloc(layout);
+        if ptr.is_null() {
+            return Err(SyscallError::ENOMEM);
+        }
+        info!("Unikernel shmget allocated at 0x{:x}", ptr as usize);
+        Ok(ptr as usize as isize)
+    }
 }
 
 bitflags! {
@@ -327,72 +309,28 @@ bitflags! {
     }
 }
 
-/// # Arguments
-/// * `shmid - i32`
-/// * `addr - usize`
-/// * `flags - i32`
-pub fn syscall_shmat(_args: [usize; 6]) -> SyscallResult {
-    unimplemented!();
-    //    let shmid = args[0] as i32;
-    //    let addr = args[1];
-    //    let flags = args[2] as i32;
-    //    let process = current_process();
-    //
-    //    let memory_set_wrapper = process.memory_set.lock();
-    //    let mut memory = memory_set_wrapper.lock();
-    //
-    //    let flags = ShmAtFlags::from_bits(flags).unwrap();
-    //
-    //    let Some(mem) = memory
-    //        .get_private_shared_mem(shmid)
-    //        .or_else(|| MemorySet::get_shared_mem(shmid))
-    //    else {
-    //        return Err(SyscallError::EINVAL);
-    //    };
-    //    let size = mem.size();
-    //
-    //    let addr = if addr == 0 {
-    //        match memory.find_free_area(addr.into(), size) {
-    //            Some(addr) => addr,
-    //            None => return Err(SyscallError::ENOMEM),
-    //        }
-    //    } else {
-    //        let addr: VirtAddr = addr.into();
-    //        let addr = if addr.is_aligned_4k() {
-    //            addr
-    //        } else if flags.contains(ShmAtFlags::SHM_RND) {
-    //            addr.align_up_4k()
-    //        } else {
-    //            return Err(SyscallError::EINVAL);
-    //        };
-    //
-    //        if flags.contains(ShmAtFlags::SHM_REMAP) {
-    //            memory.split_for_area(addr, size);
-    //            flush_tlb(None);
-    //        } else {
-    //            unimplemented!()
-    //        }
-    //
-    //        addr
-    //    };
-    //
-    //    let mut map_flags = MappingFlags::USER;
-    //    if flags.contains(ShmAtFlags::SHM_RDONLY) {
-    //        map_flags |= MappingFlags::READ;
-    //    } else {
-    //        map_flags |= MappingFlags::READ | MappingFlags::WRITE;
-    //    }
-    //    if flags.contains(ShmAtFlags::SHM_EXEC) {
-    //        map_flags |= MappingFlags::EXECUTE;
-    //    }
-    //
-    //    memory.attach_shared_mem(mem, addr, map_flags);
-    //    flush_tlb(None);
-    //
-    //    Ok(addr.as_usize() as isize)
+/// 连接共享内存段到进程地址空间 (`Unikernel` 版本)
+/// 在单地址空间模型下，这步只是简单地返回共享内存的地址，
+/// 因为所有内存都是直接可访问的。
+pub fn syscall_shmat(args: [usize; 6]) -> SyscallResult {
+    let shmid = args[0];
+    let addr = args[1];
+    let flags = args[2];
+
+    info!(
+        "Unikernel shmat shmid {}, addr 0x{:x}, flags {}",
+        shmid, addr, flags
+    );
+
+    // 在 `Unikernel` 中，shmid 就是 `shmget` 返回的物理地址
+    Ok(shmid as isize)
 }
 
-/// # `mlock`
-pub fn syscall_mlock(_args: [usize; 6]) -> SyscallResult {
+/// 锁定内存页 (`Unikernel` 版本)
+/// 在没有分页和特权级的 `Unikernel` 中，`mlock` 通常是一个空操作。
+pub fn syscall_mlock(args: [usize; 6]) -> SyscallResult {
+    let start = args[0];
+    let len = args[1];
+    info!("Unikernel mlock at 0x{:x}, len 0x{:x} (no-op)", start, len);
     Ok(0)
 }
