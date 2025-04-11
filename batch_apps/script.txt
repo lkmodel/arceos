@@ -20,6 +20,7 @@ busybox whoami
 busybox echo Test[whoami] done
 busybox echo Test[touch]...
 busybox touch
+busybox_TOUCH a.txt
 busybox echo Test[touch] done
 busybox echo Test[xz]...
 busybox xz --help
@@ -152,9 +153,24 @@ busybox echo Test[usleep]...
 busybox usleep 1000000
 busybox echo Test[usleep]done
 
+
+busybox echo Test[builtin_test]...
 busybox foo
 busybox builtin_test
+busybox echo Test[builtin_test]done
+
+busybox echo Test[stdio file test]...
+STDIO_FILE_TEST
+busybox echo Test[stdio file test]done
+
+busybox echo Test[fcntl test]...
+FCNTL_TEST
+busybox echo Test[fcntl test]done
+
+busybox echo Test[ctype test]...
+CTYPE_TEST
+busybox echo Test[ctype test]done
 
 micropython
-sqlite3_startup init
 sqlite3_startup run
+sqlite3_startup init
