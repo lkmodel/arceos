@@ -1,4 +1,4 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2" pages="3">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2" pages="4">
   <diagram name="内存分布" id="dAZeo6MuWIxKt4PNm6J2">
     <mxGraphModel dx="1428" dy="772" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -329,6 +329,74 @@
         </mxCell>
         <mxCell id="5eC6CTEkte6arPSx2CUm-13" value="Loader" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="-40" y="360" width="120" height="210" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="W9G-oXMJ7oM2CzOzBk4R" name="Batch_apps">
+    <mxGraphModel dx="985" dy="532" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-2" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="200" width="120" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-3" value="Magic Number" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="200" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-4" value="应用总数" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="220" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-5" value="头部大小" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="240" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-6" value="应用1大小" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="260" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-7" value="应用1名字" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="280" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-8" value="应用1起始地址" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="300" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-12" value="... ...&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="320" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-13" value="应用N大小" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="340" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-14" value="应用N名字" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="360" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-15" value="应用N起始地址" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="380" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-16" value="库大小" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="400" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-17" value="库起始地址" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="420" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-18" value="脚本大小" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="440" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-19" value="脚本起始地址" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="460" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-20" value="应用1 ELF" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="480" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-21" value="... ..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="500" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-22" value="应用N ELF" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="520" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-23" value="Lib ELF" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="540" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-24" value="脚本" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="560" width="120" height="20" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

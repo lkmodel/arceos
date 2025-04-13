@@ -1,4 +1,4 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2" pages="4">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2" pages="5">
   <diagram name="内存分布" id="dAZeo6MuWIxKt4PNm6J2">
     <mxGraphModel dx="1428" dy="772" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -397,6 +397,77 @@
         </mxCell>
         <mxCell id="yZ7P5CiCSJcJobtsQ3Uj-24" value="脚本" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="200" y="560" width="120" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="JD9FvwsTxquzc_05AjtR" name="模块组成">
+    <mxGraphModel dx="1428" dy="772" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-1" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="320" width="600" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-2" value="ArceOS_API(ArceOS_Posix_API)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="480" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-3" value="ArceOS_Modules" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="520" width="520" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-4" value="ArceOS_Modules_Ext" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-5" value="Linux_Ext" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="440" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-20" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="350" width="560" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="WGcIOLAdyEUCgh-uAlkX-6" target="WGcIOLAdyEUCgh-uAlkX-5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="410" />
+              <mxPoint x="410" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="WGcIOLAdyEUCgh-uAlkX-6" target="WGcIOLAdyEUCgh-uAlkX-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="410" />
+              <mxPoint x="360" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-6" value="Syscall" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="360" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-10" value="Loader" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="480" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="WGcIOLAdyEUCgh-uAlkX-14" target="WGcIOLAdyEUCgh-uAlkX-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="470" />
+              <mxPoint x="160" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-14" value="alloc, thread" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="360" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="WGcIOLAdyEUCgh-uAlkX-16" target="WGcIOLAdyEUCgh-uAlkX-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-16" value="compile_rt" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="360" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-17" value="外部Crates" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="480" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WGcIOLAdyEUCgh-uAlkX-21" value="ABI CALL" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="340" y="320" width="80" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

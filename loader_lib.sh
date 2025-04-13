@@ -1,12 +1,12 @@
-echo "Loader my lib version"
+echo "ArceOS Lib Loader"
 #!/bin/bash
 
-# 设置默认参数
-log="warn"
-qemu_log="y"
+# Set Default Arg
+log="off"
+qemu_log="n"
 type="default"
 
-# 定义枚举类型
+# Define enum, WIP
 declare -A valid_types
 valid_types=(
 	["default"]="Default type"
@@ -15,6 +15,7 @@ valid_types=(
 	["type3"]="Type 3 description"
 )
 
+# Decode ctl arg
 # 解析命令行参数
 options=$(getopt -o l:q:t --long log:,qemu_log:,type:, -- "$@")
 eval set -- "$options"
