@@ -1,228 +1,170 @@
 # mocklibc
 
-## 1. 简介
+**Read this in other languages: [English](./README.md), [中文](./README_zh.md).**
 
-**mocklibc** 是一个基于 **musl libc 1.2.2 版本**（源自 Ubuntu 22.04 LTS）修改而来的 C 标准库。
-它专门为 **ArceOS** Unikernel 项目进行了适配，旨在为动态加载的应用程序提供标准的 C 库支持。
+## 1. Introduction
 
-其主要目标是在 ArceOS 环境中，利用熟悉的 C 库接口，同时遵守 Unikernel 架构的限制，来支持动态链接应用的开发与执行。
+**mocklibc** is a C standard library modified based on **musl libc version 1.2.2** (sourced from Ubuntu 22.04 LTS).
+It has been specifically adapted for the **ArceOS** Unikernel project, aiming to provide standard C library support for dynamically loaded applications.
 
-## 2. 核心设计原则与约束
+Its main goal is to support the development and execution of dynamically linked applications within the ArceOS environment, utilizing familiar C library interfaces while adhering to the constraints of the Unikernel architecture.
 
-`mocklibc` 的开发遵循以下几项关键原则：
+## 2. Core Design Principles and Constraints
 
-* **无陷阱指令 (`ecall`):** 使用 `mocklibc` 的应用程序在 ArceOS 内核中以 Supervisor 模式（S 模式）运行。
-执行 `ecall` 指令会导致非预期的陷入（trap）到 User 模式（U 模式），这与 Unikernel 的执行模型相悖。
-因此，**`mocklibc` 的代码必须严格避免任何 `ecall` 或其他陷阱指令。**
-* **系统调用替换:** musl 中标准的系统调用被替换为特定的 ArceOS 机制：
-  * **`ABI-SYS CALL`**: 这是**首选**机制。它通过一个明确定义的应用程序二进制接口（ABI），将所需功能委托给底层的 ArceOS 内核或加载器。
- （具体定义请参阅 `../../examples/loader_lib/README.md`）。目标是让 `ABI-SYS CALL` 处理绝大多数系统级操作。
-  * **`ABI CALL`**: 此机制指的是直接在 `mocklibc` 内部实现的函数，而不是通过 `ABI-SYS CALL` 进行委托。
- `ABI CALL` 的使用应**尽可能少**，理想情况下仅用于：
-    * 编译器运行时支持函数（例如 `libgcc` 提供的内建函数）。
-    * 实现那些来自 musl 但严重依赖汇编代码、无法安全适配或可能包含陷阱的函数（参见第 3.1 节）。
-* **最小化 `ABI CALL`，最大化 `ABI-SYS CALL`:** 理想状态是，除了必要的编译器运行时辅助函数外，几乎所有的 libc 功能都通过 `ABI-SYS CALL` 实现。这能提高可移植性和可维护性。
-* **库/内核代码分离:** `ABI-SYS CALL` 依赖于内核/加载器提供的接口。`ABI CALL` 的全部实现则位于 `Kernel` 内部。
-保持这种区分使得 `mocklibc`（可能基于不同 musl 版本）能够与一个稳定的内核 ABI 协同工作，便于未来同时支持多个 musl 版本。
+The development of `mocklibc` follows these key principles:
 
-## 3. 实现考量
+* **No Trap Instructions (`ecall`):** Applications using `mocklibc` run in Supervisor mode (S mode) within the ArceOS kernel.
+Executing the `ecall` instruction would cause an unexpected trap into User mode (U mode), which contradicts the Unikernel execution model.
+Therefore, **the code of `mocklibc` must strictly avoid any `ecall` or other trap instructions.**
+* **System Call Replacement:** Standard system calls in musl are replaced with specific ArceOS mechanisms:
+  ***`ABI-SYS CALL`**: This is the **preferred** mechanism. It delegates the required functionality to the underlying ArceOS kernel or loader through a well-defined Application Binary Interface (ABI).
+  (See `../../examples/loader_lib/README.md` for the specific definition). The goal is for `ABI-SYS CALL` to handle the vast majority of system-level operations.
+  * **`ABI CALL`**: This mechanism refers to functions implemented directly within `mocklibc` itself, rather than being delegated through `ABI-SYS CALL`.
+ The use of `ABI CALL` should be **minimized** and ideally only used for:
+    *Compiler runtime support functions (e.g., built-in functions provided by `libgcc`).
+    * Implementing functions from musl that heavily rely on assembly code, cannot be safely adapted, or may contain traps (see Section 3.1).
+* **Minimize `ABI CALL`, Maximize `ABI-SYS CALL`:** The ideal state is that almost all libc functionality, except for necessary compiler runtime helper functions, is implemented through `ABI-SYS CALL`. This improves portability and maintainability.
+* **Library/Kernel Code Separation:** `ABI-SYS CALL` relies on interfaces provided by the kernel/loader. The entire implementation of `ABI CALL` resides within the `Kernel`.
+Maintaining this distinction allows `mocklibc` (potentially based on different musl versions) to work with a stable kernel ABI, facilitating future support for multiple musl versions simultaneously.
 
-### 3.1. 处理 musl 中的汇编代码
+## 3. Implementation Considerations
 
-在迁移 musl 中使用汇编（`.S` 文件或内联汇编）的代码时，必须特别小心：
+### 3.1. Handling Assembly Code in musl
 
-1. **陷阱风险:** 汇编代码常包含特定于架构的陷阱指令（如 RISC-V 上的 `ecall`），这是禁止的。
-2. **环境假设:** 汇编代码可能依赖于特定的 CPU 状态、内存布局或 ArceOS 未必提供的操作系统行为。
+Special care must be taken when migrating code in musl that uses assembly (`.S` files or inline assembly):
 
-鉴于这些风险，当遇到 musl 中复杂或可能存在问题的汇编代码时，**强烈建议在 `mocklibc` 中使用 `ABI CALL` 来实现相应功能**，而不是试图直接、可能不安全地迁移汇编代码。
+1. **Trap Risks:** Assembly code often contains architecture-specific trap instructions (such as `ecall` on RISC-V), which are prohibited.
+2. **Environment Assumptions:** Assembly code may rely on specific CPU states, memory layouts, or operating system behaviors that ArceOS may not provide.
 
-### 3.2. 评估库质量与安全性
+Given these risks, when encountering complex or potentially problematic assembly code in musl, **it is strongly recommended to use `ABI CALL` in `mocklibc` to implement the corresponding functionality** instead of attempting to directly and potentially unsafely migrate the assembly code.
 
-虽然通常信任来自 musl 的未修改代码，但 `mocklibc` 中引入的偏差需要评估。
+### 3.2. Evaluating Library Quality and Security
 
-* **建议:** 使用 `diff` 命令比较 `mocklibc` 源码树与原始 `musl-1.2.2` 源码树。
-* **度量标准:** **不相似文件的数量**可作为偏差程度的粗略指标。
-数量越少，表明修改越少，相对于原始 musl 的潜在安全性可能更高。（使用*比例*可能会产生误导性的乐观估计）。
-鼓励定期进行 `diff` 检查。
+Although unmodified code from musl is generally trusted, the deviations introduced in `mocklibc` need to be evaluated.
 
-## 4. 开发与贡献
+* **Recommendation:** Use the `diff` command to compare the `mocklibc` source tree with the original `musl-1.2.2` source tree.
+* **Metric:** The **number of dissimilar files** can serve as a rough indicator of the degree of deviation.
+A smaller number indicates fewer modifications and potentially higher security relative to the original musl. (Using *proportions* might yield misleadingly optimistic estimates).
+Regular `diff` checks are encouraged.
 
-### 4.1. 迁移/添加函数的标准操作流程 (SOP)
+We have implemented a script for evaluation; please read `./compare_dirs/COMPARE_DIRS_README.md`.
 
-为安全地从 musl 添加缺失函数或迁移现有函数，请**严格遵循以下步骤**：
+## 4. Development and Contribution
 
-1. **分析 musl 源码:** 阅读相关的 musl 源代码。识别潜在风险：
-    * 是否有直接的系统调用？
-    * 是否依赖复杂的汇编？
-    * 是否存在微妙的依赖关系或假设？
-2. **评估影响 (musl):** 理解该函数在 musl 中的作用范围，并思考如何测试其行为。
-3. **评估影响 (mocklibc):** 评估 `mocklibc` 中缺失支持的范围，并估计需要修改的范围。
-4. **迁移代码:** 使用 `cp` 命令将相关的源文件从 musl 树复制到 `mocklibc` 树中的对应位置。
-    * **关键:** **请勿使用复制粘贴。** 避免使用代码格式化工具或可能改变空白符/行尾符的编辑器打开/保存文件，因为这会破坏 `diff` 比较。
-    * **关键:** Musl 通常对头文件的包含顺序有严格要求。格式化工具可能会重新排序头文件，导致编译错误。请保留原始顺序。
-5. **适配代码与构建系统:**
-    * 修改头文件中的必要定义（例如，移除阻塞定义的注释、添加系统调用号定义）。
-    * 如果使用了系统调用，将其替换为适当的 `ABI-SYS CALL` 或 `ABI CALL` 实现。目前 `ABI-SYS CALL` 已经完整支持，可以直接使用 `syscall` 相关宏。避免任何形式的 `ABI CALL`。
-    * 如果添加了新的源文件/目录，请更新 `Makefile` 中的 `LIBSRC` 变量。
-6. **编译与测试:**
-    * 编译 `mocklibc`。目标是零错误/警告（除了可能出现的 `NULL` 重定义警告，视具体情况可能接受）。
-    * 重新构建/打包任何依赖组件（例如加载器或测试应用）。
-    * **运行所有现有测试**，确保更改未引入回归问题 (regressions)。如果可能，专门测试新增的功能。
-7. **提交变更:** 使用 `git` 将针对此次特定函数迁移的更改**作为一个单独、隔离的提交 (commit)**。这便于以后发现问题时更容易回滚。
+### 4.1. Standard Operating Procedure (SOP) for Migrating/Adding Functions
 
-**遵守此 SOP 对于避免难以诊断的问题至关重要。**
+To safely add missing functions or migrate existing functions from musl, please **strictly follow these steps**:
 
-### 4.2. 构建系统 (Makefile)
+1. **Analyze musl Source Code:** Read the relevant musl source code. Identify potential risks:
+    *Are there any direct system calls?
+    * Does it rely on complex assembly?
+    * Are there subtle dependencies or assumptions?
+2. **Evaluate Impact (musl):** Understand the scope of the function in musl and consider how to test its behavior.
+3. **Evaluate Impact (mocklibc):** Assess the extent of missing support in `mocklibc` and estimate the scope of modifications required.
+4. **Migrate Code:** Use the `cp` command to copy the relevant source files from the musl tree to the corresponding location in the `mocklibc` tree.
+    ***Crucial:** **Do not use copy-paste.** Avoid opening/saving files with code formatters or editors that might change whitespace/line endings, as this will break `diff` comparisons.
+    * **Crucial:** Musl often has strict requirements for the order of header file inclusions. Formatters might reorder headers, leading to compilation errors. Preserve the original order.
+5. **Adapt Code and Build System:**
+    *Modify necessary definitions in header files (e.g., remove comments blocking definitions, add system call number definitions).
+    * If system calls are used, replace them with appropriate `ABI-SYS CALL` or `ABI CALL` implementations. Currently, `ABI-SYS CALL` is fully supported and `syscall` related macros can be used directly. Avoid any form of `ABI CALL`.
+    * If new source files/directories are added, update the `LIBSRC` variable in the `Makefile`.
+6. **Compile and Test:**
+    *Compile `mocklibc`. The goal is zero errors/warnings (except for potential `NULL` redefinition warnings, which may be acceptable depending on the specific case).
+    * Rebuild/repackage any dependent components (e.g., loader or test applications).
+    * **Run all existing tests** to ensure that the changes do not introduce regressions. If possible, specifically test the newly added functionality.
+7. **Commit Changes:** Use `git` to commit the changes for this specific function migration **as a separate, isolated commit**. This makes it easier to roll back later if issues are found.
 
-* **配置文件:** 构建系统首先会包含项目根目录下的 `config.mk` 文件。用户可以通过编辑此文件来配置构建选项。
-* **工具链:**
-  * 默认使用 `riscv64-linux-musl` 作为目标平台前缀。
-  * 相关的交叉编译工具（`gcc`, `as`, `ld`, `ar`, `strip`, `objcopy`）都基于此平台前缀定义。
-* **主要编译选项 (`CFLAGS`):**
-  * `-nostartfiles -ffreestanding -nostdlib -nostdinc`: 关键选项，表明我们正在构建一个独立于标准宿主环境的库，不使用标准启动文件、标准库或标准头文件。
-  * `-mcmodel=medany`: RISC-V 特定的代码模型。
-  * `-fPIC -pie`: 生成位置无关代码，适用于构建动态库 (`.so`) 和位置无关的可执行文件。
-  * `-I...`: 自动包含 `arch/riscv64/`、`include/` 以及 `c/` 目录下所有子目录的头文件路径。
-* **优化级别:** 可以通过 `config.mk` 文件中的 `OPTIMIZE` 变量控制：
-  * `OPTIMIZE = 0`: `-O0` (无优化)
-  * `OPTIMIZE = 1`: `-O1`
-  * `OPTIMIZE = 2`: `-O2`
-  * `OPTIMIZE = 3`: `-O3`
-  * 其他值 (默认): `-Os` (优化大小)
-* **Malloc 实现选择:** 可以通过 `config.mk` 文件中的 `USE_SAFE_MALLOC` 变量控制：
-  * `USE_SAFE_MALLOC = 1`: 使用 `c/safe_malloc/` 目录下的 Malloc 实现。
-  * `USE_SAFE_MALLOC != 1`: 当前 `Makefile` 中未指定备选实现 (标记为 `# TODO`)。
-* **源代码 (`LIBSRC`):** `Makefile` 使用 `wildcard` 收集 `c/` 目录下各子目录中的 `.c` 文件作为库的源文件，包括 C 运行时 (`__rt_*`)、各标准库模块 (ctype, stdio, math 等) 以及架构特定实现 (setjmp_riscv64, signal_riscv64 等)。
-* **目标文件:**
-  * `.c` 和 `.s` 文件会被编译/汇编成 `.o` 文件，存放在 `obj/` 目录下，并保持 `c/` 下的子目录结构。
-  * `c/crt1.c` 会被单独编译为 `obj/crt1.o`。
-* **输出库文件:**
-  * 静态库: `lib/libmock.a`
-  * 动态库: `lib/libmock.so`
-* **当前状态:** `Makefile` 目前相当基础，主要仅支持 RISC-V (RV) 架构。
-* **未来目标:** 构建系统需要显著改进，理想情况是迁移原始 musl 构建系统的相关部分，以提供更好的跨架构支持和可配置性。
+**Adhering to this SOP is crucial for avoiding difficult-to-diagnose problems.**
 
-## 5. 当前状态与未来工作
+### 4.2. Build System (Makefile)
 
-* **架构支持:** 当前 `Makefile` 主要针对 `riscv64-linux-musl` 平台。
-* **目录结构:** 旨在尽可能模拟 `musl-1.2.2` 以保持熟悉度，但有意进行简化，以减少更改难度。
-* **`./rela/` 目录:** 此目录据信是一个不必要的残留物，应进行调查并可能**移除**。
-* **`start_c`:** `start_c`（负责 C 运行时初始化）的当前实现较为粗糙，需要针对静态和动态链接场景进行进一步完善。
-* **构建配置:** 理想情况下，`mocklibc` 应支持可配置构建（例如通过 `config` 文件），以允许启用/禁用主要功能（如多进程、网络、数学库等），从而让用户可以构建定制化的库版本（从最小支持到功能完备）。此功能尚未实现。
-* **分版本发布:** 理想情况下，`mocklibc` 应提供多个 musl 版本的源码分支或标签，并允许用户选择基于哪个 musl 版本进行构建。此功能尚未实现。
-* **Makefile 健壮性:** 当前 `Makefile` 功能相对基础，未来目标是使其更健壮，并可能迁移 musl 原生构建系统的更多功能，以获得更好的灵活性和跨平台能力。
+* **Configuration File:** The build system first includes the `config.mk` file from the project root directory. Users can configure build options by editing this file.
+* **Toolchain:**
+  *The default target platform prefix is `riscv64-linux-musl`.
+  * The relevant cross-compilation tools (`gcc`, `as`, `ld`, `ar`, `strip`, `objcopy`) are all defined based on this platform prefix.
+* **Main Compilation Options (`CFLAGS`):**
+  *`-nostartfiles -ffreestanding -nostdlib -nostdinc`: Key options indicating that we are building a library independent of the standard host environment, without using standard startup files, standard libraries, or standard header files.
+  * `-mcmodel=medany`: RISC-V specific code model.
+  *`-fPIC -pie`: Generate position-independent code, suitable for building dynamic libraries (`.so`) and position-independent executables.
+  * `-I...`: Automatically include header file paths for `arch/riscv64/`, `include/`, and all subdirectories within `c/`.
+* **Optimization Level:** Can be controlled by the `OPTIMIZE` variable in the `config.mk` file:
+  *`OPTIMIZE = 0`: `-O0` (no optimization)
+  * `OPTIMIZE = 1`: `-O1`
+  *`OPTIMIZE = 2`: `-O2`
+  * `OPTIMIZE = 3`: `-O3`
+  * Other values (default): `-Os` (optimize for size)
+* **Malloc Implementation Selection:** Can be controlled by the `USE_SAFE_MALLOC` variable in the `config.mk` file:
+  *`USE_SAFE_MALLOC = 1`: Use the Malloc implementation under the `c/safe_malloc/` directory.
+  * `USE_SAFE_MALLOC != 1`: No alternative implementation is currently specified in the `Makefile` (marked as `# TODO`).
+* **Source Code (`LIBSRC`):** The `Makefile` uses `wildcard` to collect `.c` files from various subdirectories within `c/` as source files for the library, including C runtime (`__rt_*`), various standard library modules (ctype, stdio, math, etc.), and architecture-specific implementations (setjmp_riscv64, signal_riscv64, etc.).
+* **Object Files:**
+  *`.c` and `.s` files are compiled/assembled into `.o` files, stored in the `obj/` directory, maintaining the subdirectory structure from `c/`.
+  * `c/crt1.c` is compiled separately as `obj/crt1.o`.
+* **Output Library Files:**
+  *Static library: `lib/libmock.a`
+  * Dynamic library: `lib/libmock.so`
+* **Current Status:** The `Makefile` is currently quite basic and primarily supports the RISC-V (RV) architecture.
+* **Future Goals:** The build system needs significant improvement. Ideally, relevant parts of the original musl build system should be migrated to provide better cross-architecture support and configurability.
 
-## 6. 构建与运行
+## 5. Current Status and Future Work
 
-### 6.1. 配置构建
+* **Architecture Support:** The current `Makefile` is mainly targeted at the `riscv64-linux-musl` platform.
+* **Directory Structure:** Aims to simulate `musl-1.2.2` as much as possible for familiarity but is intentionally simplified to reduce the difficulty of making changes.
+* **`./rela/` Directory:** This directory is believed to be an unnecessary remnant and should be investigated and possibly **removed**.
+* **`start_c`:** The current implementation of `start_c` (responsible for C runtime initialization) is rather rough and needs further refinement for both static and dynamic linking scenarios.
+* **Build Configuration:** Ideally, `mocklibc` should support configurable builds (e.g., through a `config` file) to allow enabling/disabling major features (such as multi-process, networking, math library, etc.), allowing users to build customized library versions (from minimal support to full functionality). This feature is not yet implemented.
+* **Versioned Releases:** Ideally, `mocklibc` should provide source code branches or tags for multiple musl versions and allow users to choose which musl version to build against. This feature is not yet implemented.
+* **Makefile Robustness:** The current `Makefile` has relatively basic functionality. Future goals include making it more robust and potentially migrating more features from the native musl build system for better flexibility and cross-platform capabilities.
 
-在编译前，编辑项目根目录下的 `config.mk` 文件，设置所需的配置选项，例如：
+## 6. Build and Run
+
+### 6.1. Configure Build
+
+Before compiling, edit the `config.mk` file in the project root directory to set the desired configuration options, for example:
 
 ```makefile
 # config.mk Example
-OPTIMIZE = 0       # 使用 -O0 优化
-USE_SAFE_MALLOC = 1 # 使用 safe_malloc 实现
-## 7. 运行方式
+OPTIMIZE = 0        # Use -O0 optimization
+USE_SAFE_MALLOC = 1 # Use safe_malloc implementation
+## 7. Running Method
 
-当前Makefile提供了两种编译方式：动态库编译与静态库编译。
+The current Makefile provides two compilation methods: dynamic library compilation and static library compilation.
 
-全部编译：
+Compile All:
 
 ```bash
 make
 ```
 
-### 6.2. 执行编译
+### Execute Compilation
 
-在 Makefile 所在的目录下执行以下命令：
+Execute the following commands in the directory where the `Makefile` is located:
 
-* 编译所有 (静态库 + 动态库):
+* Compile all (static library + dynamic library):
 
 ```bash
 make
-# 或者 make all
+# Or make all
 ```
 
-* 仅编译静态库 (lib/libmock.a):
+* Compile static library only (`lib/libmock.a`):
 
 ```bash
 make static
 ```
 
-* 仅编译动态库 (lib/libmock.so):
+* Compile dynamic library only (`lib/libmock.so`):
 
 ```bash
 make dynamic
 ```
 
-编译产物会出现在 lib/ 目录下。
+The compilation products will appear in the `lib/` directory.
 
-### 6.3. 清除编译结果
+### 6.3. Clean Compilation Results
 
-执行以下命令可删除 obj/ 和 lib/ 目录及其所有内容：
+Execute the following command to delete the `obj/` and `lib/` directories and all their contents:
 
 ```bash
 make clean
 ```
-
----
-
-> [!WARNING]
-> 以下内容为旧文档，仅仅用于原开发者进行核查更正。
-> 任何用户或新开发者都不应当信任以下内容。
-> 下面内容可能错误、描述不清、带有误导。
-
-# mocklibc
-
-这个是用于给ArceOS的项目提供的，基于musl 1.2.2版本（Ubuntu22.04LTS）的修改C库，用于在直接加载动态应用的时候，提供开发支持的。
-
-## 开发基础
-
-基于 `musl-1.2.2` 源码进行修改。
-
-## 碎碎念
-
-我们信任没有经过修改的代码是 **正确的**，可以跳过测试。（但是我们还是建议测试，这是避免出现特殊错误的）
-我们通过修改 `musl-1.2.2` 中的系统调用，将系统调用替换为 `ABI-SYS CALL`（定义见`../../examples/loader_lib/README.md`）。
-
-我们强制要求 mock 中不应当有任何一处 `ecall`，因为我们的代码在S Mode下运行，而执行任何 trap指令都将进入 U Mode。
-这个是由于我们 Unikernel 的本质特性而来的，所以整个mock代码库中不能出现 trap指令。
-
-在整个mock libc中，存在两种替换实现，`ABI CALL`和`ABI-SYS CALL` （定义见`../../examples/loader_lib/README.md`）。理想中，`ABI cALL`应该尽可能少，而`ABI-SYS CALL`应该负责绝大多数功能。
-最理想的情况中，整个 mock libc中，除了compile runtime相关函数由ABI cALL实现，其他都由 ABI-SYS CALL实现。
-
-我们建议通过diff命令检查 mock库和musl的区别，以此来评估当前库的安全性。
-diff命令检查出的不同越少，安全性越高。
-或许我们可以通过不相似文件数量作为评估标准（不建议使用比例，比例在考量的时候会过于乐观）
-
-当前整个mock库的makefile脚本比较简单，只支持RV架构，未来需要完善，尽可能完整迁移 musl 的构建脚本。
-
-任何在 musl中通过汇编实现的，我们在迁移时要额外注意。这些直接的汇编代码一方面往往意味着有trap指令，另一方面可能依赖着一些特殊假设，而我们可能无法提供。
-在这种情况下，我建议通过 `ABI CALL`来实现，以避免直接的汇编代码带来问题。
-
-通过 `ABI-SYS cALL`来实现，为何是一个建议的方式：
-我们mock库未来可以同步支持多个不同的版本，例如同时支持musl 1.2.2到musl 1.3.6之间的所有版本。大量的 ABI CALL意味着广泛支持性的下降。
-ABI CALL的特殊性在于其函数的实现位于 Kernel代码中，而Kernel代码在我们的设想中不应当发生任何变化。
-我们也应该注意，Lib库的代码应该与内核代码充分区分，以提供同时支持不同musl版本的库。
-
-理想中，我们可以进行选项构建mock库，例如构建发布某一个版本的、支持多进程、多任务、网络和数学库的mock库，或者发布一个只有最小支持的库。这些东西都应该可以通过config文件进行配置。这些东西都没有写呢。
-
-对于不管静态库还是动态库而言，我们需要进一步修改startc,现在那个写的太粗糙了。
-
-在发现某一些函数支持缺乏的时候，可以通过以下SOP迁移新的函数：
-
-1. 阅读musl相关源码，确保其不会有 **系统调用**、**汇编依赖**等等风险代码；
-2. 阅读musl相关代码，评估其影响范围，以及可能的测试方式；
-3. 阅读mock相关代码，评估缺乏支持的范围，可能修改的范围；
-4. 将代码通过cp指令迁移到mock的对应位置上。
-请不要使用复制粘贴的方式，也不要用带有格式整理的编辑器打开文件，这样会导致diff命令比对的时候出现不一致的情况。
-此外，musl库中的代码对于头文件包含有顺序要求，而格式整理的时候可能会打破头文件包含的先后顺序，导致出现错误。
-5. 修改头文件中的定义，删除函数定义、系统调用号的定义前的注释；在需要的情况下，添加新的目录，并在Makefile脚本中的 `LIBSRC` 变量中添加相关条目。
-6. 编译，确保没有除了 NULL重定义的警告或报错，重新打包，运行之前所有的测试，确保新添加函数没有出现严重问题。
-7. 通过git记录，完成一次提交（避免发现有某些函数出现问题，而git回档太多函数的情况）。
-
-请一定要遵守上述SOP,不然出现问题死都不知道怎么死的，这是经验之谈。
-
-`./rela/` 理论上而言是一个无效依赖。请删除
-
-我们的目录结构尽可能的模拟了musl-1.2.2的目录结构，但是依然足够简单，方便阅读，但是支持的东西也足够少。

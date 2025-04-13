@@ -235,7 +235,9 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
                         "[Lib-rela.plt R_RISCV_JUMP_SLOT] @0x{:x}=0x{:x} st_name {}",
                         relative_offset, new_value, rela_name,
                     );
-                    sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
+                    sym.st_value
+                        .eq(&0)
+                        .then(|| panic!("Bad st_value = 0, st_name = {}", rela_name));
                     unsafe { *(relative_offset as *mut usize) = new_value };
                 }
             }
@@ -272,7 +274,10 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
                     "[Lib-rela.dyn R_RISCV_RELATIVE] @0x{:x}=0x{:x}",
                     relative_offset, new_value,
                 );
-                rela_dyn.r_addend.eq(&0).then(|| panic!("Bad st_value"));
+                rela_dyn
+                    .r_addend
+                    .eq(&0)
+                    .then(|| panic!("Bad st_value = 0, R_RISCV_RELATIVE"));
                 unsafe { *(relative_offset as *mut usize) = new_value };
             }
             // 64-bit relocation: `S + A`.
@@ -283,7 +288,9 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
                     "[Lib-rela.dyn R_RISCV_64] @0x{:x}=0x{:x} name {}",
                     relative_offset, new_value, rela_name,
                 );
-                sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
+                sym.st_value
+                    .eq(&0)
+                    .then(|| panic!("Bad st_value = 0, R_RISCV_64"));
                 unsafe { *(relative_offset as *mut usize) = new_value };
             }
             _ => {
@@ -402,7 +409,10 @@ fn modify_app(
                         // 如果开始寻找`__libc_start_main`，就替换成我们的实现
                         name == app_rela_name
                     })
-                    .expect("Failed to find symbol in LIB dynamic symbol table");
+                    .expect(&format!(
+                        "Failed to find symbol {} in LIB dynamic symbol table",
+                        app_rela_name
+                    ));
 
                 let relative_offset = app_start + app_rela_plt.r_offset as usize;
                 let new_value = lib_start + lib_sym.st_value as usize;
@@ -410,7 +420,10 @@ fn modify_app(
                     "[App-rela.plt R_RISCV_JUMP_SLOT] @0x{:x}=0x{:x} st_name {}",
                     relative_offset, new_value, app_rela_name,
                 );
-                lib_sym.st_value.eq(&0).then(|| panic!("Bad st_value"));
+                lib_sym
+                    .st_value
+                    .eq(&0)
+                    .then(|| panic!("Bad st_value = 0, st_name = {}", app_rela_name));
                 unsafe { *(relative_offset as *mut usize) = new_value };
             }
             _ => {
@@ -456,24 +469,45 @@ fn modify_app(
             }
             // 64-bit relocation: `S + A`.
             R_RISCV_64 => {
-                // Find symbol in LIB ELF
-                let lib_sym = lib_dynsym_table
-                    .iter()
-                    .find(|s| {
-                        let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
-                        name == app_rela_name
-                    })
-                    .expect("Failed to find symbol in LIB dynamic symbol table");
+                // Find symbol in LIB ELF or APP ELF
+                let lib_sym = lib_dynsym_table.iter().find(|s| {
+                    let name = lib_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                    name == app_rela_name
+                });
 
-                let relative_offset = app_start + app_rela_dyn.r_offset as usize;
-                let new_value = lib_start + lib_sym.st_value as usize;
-                debug!(
-                    "[App-rela.dyn R_RISCV_64] @0x{:x}=0x{:x} name {}",
-                    relative_offset, new_value, app_rela_name,
-                );
-                lib_sym.st_value.eq(&0).then(|| panic!("Bad lib st_value"));
-                app_sym.st_value.ne(&0).then(|| panic!("Bad app st_value"));
-                unsafe { *(relative_offset as *mut usize) = new_value };
+                let rela_app_sym = app_dynsym_table.iter().find(|s| {
+                    let name = app_dynstr_table.get(s.st_name as usize).unwrap_or(&"");
+                    name == app_rela_name
+                });
+
+                match (lib_sym, rela_app_sym) {
+                    (Some(lib_sym), _) => {
+                        let relative_offset = app_start + app_rela_dyn.r_offset as usize;
+                        let new_value = lib_start + lib_sym.st_value as usize;
+                        debug!(
+                            "[App-rela.dyn R_RISCV_64] @0x{:x}=LIB::0x{:x} name {}",
+                            relative_offset, new_value, app_rela_name,
+                        );
+                        lib_sym.st_value.eq(&0).then(|| panic!("Bad lib st_value"));
+                        unsafe { *(relative_offset as *mut usize) = new_value };
+                    }
+                    (None, Some(rela_app_sym)) => {
+                        let relative_offset = app_start + app_rela_dyn.r_offset as usize;
+                        let new_value = app_start + rela_app_sym.st_value as usize;
+                        debug!(
+                            "[App-rela.dyn R_RISCV_64] @0x{:x}=APP::0x{:x} name {}",
+                            relative_offset, new_value, app_rela_name,
+                        );
+                        app_sym.st_value.eq(&0).then(|| panic!("Bad app st_value"));
+                        unsafe { *(relative_offset as *mut usize) = new_value };
+                    }
+                    (None, None) => {
+                        panic!(
+                            "Failed to find symbol {} in both LIB and APP dynamic symbol table",
+                            app_rela_name
+                        );
+                    }
+                }
             }
             _ => {
                 panic!("Unknown relocation type: {}", app_rela_dyn.r_type);

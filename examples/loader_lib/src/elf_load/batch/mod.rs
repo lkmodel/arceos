@@ -39,6 +39,9 @@ pub fn run_loop() {
     );
 
     let lib = if head_decoded.lib.0 != 0 && head_decoded.lib.1 != 0 {
+        if head_decoded.lib.0 as usize > MAX_LIB_SIZE {
+            panic!("Lib size > max lib size");
+        }
         let lib_elf_slice = unsafe {
             from_raw_parts(
                 (PLASH_START + (head_decoded.lib.1 as usize)) as *const u8,
@@ -82,6 +85,9 @@ pub fn run_loop() {
             .expect("Failed to find app");
 
         info!("Load APP");
+        if app.0 as usize > MAX_APP_SIZE {
+            panic!("App size > max app size");
+        }
         let app_elf_slice = unsafe {
             from_raw_parts(
                 (PLASH_START + (app.2 as usize)) as *const u8,

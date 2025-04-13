@@ -1,12 +1,12 @@
-// NOTE: `Std C impl based on musl 1.2.5`
-#include "libm.h"
-#include <fenv.h>
 #include <limits.h>
+#include <fenv.h>
+#include "libm.h"
+
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 long long llrintl(long double x)
 {
-    return llrint(x);
+	return llrint(x);
 }
 #elif defined(FE_INEXACT)
 /*
@@ -18,19 +18,19 @@ raises inexact (with tonearest or upward rounding mode)
 */
 long long llrintl(long double x)
 {
-#pragma STDC FENV_ACCESS ON
-    int e;
+	#pragma STDC FENV_ACCESS ON
+	int e;
 
-    e = fetestexcept(FE_INEXACT);
-    x = rintl(x);
-    if (!e && (x > LLONG_MAX || x < LLONG_MIN))
-        feclearexcept(FE_INEXACT);
-    /* conversion */
-    return x;
+	e = fetestexcept(FE_INEXACT);
+	x = rintl(x);
+	if (!e && (x > LLONG_MAX || x < LLONG_MIN))
+		feclearexcept(FE_INEXACT);
+	/* conversion */
+	return x;
 }
 #else
 long long llrintl(long double x)
 {
-    return rintl(x);
+	return rintl(x);
 }
 #endif

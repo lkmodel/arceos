@@ -20,7 +20,7 @@ struct itimerval {
 };
 
 // int getitimer (int, struct itimerval *);
-// int setitimer (int, const struct itimerval *__restrict, struct itimerval *__restrict);
+int setitimer (int, const struct itimerval *__restrict, struct itimerval *__restrict);
 int utimes (const char *, const struct timeval [2]);
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)

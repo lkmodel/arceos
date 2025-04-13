@@ -47,35 +47,35 @@ struct _IO_FILE {
 	struct __locale_struct *locale;
 };
 
-extern FILE *volatile __stdin_used;
-extern FILE *volatile __stdout_used;
-extern FILE *volatile __stderr_used;
+extern hidden FILE *volatile __stdin_used;
+extern hidden FILE *volatile __stdout_used;
+extern hidden FILE *volatile __stderr_used;
 
 hidden int __lockfile(FILE *);
 hidden void __unlockfile(FILE *);
 
-size_t __stdio_read(FILE *, unsigned char *, size_t);
-size_t __stdio_write(FILE *, const unsigned char *, size_t);
-size_t __stdout_write(FILE *, const unsigned char *, size_t);
-off_t __stdio_seek(FILE *, off_t, int);
-int __stdio_close(FILE *);
+hidden size_t __stdio_read(FILE *, unsigned char *, size_t);
+hidden size_t __stdio_write(FILE *, const unsigned char *, size_t);
+hidden size_t __stdout_write(FILE *, const unsigned char *, size_t);
+hidden off_t __stdio_seek(FILE *, off_t, int);
+hidden int __stdio_close(FILE *);
 
-int __toread(FILE *);
-int __towrite(FILE *);
+hidden int __toread(FILE *);
+hidden int __towrite(FILE *);
 
-// hidden void __stdio_exit(void);
-// hidden void __stdio_exit_needed(void);
+hidden void __stdio_exit(void);
+hidden void __stdio_exit_needed(void);
 
 #if defined(__PIC__) && (100*__GNUC__+__GNUC_MINOR__ >= 303)
 __attribute__((visibility("protected")))
 #endif
 int __overflow(FILE *, int), __uflow(FILE *);
- 
+
 hidden int __fseeko(FILE *, off_t, int);
 hidden int __fseeko_unlocked(FILE *, off_t, int);
 hidden off_t __ftello(FILE *);
 hidden off_t __ftello_unlocked(FILE *);
-size_t __fwritex(const unsigned char *, size_t, FILE *);
+hidden size_t __fwritex(const unsigned char *, size_t, FILE *);
 hidden int __putc_unlocked(int, FILE *);
 
 hidden FILE *__fdopen(int, const char *);
@@ -98,15 +98,15 @@ hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 #define ferror(f) ((f)->flags & F_ERR)
 
 #define getc_unlocked(f) \
- 	( ((f)->rpos != (f)->rend) ? *(f)->rpos++ : __uflow((f)) )
- 
+	( ((f)->rpos != (f)->rend) ? *(f)->rpos++ : __uflow((f)) )
+
 #define putc_unlocked(c, f) \
 	( (((unsigned char)(c)!=(f)->lbf && (f)->wpos!=(f)->wend)) \
 	? *(f)->wpos++ = (unsigned char)(c) \
 	: __overflow((f),(unsigned char)(c)) )
 
 /* Caller-allocated FILE * operations */
-// hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
-// hidden int __fclose_ca(FILE *);
+hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
+hidden int __fclose_ca(FILE *);
 
 #endif

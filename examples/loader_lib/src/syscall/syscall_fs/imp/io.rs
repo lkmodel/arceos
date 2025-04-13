@@ -299,6 +299,7 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
 
     info!("[write()] fd: {}, buf: {buf:?}, len: {count}", fd as i32);
     if buf.is_null() {
+        debug!("EFAULT");
         return Err(SyscallError::EFAULT);
     }
     let process = process_api();
@@ -308,23 +309,40 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
 
     let file = match process.fd_manager.fd_table.lock().get(fd) {
         Some(Some(f)) => f.clone(),
-        _ => return Err(SyscallError::EBADF),
+        _ => {
+            debug!("EBADF");
+            return Err(SyscallError::EBADF);
+        }
     };
 
     if file.get_type() == FileIOType::DirDesc {
+        debug!("EBADF");
         return Err(SyscallError::EBADF);
     }
     if !file.writable() {
+        debug!("EBADF");
         return Err(SyscallError::EBADF);
     }
 
     match file.write(buf) {
         Ok(len) => Ok(len as isize),
         // TODO: Send a `SIGPIPE` signal to the process
-        Err(AxError::ConnectionReset) => Err(SyscallError::EPIPE),
-        Err(AxError::WouldBlock) => Err(SyscallError::EAGAIN),
-        Err(AxError::InvalidInput) => Err(SyscallError::EINVAL),
-        Err(_) => Err(SyscallError::EPERM),
+        Err(AxError::ConnectionReset) => {
+            debug!("EPIPE");
+            Err(SyscallError::EPIPE)
+        }
+        Err(AxError::WouldBlock) => {
+            debug!("EAGAIN");
+            Err(SyscallError::EAGAIN)
+        }
+        Err(AxError::InvalidInput) => {
+            debug!("EINVAL");
+            Err(SyscallError::EINVAL)
+        }
+        Err(_) => {
+            debug!("EPERM");
+            Err(SyscallError::EPERM)
+        }
     }
 }
 

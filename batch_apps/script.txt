@@ -1,13 +1,182 @@
-busybox_WHOAMI --version
-busybox_ASH
-busybox_ECHO TREE
-busybox_PWD
-busybox_ENV
-busybox_TOUCH fff.txt
-busybox_XZ fff.txt
-busybox_XZ --help
-busybox_UNAME
-busybox_TOUCH --help
-busybox_NICE
-sqlite3_startup init
-busybox_CAT
+busybox echo test
+busybox --help
+busybox echo Test[env]...
+busybox env
+busybox echo Test[env]done
+busybox echo Test[false]...
+busybox false
+busybox echo Test[false]done
+busybox echo Test[true]...
+busybox true
+busybox echo Test[true]done
+busybox echo Test[nice]...
+busybox nice
+busybox echo Test[nice]done
+busybox echo Test[uname]...
+busybox uname --all
+busybox echo Test[uname] done
+busybox echo Test[whoami]...
+busybox whoami
+busybox echo Test[whoami] done
+busybox echo Test[touch]...
+busybox touch
+busybox_TOUCH a.txt
+busybox echo Test[touch] done
+busybox echo Test[xz]...
+busybox xz --help
+busybox echo Test[xz] done
+busybox echo Test[mv]...
+busybox mv --help
+busybox echo Test[mv] done
+busybox echo Test[tar]...
+busybox tar
+busybox_TAR
+busybox echo Test[tar] done
+busybox echo Test[pwd]...
+busybox pwd
+busybox echo Test[pwd] done
+busybox echo Test[unzip]...
+busybox unzip
+busybox echo Test[unzip]done
+busybox echo Test[basename]...
+busybox basename
+busybox echo Test[basename]done
+busybox echo Test[chgrp]...
+busybox chgrp
+busybox echo Test[chgrp]done
+busybox echo Test[chmod]...
+busybox chmod
+busybox echo Test[chmod]done
+busybox echo Test[chown]...
+busybox chown
+busybox echo Test[chown]done
+busybox echo Test[chroot]...
+busybox chroot
+busybox echo Test[chroot]done
+busybox echo Test[comm]...
+busybox comm
+busybox echo Test[comm]done
+busybox echo Test[cut]...
+busybox cut
+busybox echo Test[cut]done
+busybox echo Test[dirname]...
+busybox dirname
+busybox echo Test[dirname]done
+busybox echo Test[expr]...
+busybox expr index "fffdsafsaf" "d"
+busybox echo Test[expr]done
+busybox echo Test[link]...
+busybox link
+busybox echo Test[link]done
+busybox echo Test[ln]...
+busybox ln
+busybox echo Test[ln]done
+busybox echo Test[logname]...
+busybox logname
+busybox echo Test[logname]done
+busybox echo Test[mkdir]...
+busybox mkdir test_dir
+busybox echo Test[mkdir]done
+busybox echo Test[mknod]...
+busybox mknod
+busybox echo Test[mknod]done
+busybox echo Test[mktemp]...
+busybox mktemp
+busybox echo Test[mktemp]done
+busybox echo Test[nohup]...
+busybox nohup
+busybox echo Test[nohup]done
+busybox echo Test[printenv]...
+busybox printenv
+busybox echo Test[printenv]done
+busybox echo Test[printf]...
+busybox printf
+busybox echo Test[printf]done
+busybox echo Test[readlink]...
+busybox readlink
+busybox echo Test[readlink]done
+busybox echo Test[realpath]...
+busybox realpath
+busybox echo Test[realpath]done
+busybox echo Test[rm]...
+busybox rm
+busybox echo Test[rm]done
+busybox echo Test[rmdir]...
+busybox rmdir
+busybox echo Test[rmdir]done
+
+busybox echo Test[seq]...
+busybox echo Sequence from 1 to 10:
+busybox seq 10
+busybox echo Every 3rd number from 5 to 20:
+busybox seq 5 3 20
+busybox echo Separate the output with a space instead of a newline:
+busybox seq -s " " 5 3 20
+busybox echo Test[seq]done
+
+busybox echo Test[shred]...
+busybox shred
+busybox echo Test[shred]done
+busybox echo Test[sleep]...
+busybox sleep 0.5
+busybox echo Test[sleep]done
+busybox echo Test[sync]...
+busybox sync
+busybox echo Test[sync]done
+busybox echo Test[fsync]...
+busybox fsync
+busybox echo Test[fsync]done
+
+busybox echo Test[test]...
+busybox test true
+busybox echo Test[test]done
+busybox echo Test[timeout]...
+busybox timeout
+busybox echo Test[timeout]done
+busybox echo Test[tr]...
+busybox tr
+busybox echo Test[tr]done
+
+busybox echo Test[truncate]...
+busybox truncate
+busybox echo Test[truncate]done
+busybox echo Test[tty]...
+busybox tty
+busybox echo Test[tty]done
+busybox echo Test[arch]...
+busybox arch
+busybox echo Test[arch]done
+busybox echo Test[unlink]...
+busybox unlink
+busybox echo Test[unlink]done
+busybox echo Test[usleep]...
+busybox usleep 1000000
+busybox echo Test[usleep]done
+
+
+busybox echo Test[builtin_test]...
+busybox foo
+busybox builtin_test
+busybox echo Test[builtin_test]done
+
+busybox echo Test[stdio file test]...
+STDIO_FILE_TEST
+busybox echo Test[stdio file test]done
+
+busybox echo Test[fcntl test]...
+FCNTL_TEST
+busybox echo Test[fcntl test]done
+
+busybox echo Test[ctype test]...
+CTYPE_TEST
+busybox echo Test[ctype test]done
+
+busybox echo Test[math test]...
+MATH_TEST
+busybox echo Test[math test]done
+
+busybox echo Test[complex test]...
+COMPLEX_TEST
+busybox echo Test[complex test]done
+
+busybox ash

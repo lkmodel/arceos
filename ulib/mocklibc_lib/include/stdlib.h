@@ -53,7 +53,7 @@ _Noreturn void _Exit(int);
 
 char *getenv(const char *);
 
-// int system(const char *);
+int system(const char *);
 
 void *bsearch(const void *, const void *, size_t, size_t, int (*)(const void *, const void *));
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *));
@@ -85,7 +85,7 @@ size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-// size_t __ctype_get_mb_cur_max(void);
+size_t __ctype_get_mb_cur_max(void);
 #define MB_CUR_MAX (__ctype_get_mb_cur_max())
 
 #define RAND_MAX (0x7fffffff)
@@ -106,34 +106,34 @@ size_t wcstombs(char *__restrict, const wchar_t *__restrict, size_t);
 // int posix_memalign(void **, size_t, size_t);
 int setenv(const char *, const char *, int);
 int unsetenv(const char *);
-// int mkstemp(char *);
-// int mkostemp(char *, int);
-// char *mkdtemp(char *);
+int mkstemp(char *);
+int mkostemp(char *, int);
+char *mkdtemp(char *);
 // int getsubopt(char **, char *const *, char **);
 int rand_r(unsigned *);
 
 #endif
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
-// char *realpath(const char *__restrict, char *__restrict);
+char *realpath(const char *__restrict, char *__restrict);
 long int random(void);
 void srandom(unsigned int);
-// char *initstate(unsigned int, char *, size_t);
-// char *setstate(char *);
+char *initstate(unsigned int, char *, size_t);
+char *setstate(char *);
 int putenv(char *);
-// int posix_openpt(int);
-// int grantpt(int);
-// int unlockpt(int);
-// char *ptsname(int);
-// char *l64a(long);
+int posix_openpt(int);
+int grantpt(int);
+int unlockpt(int);
+char *ptsname(int);
+char *l64a(long);
 long a64l(const char *);
-// void setkey(const char *);
+void setkey(const char *);
 double drand48(void);
-// double erand48(unsigned short[3]);
+double erand48(unsigned short[3]);
 long int lrand48(void);
-// long int nrand48(unsigned short[3]);
+long int nrand48(unsigned short[3]);
 long mrand48(void);
-// long jrand48(unsigned short[3]);
+long jrand48(unsigned short[3]);
 void srand48(long);
 unsigned short *seed48(unsigned short[3]);
 void lcong48(unsigned short[7]);
@@ -141,9 +141,9 @@ void lcong48(unsigned short[7]);
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 #include <alloca.h>
-// char *mktemp(char *);
-// int mkstemps(char *, int);
-// int mkostemps(char *, int, int);
+char *mktemp(char *);
+int mkstemps(char *, int);
+int mkostemps(char *, int, int);
 // void *valloc(size_t);
 // void *memalign(size_t, size_t);
 // int getloadavg(double *, int);
@@ -157,7 +157,7 @@ int clearenv(void);
 #ifdef _GNU_SOURCE
 // int ptsname_r(int, char *, size_t);
 char *ecvt(double, int, int *, int *);
-// char *fcvt(double, int, int *, int *);
+char *fcvt(double, int, int *, int *);
 char *gcvt(double, int, char *);
 // char *secure_getenv(const char *);
 // struct __locale_struct;

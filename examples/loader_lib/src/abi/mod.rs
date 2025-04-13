@@ -577,7 +577,7 @@ fn register_abi(name: &str, num: usize, handle: usize) {
     unsafe {
         ABI_TABLE[num] = handle;
     }
-    info!("[ABI]{}: 0x{:x}", name, handle);
+    debug!("[ABI]{}: 0x{:x}", name, handle);
 }
 
 pub fn abi_init_scheduler() {
@@ -596,9 +596,6 @@ fn abi_terminate() -> ! {
 #[unsafe(no_mangle)]
 fn abi_checkpoint() {
     info!("[ABI: SYS CTL] abi_checkpoint");
-    // FIXME: BUG
-    // ".".to_string();
-    // warn!("[ABI: SYS CTL] CHECKPOINT 2");
 }
 
 #[repr(C)]

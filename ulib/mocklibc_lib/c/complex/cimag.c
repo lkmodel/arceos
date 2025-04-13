@@ -1,6 +1,6 @@
 #include "complex_impl.h"
 
-double(cimag)(double complex z)
+double (cimag)(double complex z)
 {
-    return cimag(z);
+	return cimag(z);
 }

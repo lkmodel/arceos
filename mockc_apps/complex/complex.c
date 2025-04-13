@@ -15,49 +15,49 @@ bool compare_complex(double complex a, double complex b)
 }
 
 // 测试宏定义
-#define TEST_FUNC(func, input, expected)                                            \
-    do {                                                                            \
-        double complex result = func(input);                                        \
-        if (compare_complex(result, expected)) {                                    \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                \
-        } else {                                                                    \
-            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)\n" RESET, #func,  \
-                   creal(expected), cimag(expected), creal(result), cimag(result)); \
-        }                                                                           \
+#define TEST_FUNC(func, input, expected)                                              \
+    do {                                                                              \
+        double complex result = func(input);                                          \
+        if (compare_complex(result, expected)) {                                      \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                               \
+        } else {                                                                      \
+            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)" RESET "\n", #func, \
+                   creal(expected), cimag(expected), creal(result), cimag(result));   \
+        }                                                                             \
     } while (0)
 
-#define TEST_FUNC_F(func, input, expected)                                          \
-    do {                                                                            \
-        float complex result = func(input);                                         \
-        if (compare_complex(result, expected)) {                                    \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                \
-        } else {                                                                    \
-            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)\n" RESET, #func,  \
-                   creal(expected), cimag(expected), creal(result), cimag(result)); \
-        }                                                                           \
+#define TEST_FUNC_F(func, input, expected)                                            \
+    do {                                                                              \
+        float complex result = func(input);                                           \
+        if (compare_complex(result, expected)) {                                      \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                               \
+        } else {                                                                      \
+            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)" RESET "\n", #func, \
+                   creal(expected), cimag(expected), creal(result), cimag(result));   \
+        }                                                                             \
     } while (0)
 
 // 测试宏定义
-#define TEST_FUNC_2(func, input1, input2, expected)                                 \
-    do {                                                                            \
-        double complex result = func(input1, input2);                               \
-        if (compare_complex(result, expected)) {                                    \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                \
-        } else {                                                                    \
-            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)\n" RESET, #func,  \
-                   creal(expected), cimag(expected), creal(result), cimag(result)); \
-        }                                                                           \
+#define TEST_FUNC_2(func, input1, input2, expected)                                   \
+    do {                                                                              \
+        double complex result = func(input1, input2);                                 \
+        if (compare_complex(result, expected)) {                                      \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                               \
+        } else {                                                                      \
+            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)" RESET "\n", #func, \
+                   creal(expected), cimag(expected), creal(result), cimag(result));   \
+        }                                                                             \
     } while (0)
 
-#define TEST_FUNC_F_2(func, input1, input2, expected)                               \
-    do {                                                                            \
-        float complex result = func(input1, input2);                                \
-        if (compare_complex(result, expected)) {                                    \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                \
-        } else {                                                                    \
-            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)\n" RESET, #func,  \
-                   creal(expected), cimag(expected), creal(result), cimag(result)); \
-        }                                                                           \
+#define TEST_FUNC_F_2(func, input1, input2, expected)                                 \
+    do {                                                                              \
+        float complex result = func(input1, input2);                                  \
+        if (compare_complex(result, expected)) {                                      \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                               \
+        } else {                                                                      \
+            printf(RED "%s: BAD - expected (%f, %f), got (%f, %f)" RESET "\n", #func, \
+                   creal(expected), cimag(expected), creal(result), cimag(result));   \
+        }                                                                             \
     } while (0)
 
 // 测试函数

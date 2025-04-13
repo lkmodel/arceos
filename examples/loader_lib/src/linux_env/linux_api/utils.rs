@@ -2,11 +2,14 @@ use alloc::{format, string::ToString};
 use axfs::api::Permissions;
 use axlog::debug;
 
-use crate::linux_env::{
-    axfs_ext::api::FileIOType,
-    linux_api::{
-        api::process_api,
-        link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
+use crate::{
+    config::{FILE_NAME_LENGTH, SPACE_BOTTOM, SPACE_TOP},
+    linux_env::{
+        axfs_ext::api::FileIOType,
+        linux_api::{
+            api::process_api,
+            link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
+        },
     },
 };
 
@@ -50,8 +53,6 @@ pub enum UtilsError {
 /// A specialized [`Result`] type with [`UtilsError`] as the error type.
 pub type UtilsResult<T = ()> = Result<T, UtilsError>;
 
-const FILE_NAME_LENGTH: usize = 255usize;
-
 /// To handle common file or directory paths and encapsulates them into a `UtilsError`.
 /// Under normal circumstances, it converts each provided address into a standardized path in the form of an absolute address.
 ///
@@ -74,23 +75,7 @@ pub fn deal_path(
 
     let process = process_api();
     if let Some(path_addr) = path_addr {
-        if path_addr.is_null() {
-            return Err(UtilsError::NULL);
-        }
-
-        // FIX:
-        // ```
-        // if UNI_API
-        //     .manual_alloc_for_lazy((path_addr as usize).into())
-        //     .is_err()
-        // {
-        //     return Err(UtilsError::CannotAcce);
-        // }
-        const START_ADDR: usize = 0xffffffc080100000;
-        const END_ADDR: usize = 0xffffffc080800000;
-        if (path_addr as usize).lt(&START_ADDR) || (path_addr as usize).ge(&END_ADDR) {
-            return Err(UtilsError::CannotAcce);
-        }
+        is_in_valid_space(path_addr as usize)?;
         path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
     }
 
@@ -155,4 +140,14 @@ pub fn has_permission(mode: Permissions, perm: Permissions) -> bool {
         return false;
     }
     true
+}
+
+pub fn is_in_valid_space(addr: usize) -> UtilsResult {
+    if addr == 0 {
+        return Err(UtilsError::NULL);
+    } else if addr.lt(&SPACE_BOTTOM) || addr.ge(&SPACE_TOP) {
+        return Err(UtilsError::CannotAcce);
+    } else {
+        Ok(())
+    }
 }

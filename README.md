@@ -1,14 +1,24 @@
-# ArceOS
+# ArceOS Lib Loader
 
-[![CI](https://github.com/arceos-org/arceos/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/arceos-org/arceos/actions/workflows/build.yml)
-[![CI](https://github.com/arceos-org/arceos/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/arceos-org/arceos/actions/workflows/test.yml)
-[![Docs](https://img.shields.io/badge/docs-pages-green)](https://arceos-org.github.io/arceos/)
+An experimental loading module for Compatibility with native Linux ELF applications,
+which is responsible for loading and managing applications
+and shared libraries (`MockLibC`) within the [ArceOS](https://github.com/arceos-org/arceos) environment.
+It aims to provide guidance for contributors or developers
+who wish to understand the loader architecture,
+development progress, design decisions, and known issues.
 
-An experimental modular operating system (or unikernel) written in Rust.
-
-ArceOS was inspired a lot by [Unikraft](https://github.com/unikraft/unikraft).
+ArceOS Lib Loader based on [ArceOS](https://github.com/arceos-org/arceos).
+ArceOS Lib Loader was inspired a lot by [Starry-OS](https://github.com/Arceos-monolithic/Starry).
 
 🚧 Working In Progress.
+
+## Project Goals (Phased)
+
+* ~~Supports single applications statically linked with musl (application source code requires no modification).~~
+* ~~Supports single applications dynamically linked with musl (original binary applications require no modification).~~
+* ~~Supports launching multiple applications by supporting fork and multiple address spaces.~~
+* Supports file systems such as procfs/sysfs to run BusyBox, LTP, etc., expanding system call coverage.
+* Supports an application compilation toolchain from musl to gcc.
 
 ## Features & TODOs
 
@@ -21,9 +31,18 @@ ArceOS was inspired a lot by [Unikraft](https://github.com/unikraft/unikraft).
 * [x] Synchronization/Mutex
 * [x] SMP scheduling with [per-cpu run queue](https://github.com/arceos-org/arceos/discussions/181)
 * [x] File system
-* [ ] Compatible with Linux apps
+* [x] Compatible with Linux apps
 * [ ] Interrupt driven device I/O
 * [ ] Async I/O
+
+## More details and `REAADME`
+
+[`LibLoader`](./examples/loader_lib/README.md)
+[`MockLibC`](./ulib/mocklibc_lib/README.md)
+[`Batch Package Script`](./batch_apps/README.md)
+[`Uni Package Script`](./mockc_apps/README.md)
+[`CC`](./mocksrc/README.md)
+[`ArceOS README`](./README_ARCEOS.md)
 
 ## Quick Start
 
@@ -38,14 +57,16 @@ docker build -t arceos -f Dockerfile .
 ```
 
 Create a container and build/run app:
+
 ```bash
 docker run -it -v $(pwd):/arceos -w /arceos arceos bash
 
 # Now build/run app in the container
-make A=examples/helloworld ARCH=aarch64 run
+./quick_start.sh
 ```
 
 ### Manually Build and Run
+
 #### 1. Install Build Dependencies
 
 Install [cargo-binutils](https://github.com/rust-embedded/cargo-binutils) to use `rust-objcopy` and `rust-objdump` tools, and [axconfig-gen](https://github.com/arceos-org/axconfig-gen) for kernel configuration:
@@ -91,6 +112,14 @@ Other systems and arch please refer to [Qemu Download](https://www.qemu.org/down
 #### 2. Build & Run
 
 ```bash
+# build mocklibc
+cd ulib/mocklibc_lib/
+make
+cd -
+# package apps.bin
+cd batch_apps
+make
+cd -
 # build app in arceos directory
 make A=path/to/app ARCH=<arch> LOG=<log>
 ```

@@ -7,15 +7,15 @@
 #define RESET "\033[0m"
 
 // 测试宏
-#define TEST(func, input, expected)                                                              \
-    do {                                                                                         \
-        int result = func(input);                                                                \
-        if (result == expected) {                                                                \
-            printf(GREEN "%s: PASS\n" RESET, #func);                                             \
-        } else {                                                                                 \
-            printf(RED "%s: BAD - Expected %d but got %d for input %d\n" RESET, #func, expected, \
-                   result, input);                                                               \
-        }                                                                                        \
+#define TEST(func, input, expected)                                                       \
+    do {                                                                                  \
+        int result = func(input);                                                         \
+        if (result == expected) {                                                         \
+            printf(GREEN "%s: PASS" RESET "\n", #func);                                   \
+        } else {                                                                          \
+            printf(RED "%s: BAD - Expected %d but got %d for input %d" RESET "\n", #func, \
+                   expected, result, input);                                              \
+        }                                                                                 \
     } while (0)
 
 // 测试函数

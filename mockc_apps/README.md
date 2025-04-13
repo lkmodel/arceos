@@ -1,49 +1,51 @@
-# mockc_apps - Uni Mode 应用打包器 (待修订)
+# mockc_apps - Uni Mode Application Packager (To be Revised)
 
-**状态:** 待修订 (Needs Revision) - 计划重命名为 `uni_apps`
+**Read this in other languages: [English](./README.md), [中文](./README_zh.md).**
 
-## 概述
+**Status:** To be Revised (Needs Revision) - Planned to be renamed `uni_apps`
 
-`mockc_apps` 包含一套**简单的**构建和打包脚本，主要用于处理 **`Uni Mode`** (Unikernel 模式) 下的单个应用程序打包。
+## Overview
 
-其目的是将一个预编译的应用程序（静态或动态链接到 `mocklibc`）打包成一个可供 `loader_lib` 在 `Uni Mode` 下加载和执行的基础应用包。
+`mockc_apps` contains a set of **simple** build and packaging scripts, primarily used for packaging single applications in **`Uni Mode`** (Unikernel Mode).
 
-**注意:** 此目录下的脚本功能相对基础，且计划进行修订并整合到新的 `uni_apps` 目录中。目前功能最完善的打包工具请参见 `../../batch_apps/` (用于 `Batch Mode`)。
+Its purpose is to package a pre-compiled application (statically or dynamically linked to `mocklibc`) into a basic application package that can be loaded and executed by `loader_lib` in `Uni Mode`.
 
-## 使用方法
+**Note:** The scripts in this directory have relatively basic functionality and are planned to be revised and integrated into the new `uni_apps` directory. For the most complete packaging tools currently available, please refer to `../../batch_apps/` (used for `Batch Mode`).
 
-在 `mockc_apps` 目录下执行 `make` 命令进行打包。
+## Usage
+
+Execute the `make` command in the `mockc_apps` directory to perform packaging.
 
 ```bash
-# 进入 mockc_apps 目录
+# Enter the mockc_apps directory
 cd mockc_apps
 
-# 执行打包
-# SRC: 指定要打包的应用名称 (对应 APPS/ 目录下的文件名)
-# TYPE: 指定链接类型 (dynamic 或 static)
+# Execute packaging
+# SRC: Specifies the name of the application to be packaged (corresponding to the filename in the APPS/ directory)
+# TYPE: Specifies the linking type (dynamic or static)
 make SRC=<app_name> TYPE=<dynamic|static>
 
-# 示例: 打包名为 'sqlite3' 的动态链接应用
+# Example: Package a dynamically linked application named 'sqlite3'
 make SRC=sqlite3 TYPE=dynamic
 
-# 返回上级目录
+# Return to the parent directory
 cd ..
 ```
 
-打包过程通常包括:
+The packaging process typically includes:
 
-1. 查找位于 APPS/ 目录下的指定应用文件 (<app_name>)。
-2. 根据 TYPE 参数决定是否需要包含 mocklibc 动态库 (.so) 或链接静态库 (.a) (具体链接逻辑可能在此脚本或应用编译阶段处理)。
-3. 生成一个简单的应用包结构，供 loader_lib 在 Uni Mode 下使用。
+1. Locating the specified application file (<app_name>) in the APPS/ directory.
+2. Determining whether to include the `mocklibc` dynamic library (`.so`) or link the static library (`.a`) based on the TYPE parameter (the specific linking logic may be handled in this script or during the application compilation stage).
+3. Generating a simple application package structure for loader_lib to use in `Uni` Mode.
 
-## 依赖
+## Dependencies
 
-* 预编译的应用程序可执行文件，放置于 APPS/ 目录下。
-* 如果打包动态链接应用 (TYPE=dynamic)，需要 ulib/mocklibc_lib/lib/libmock.so 文件存在于预期的相对路径。
-* 如果应用是静态链接到 mocklibc (TYPE=static)，则需要在应用编译时已正确链接 ulib/mocklibc_lib/lib/libmock.a。
+Pre-compiled application executable files placed in the `APPS/` directory.
+If packaging a dynamically linked application (TYPE=dynamic), the `ulib/mocklibc_lib/lib/libmock.so` file needs to exist at the expected relative path.
+If the application is statically linked to `mocklibc` (TYPE=static), it needs to have been correctly linked with `ulib/mocklibc_lib/lib/libmock.a` during application compilation.
 
-## 未来计划
+## Future Plans
 
-* 将此目录重命名为 uni_apps。
-* 修订和完善打包脚本，可能借鉴 batch_apps 中的成熟功能（如参数传递、更灵活的配置）。
-* 与 mocksrc 目录（负责源码编译）进行更好的整合。
+* Rename this directory to `uni_apps`.
+* Revise and improve the packaging scripts, possibly drawing on the mature features in batch_apps (such as parameter passing and more flexible configuration).
+* Better integration with the `mocksrc` directory (responsible for source code compilation).

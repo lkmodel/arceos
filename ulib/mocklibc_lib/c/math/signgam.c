@@ -1,6 +1,5 @@
-// NOTE: `Std C impl based on musl 1.2.5`
-#include "libm.h"
 #include <math.h>
+#include "libm.h"
 
 int __signgam = 0;
 

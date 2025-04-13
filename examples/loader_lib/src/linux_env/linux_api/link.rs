@@ -5,7 +5,7 @@ use alloc::{
 };
 use axerrno::{AxError, AxResult};
 use axfs::api::{canonicalize, metadata, remove_file};
-use axlog::{debug, info, trace, warn};
+use axlog::{debug, info, warn};
 use axsync::Mutex;
 
 use crate::linux_env::axfs_ext::api::FileIOType;
@@ -145,7 +145,7 @@ pub fn new_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
 /// 现在的一个问题是，如果建立了dir1/A，并将dir2/B链接到dir1/A，那么删除dir1/A时，实际的文件不会被删除(连接数依然大于1)，只有当删除dir2/B时，实际的文件才会被删除
 /// 这样的话，如果新建了dir1/A，那么就会报错(create_new)或者覆盖原文件(create)，从而影响到dir2/B
 pub fn remove_link(src_path: &FilePath) -> Option<String> {
-    trace!("remove_link: {}", src_path.path());
+    info!("remove_link: {}", src_path.path());
     let mut map = LINK_PATH_MAP.lock();
     // 找到对应的链接
     match map.remove(&src_path.path().to_string()) {
@@ -172,7 +172,7 @@ pub fn remove_link(src_path: &FilePath) -> Option<String> {
 /// 如果文件存在，但是没有链接，那么返回 1
 /// 如果文件存在，且有链接，那么返回链接数
 pub fn get_link_count(src_path: &String) -> usize {
-    trace!("get_link_count: {}", src_path);
+    info!("get_link_count: {}", src_path);
     let map = LINK_PATH_MAP.lock();
     // 找到对应的链接
     match map.get(src_path) {
@@ -429,7 +429,7 @@ pub static LINK_COUNT_MAP: Mutex<BTreeMap<String, usize>> = Mutex::new(BTreeMap:
 ///
 /// 如果在链接列表中找不到，则直接返回自己
 pub fn real_path(src_path: &String) -> String {
-    trace!("parse_file_name: {}", src_path);
+    info!("parse_file_name: {}", src_path);
     let map = LINK_PATH_MAP.lock();
     // 找到对应的链接
     match map.get(src_path) {

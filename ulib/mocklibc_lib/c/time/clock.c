@@ -1,20 +1,16 @@
-#include <limits.h>
-#include <mocklibc.h>
-#include <stdio.h>
 #include <time.h>
+#include <limits.h>
 
 clock_t clock()
 {
-    struct timespec ts;
-    struct timespec *ts_ptr = &ts;
+	struct timespec ts;
 
-    typedef int (*FnABI)(long);
-    long *abi_ptr = (long *)(abi_entry + 8 * ABI_TIMESPEC);
-    FnABI func = (FnABI)(*abi_ptr);
-    func((long)ts_ptr);
+	if (__clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts))
+		return -1;
 
-    if (ts.tv_sec > LONG_MAX / 1000000 || ts.tv_nsec / 1000 > LONG_MAX - 1000000 * ts.tv_sec)
-        return -1;
+	if (ts.tv_sec > LONG_MAX/1000000
+	 || ts.tv_nsec/1000 > LONG_MAX-1000000*ts.tv_sec)
+		return -1;
 
-    return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+	return ts.tv_sec*1000000 + ts.tv_nsec/1000;
 }

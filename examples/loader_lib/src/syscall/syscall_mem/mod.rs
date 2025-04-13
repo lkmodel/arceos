@@ -11,6 +11,7 @@ use super::SyscallResult;
 /// 与内存相关的系统调用
 pub fn mem_syscall(syscall_id: mem_syscall_id::MemSyscallId, args: [usize; 6]) -> SyscallResult {
     match syscall_id {
+        // FIX: 这些东西暂时不支持PMP
         BRK => syscall_brk(args),
         MUNMAP => syscall_munmap(args),
         MREMAP => syscall_mremap(args),

@@ -212,38 +212,38 @@ int __libc_current_sigrtmax(void);
 
 int kill(pid_t, int);
 
-// int sigemptyset(sigset_t *);
+int sigemptyset(sigset_t *);
 int sigfillset(sigset_t *);
-// int sigaddset(sigset_t *, int);
-// int sigdelset(sigset_t *, int);
-// int sigismember(const sigset_t *, int);
+int sigaddset(sigset_t *, int);
+int sigdelset(sigset_t *, int);
+int sigismember(const sigset_t *, int);
 
-// int sigprocmask(int, const sigset_t *__restrict, sigset_t *__restrict);
+int sigprocmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 int sigsuspend(const sigset_t *);
-// int sigaction(int, const struct sigaction *__restrict, struct sigaction *__restrict);
-// int sigpending(sigset_t *);
-// int sigwait(const sigset_t *__restrict, int *__restrict);
-// int sigwaitinfo(const sigset_t *__restrict, siginfo_t *__restrict);
-// int sigtimedwait(const sigset_t *__restrict, siginfo_t *__restrict, const struct timespec *__restrict);
-// int sigqueue(pid_t, int, union sigval);
-// 
-// int pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
+int sigaction(int, const struct sigaction *__restrict, struct sigaction *__restrict);
+int sigpending(sigset_t *);
+int sigwait(const sigset_t *__restrict, int *__restrict);
+int sigwaitinfo(const sigset_t *__restrict, siginfo_t *__restrict);
+int sigtimedwait(const sigset_t *__restrict, siginfo_t *__restrict, const struct timespec *__restrict);
+int sigqueue(pid_t, int, union sigval);
+
+int pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 int pthread_kill(pthread_t, int);
 
-// void psiginfo(const siginfo_t *, const char *);
-// void psignal(int, const char *);
+void psiginfo(const siginfo_t *, const char *);
+void psignal(int, const char *);
 
 #endif
 
 #if defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
-// int killpg(pid_t, int);
-// int sigaltstack(const stack_t *__restrict, stack_t *__restrict);
-// int sighold(int);
-// int sigignore(int);
-// int siginterrupt(int, int);
-// int sigpause(int);
-// int sigrelse(int);
-// void (*sigset(int, void (*)(int)))(int);
+int killpg(pid_t, int);
+int sigaltstack(const stack_t *__restrict, stack_t *__restrict);
+int sighold(int);
+int sigignore(int);
+int siginterrupt(int, int);
+int sigpause(int);
+int sigrelse(int);
+void (*sigset(int, void (*)(int)))(int);
 #define TRAP_BRKPT 1
 #define TRAP_TRACE 2
 #define TRAP_BRANCH 3
@@ -271,10 +271,10 @@ typedef void (*sig_t)(int);
 
 #ifdef _GNU_SOURCE
 typedef void (*sighandler_t)(int);
-// void (*bsd_signal(int, void (*)(int)))(int);
-// int sigisemptyset(const sigset_t *);
-// int sigorset (sigset_t *, const sigset_t *, const sigset_t *);
-// int sigandset(sigset_t *, const sigset_t *, const sigset_t *);
+void (*bsd_signal(int, void (*)(int)))(int);
+int sigisemptyset(const sigset_t *);
+int sigorset (sigset_t *, const sigset_t *, const sigset_t *);
+int sigandset(sigset_t *, const sigset_t *, const sigset_t *);
 
 #define SA_NOMASK SA_NODEFER
 #define SA_ONESHOT SA_RESETHAND
