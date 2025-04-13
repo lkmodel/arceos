@@ -192,11 +192,88 @@
 #define ABI_RT_DIVTC3 222
 #define ABI_RT_DIVXC3 223
 
-// -------------
+// `rt_integer`的实现
+// Arithmetic functions[230, 256]
+#define ABI_RT_ASHLSI3 230
+#define ABI_RT_ASHLDI3 231
+#define ABI_RT_ASHLTI3 231
 
+#define ABI_RT_ASHRSI3 232
+#define ABI_RT_ASHRDI3 233
+#define ABI_RT_ASHRTI3 234
+
+#define ABI_RT_DIVSI3 235
+#define ABI_RT_DIVDI3 236
+#define ABI_RT_DIVTI3 237
+
+#define ABI_RT_LSHRSI3 238
+#define ABI_RT_LSHRDI3 239
+#define ABI_RT_LSHRTI3 240
+
+#define ABI_RT_MODSI3 241
+#define ABI_RT_MODDI3 242
+#define ABI_RT_MODTI3 243
+
+#define ABI_RT_MULSI3 244
+#define ABI_RT_MULDI3 245
+#define ABI_RT_MULTI3 246
+
+#define ABI_RT_NEGDI2 247
+#define ABI_RT_NEGTI2 248
+
+#define ABI_RT_UDIVSI3 249
+#define ABI_RT_UDIVDI3 250
+#define ABI_RT_UDIVTI3 251
+
+#define ABI_RT_UDIVMODDI4 252
+#define ABI_RT_UDIVMODTI4 253
+
+#define ABI_RT_UMODSI3 254
+#define ABI_RT_UMODDI3 255
+#define ABI_RT_UMODTI3 256
+
+// Comparison functions[257, 260]
+#define ABI_RT_CMPDI2 257
+#define ABI_RT_CMPTI2 258
+
+#define ABI_RT_UCMPDI2 259
+#define ABI_RT_UCMPTI2 260
+
+// Trapping Arithmetic functions[261, 270]
+#define ABI_RT_ABSVSI2 261
+#define ABI_RT_ABSVDI2 262
+
+#define ABI_RT_ADDVSI3 263
+#define ABI_RT_ADDVDI3 264
+
+#define ABI_RT_MULVSI3 265
+#define ABI_RT_MULVDI3 266
+
+#define ABI_RT_NEGVSI2 267
+#define ABI_RT_NEGVDI2 268
+
+#define ABI_RT_SUBVSI3 269
+#define ABI_RT_SUBVDI3 270
+
+// Bit operations functions[271, 286]
 #define ABI_RT_CLZSI2 271
 #define ABI_RT_CLZDI2 272
 #define ABI_RT_CLZTI2 273
+
+#define ABI_RT_CTZSI2 274
+#define ABI_RT_CTZDI2 275
+#define ABI_RT_CTZTI2 276
+
+#define ABI_RT_FFSDI2 277
+#define ABI_RT_FFSTI2 278
+
+#define ABI_RT_PARITYSI2 279
+#define ABI_RT_PARITYDI2 280
+#define ABI_RT_PARITYTI2 281
+
+#define ABI_RT_POPCOUNTSI2 282
+#define ABI_RT_POPCOUNTDI2 283
+#define ABI_RT_POPCOUNTTI2 284
 
 #define ABI_RT_BSWAPSI2 285
 #define ABI_RT_BSWAPDI2 286
