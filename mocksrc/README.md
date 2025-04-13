@@ -1,41 +1,41 @@
-# mocksrc - 源码编译与链接中心 (开发中)
+# mocksrc - Source Code Compilation and Linking Center (Under Development)
 
-**状态:** 开发中 (Under Development)
+**Status:** Under Development
 
-## 概述
+## Overview
 
-`mocksrc` 目录规划为 ArceOS 项目中**统一存放应用程序源码编译和链接脚本**的中心位置。
+The `mocksrc` directory is planned to be the central location in the ArceOS project for **uniformly storing application source code compilation and linking scripts**.
 
-其**目标**是提供一套工具和脚本，允许开发者直接从应用程序源代码开始，编译并链接生成适用于 ArceOS `loader_lib` 环境（包括静态链接和动态链接到 `mocklibc`）的可执行文件。
+Its **goal** is to provide a set of tools and scripts that allow developers to start directly from application source code, compile, and link to generate executable files suitable for the ArceOS `loader_lib` environment (including static and dynamic linking to `mocklibc`).
 
-这将与 `batch_apps` 和 `uni_apps`（原 `mockc_apps`）形成分工：`mocksrc` 负责**编译链接**，而后两者负责将编译好的可执行文件**打包**成 `apps.bin` 应用包。
+This will form a division of labor with `batch_apps` and `uni_apps` (formerly `mockc_apps`): `mocksrc` will be responsible for **compilation and linking**, while the latter two will be responsible for **packaging** the compiled executables into `apps.bin` application packages.
 
-## 当前内容
+## Current Content
 
-目前此目录下可能包含：
+Currently, this directory may contain:
 
-* `link.ld`: 示例或基础链接脚本。
-* `Makefile`: 初始的或占位符性质的构建脚本。
+* `link.ld`: Example or basic linker script.
+* `Makefile`: Initial or placeholder build script.
 
-**注意:** 当前的功能非常有限，尚处于早期开发阶段。
+**Note:** The current functionality is very limited and is still in the early stages of development.
 
-## 发展目标
+## Development Goals
 
-* 建立统一的应用程序编译框架。
-* 管理不同应用的编译配置和依赖。
-* 正确处理针对 `mocklibc` 的静态链接和动态链接。
-* 支持 musl 工具链，并计划未来支持 GCC 工具链。
-* 与 `loader_lib` 的不同加载模式 (`Uni`, `Batch`, `PMP`) 兼容。
-* 与应用打包脚本 (`batch_apps`, `uni_apps`) 协同工作。
+* Establish a unified application compilation framework.
+* Manage compilation configurations and dependencies for different applications.
+* Correctly handle static and dynamic linking against `mocklibc`.
+* Support the musl toolchain, with plans to support the GCC toolchain in the future.
+* Be compatible with different loading modes of `loader_lib` (`Uni`, `Batch`, `PMP`).
+* Work collaboratively with application packaging scripts (`batch_apps`, `uni_apps`).
 
-## 使用方法
+## Usage
 
-**暂无。**
+**None yet.**
 
-详细的使用说明将在功能开发完成后提供。
+Detailed usage instructions will be provided after the functionality is developed.
 
-## 与其他组件的关系
+## Relationship with Other Components
 
-* **依赖于:** `ulib/mocklibc_lib` (提供 `mocklibc` 库和头文件)。
-* **服务于:** `batch_apps`, `uni_apps` (提供编译好的可执行文件用于打包)。
-* **目标环境:** `examples/loader_lib` (编译出的应用最终由加载器执行)。
+* **Depends on:** `ulib/mocklibc_lib` (provides the `mocklibc` library and header files).
+* **Serves:** `batch_apps`, `uni_apps` (provides compiled executables for packaging).
+* **Target Environment:** `examples/loader_lib` (the compiled applications are ultimately executed by the loader).
