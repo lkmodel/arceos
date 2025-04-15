@@ -5,8 +5,8 @@ use crate::{
         axfs_ext::api::OpenFlags,
         linux_api::{
             api::process_api,
-            link::{AT_FDCWD, FilePath, deal_with_path},
-            utils::{UtilsError, deal_path},
+            link::{AT_FDCWD, FilePath},
+            utils::deal_path,
         },
     },
     syscall::{
@@ -79,21 +79,7 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
     let path = args[1] as *const u8;
     let mode = args[2] as u32;
 
-    let path = match deal_path(dir_fd, Some(path), true) {
-        Ok(ans) => ans,
-        Err(e) => match e {
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::InvalidArg => return Err(SyscallError::ENOTDIR),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let path = deal_path(dir_fd, Some(path), true)?;
 
     debug!(
         "Into syscall_mkdirat. dirfd: {}, path: {:?}, mode: {}",
@@ -146,20 +132,7 @@ pub fn syscall_mkdirat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_chdir(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     // 从path中读取字符串
-    let path = match deal_path(AT_FDCWD, Some(path), true) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let path = deal_path(AT_FDCWD, Some(path), true)?;
 
     debug!("Into syscall_chdir. path: {:?}", path.path());
     match metadata(path.path()) {
@@ -197,21 +170,7 @@ pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let buf = args[1] as *mut u8;
     let len = args[2];
-    let path = match deal_path(fd, None, false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let path = deal_path(fd, None, false)?;
 
     // ```
     // let process = process_api();
@@ -322,12 +281,12 @@ pub fn syscall_getdents64(args: [usize; 6]) -> SyscallResult {
 /// * `flags: usize`, 重命名的标志位。目前只支持`RENAME_NOREPLACE`、`RENAME_EXCHANGE`和`RENAME_WHITEOUT`。
 pub fn syscall_renameat2(args: [usize; 6]) -> SyscallResult {
     let old_dirfd = args[0];
-    let _old_path = args[1] as *const u8;
+    let old_path = args[1] as *const u8;
     let new_dirfd = args[2];
-    let _new_path = args[3] as *const u8;
+    let new_path = args[3] as *const u8;
     let flags = args[4];
-    let old_path = deal_with_path(old_dirfd, Some(_old_path), false).unwrap();
-    let new_path = deal_with_path(new_dirfd, Some(_new_path), false).unwrap();
+    let old_path = deal_path(old_dirfd, Some(old_path), false)?;
+    let new_path = deal_path(new_dirfd, Some(new_path), false)?;
 
     let proc_path = FilePath::new("/proc").unwrap();
     if old_path.start_with(&proc_path) || new_path.start_with(&proc_path) {
@@ -566,21 +525,7 @@ pub fn syscall_fchmodat(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EINVAL);
     };
 
-    let file_path = match deal_path(dir_fd, Some(path), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let file_path = deal_path(dir_fd, Some(path), false)?;
 
     //```
     // FIXME: 这里是有问题的，因为现有的文件系统尚不支持设置权限，在这里实验了一下
@@ -680,20 +625,7 @@ pub fn syscall_faccessat(args: [usize; 6]) -> SyscallResult {
     let mode = args[2];
     // `todo`: 有问题,实际上需要考虑当前进程对应的用户`UID`和文件拥有者之间的关系
     // 现在一律当作root用户处理
-    let file_path = match deal_path(dir_fd, Some(path), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::PanicMe => {
-                panic!("panic {:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let file_path = deal_path(dir_fd, Some(path), false)?;
 
     let mode = if let Some(ans) = Permissions::from_bits(mode as u16) {
         ans
@@ -826,7 +758,7 @@ pub fn syscall_utimensat(args: [usize; 6]) -> SyscallResult {
         }
         Ok(0)
     } else {
-        let file_path = deal_with_path(dir_fd, Some(path), false).unwrap();
+        let file_path = deal_path(dir_fd, Some(path), false)?;
         if !axfs::api::path_exists(file_path.path()) {
             error!("Set time failed: file {} doesn't exist!", file_path.path());
             if !axfs::api::path_exists(file_path.dir().unwrap()) {

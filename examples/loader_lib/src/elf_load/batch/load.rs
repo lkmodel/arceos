@@ -16,6 +16,7 @@ pub fn load_exec(
     app_code: &mut [u8],
     app_start: usize,
 ) {
+    info!("Start Load exec app");
     if let Some(phs) = app_elf.segments() {
         for ph in phs {
             if ph.p_type != PT_LOAD {
@@ -66,12 +67,13 @@ pub fn load_dyn(
             continue;
         }
         debug!(
-            "Load Segment vaddr 0x{:x} offset 0x{:x} filesz 0x{:x} memsz 0x{:x} address_bios 0x{:x}",
+            "Load Segment vaddr 0x{:x} offset 0x{:x} filesz 0x{:x} memsz 0x{:x} address_bios 0x{:x} to space: 0x{:?}",
             phdr.p_vaddr as usize,
             phdr.p_offset as usize,
             phdr.p_offset as usize,
             phdr.p_memsz as u64,
-            address_bios
+            address_bios,
+            run_code.as_ptr()
         );
         load_segment(
             run_code,
@@ -307,6 +309,7 @@ fn modify_lib(elf: &ElfBytes<LittleEndian>, lib_start: usize) {
 /// * `lib_start` - `LIB` 在内存中地址
 /// * `main_entry` - 对应的 `APP` 库的 `main` 函数入口地址
 pub fn modify_lib_main(elf: &ElfBytes<LittleEndian>, lib_start: usize, main_entry: usize) {
+    debug!("Entry modify_lib_main fn");
     let (dynsym_table, dynstr_table) = elf
         .dynamic_symbol_table()
         .expect("Failed to parse dynamic symbol table")

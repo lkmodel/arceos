@@ -4,7 +4,7 @@ use crate::{
         linux_api::{
             api::process_api,
             link::{create_link, real_path},
-            utils::{UtilsError, deal_path, has_permission},
+            utils::{deal_path, has_permission, is_valid_addr},
         },
     },
     syscall::{
@@ -63,23 +63,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EINVAL);
     };
 
-    let path = match deal_path(fd, Some(path), flags.is_dir()) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                error!("panic me {:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-            _ => {
-                error!("{:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-        },
-    };
+    let path = deal_path(fd, Some(path), flags.is_dir())?;
 
     let mut fd_table = process.fd_manager.fd_table.lock();
     let fd_num: usize = if let Ok(fd) = process.alloc_fd(&mut fd_table) {
@@ -263,7 +247,7 @@ pub fn syscall_read(args: [usize; 6]) -> SyscallResult {
 
     let process = process_api();
 
-    // FIX: 进行检查，这里是不安全
+    is_valid_addr(buf as usize)?;
     let buf = unsafe { from_raw_parts_mut(buf, count) };
 
     let file = match process.fd_manager.fd_table.lock().get(fd) {
@@ -304,7 +288,7 @@ pub fn syscall_write(args: [usize; 6]) -> SyscallResult {
     }
     let process = process_api();
 
-    // FIX: 进行地址检查，当超出可访问地址空间的时候，返回错误EFAULT
+    is_valid_addr(buf as usize)?;
     let buf = unsafe { from_raw_parts(buf, count) };
 
     let file = match process.fd_manager.fd_table.lock().get(fd) {
@@ -592,23 +576,7 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
         return Err(SyscallError::EINVAL);
     }
 
-    let path = match deal_path(dir_fd, Some(path), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                error!("panic me {:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-            _ => {
-                error!("{:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-        },
-    };
+    let path = deal_path(dir_fd, Some(path), false)?;
 
     if path.path() == "proc/self/exe" {
         // 针对`lmbench_all`特判
@@ -714,8 +682,8 @@ pub fn syscall_sendfile64(args: [usize; 6]) -> SyscallResult {
     let mut buf = vec![0u8; count];
     if !offset.is_null() {
         // 如果offset不为NULL,则从offset指定的位置开始读取
-        // FIX: 检查地址是否合法
         info!("offset {:?}", offset);
+        is_valid_addr(offset as usize)?;
         let in_offset = unsafe { *offset };
         if (in_offset as isize) < 0 {
             return Err(SyscallError::EINVAL);

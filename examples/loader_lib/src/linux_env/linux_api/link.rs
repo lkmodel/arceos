@@ -350,7 +350,6 @@ pub fn deal_with_path(
             axlog::warn!("path address is null");
             return None;
         }
-        // FIX: 直接访问前需要确保已经被分配
         path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
     }
     // 处理空路径的情况

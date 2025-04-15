@@ -42,7 +42,6 @@ use crate::{
     elf_load::load::load_user_app,
     elf_load::uni_load::load_elf,
     init::init_all,
-    // linux_env::linux_fs::api::UniAPI,
 };
 
 // 准备参数 p，这里我们直接在代码中指定参数
