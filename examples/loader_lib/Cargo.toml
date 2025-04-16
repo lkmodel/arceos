@@ -5,7 +5,7 @@ authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
 [features]
-default = ["fs", "driver-ramdisk", "batch"]
+default = ["fs", "driver-ramdisk"]
 
 # 一级可选项目
 

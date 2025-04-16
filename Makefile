@@ -106,6 +106,31 @@ export AX_TARGET=$(TARGET)
 export AX_IP=$(IP)
 export AX_GW=$(GW)
 
+define ZELLIJ_CONFIG
+layout {
+    cwd "/home/ridesun/arceos_mocklibc"
+    tab name="Tab #1" focus=true {
+        pane split_direction="vertical" {
+            pane name="QEMU" command="qemu-system-$(ARCH)" size="40%" {
+                args $(patsubst %,"%",$(call get_qemu_arg_debug))
+            }
+            pane name="GDB" command="rust-gdb" size="45%" focus=true {
+                args "$(OUT_ELF)" "-ex" "target remote localhost:1234" "-ex" "tui refresh" "-ex" "b main" "-ex" "c"
+            }
+            pane name="Monitor" command="target/debug/qemu_monitor" size="15%" {
+            	args "/tmp/qmp.socket"
+            }
+        }
+    }
+}
+default_mode "locked"
+show_startup_tips false
+simplified_ui true
+endef
+
+export ZELLIJ_CONFIG
+
+
 ifneq ($(filter $(MAKECMDGOALS),unittest unittest_no_fail_fast),)
   # When running unit tests, set `AX_CONFIG_PATH` to empty for dummy config
   unexport AX_CONFIG_PATH
@@ -161,13 +186,15 @@ justrun:
 	$(call run_qemu)
 
 debug: build
-	$(call run_qemu_debug) &
-	sleep 1
-	$(GDB) $(OUT_ELF) \
-	  -ex 'target remote localhost:1234' \
-	  -ex 'b rust_entry' \
-	  -ex 'continue' \
-	  -ex 'disp /16i $$pc'
+	@echo "$$ZELLIJ_CONFIG" > /tmp/zellij.kdl
+	@zellij --layout "/tmp/zellij.kdl" #start zellij with layout
+#	$(call run_qemu_debug) &
+#	sleep 1
+#	$(GDB) $(OUT_ELF) \
+#	  -ex 'target remote localhost:1234' \
+#	  -ex 'b rust_entry' \
+#	  -ex 'continue' \
+#	  -ex 'disp /16i $$pc'
 
 clippy: oldconfig
 ifeq ($(origin ARCH), command line)
