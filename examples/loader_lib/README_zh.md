@@ -260,7 +260,28 @@
     # 可选日志级别: -l <debug|warn|info|off|trace>
     # 是否使用 QEMU 图形界面: -q <y|n>
     ```
-
+5. **使用`cargo-xtask`来运行**
+   * **Uni Mode:**
+   ```bash
+   cargo xtask uni <app_name> [dynamic(default)|static]
+   # e.g. cargo xtask string
+   #会连续执行编译打包并运行
+   ```
+   * **Batch Mode:**
+   ```bash
+   cargo xtask batch [SCRIPT]
+   #会连续执行编译打包并运行
+   #后面跟上SCRIPT后会替代batch_app下的script.txt来进行打包运行
+   # e.g. cargo xtask batch "busybox echo Hello,ArceOS!"
+   ```
+   * **Debug Mode**
+   ```bash
+   cargo xtask --debug <batch|uni>
+   #需要安装zellij
+   ```
+   同样也支持
+   * -l <debug|warn|info|off|trace>
+   * -q <y|n>
 ## 11. 代码改进建议
 
 * 目录结构重构 (如 README 所述):
