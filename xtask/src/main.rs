@@ -1,8 +1,11 @@
-use std::path::PathBuf;
 use clap::{Parser, Subcommand};
-use std::process::Stdio;
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
+use std::sync::OnceLock;
 use xshell::{Shell, cmd};
 
+const MUSL: &str = "xtask/riscv64-linux-musl-cross/bin/";
+static DIR: OnceLock<PathBuf> = OnceLock::new();
 #[derive(Parser)]
 #[command(version, about,long_about = None)]
 struct Cli {
@@ -43,6 +46,10 @@ enum Commands {
     },
 }
 fn main() -> anyhow::Result<()> {
+    DIR.set(PathBuf::from(
+        env!("CARGO_MANIFEST_DIR").strip_suffix("xtask").unwrap(),
+    ))
+    .unwrap();
     let cli = Cli::parse();
     match &cli.command {
         Commands::Batch { script } => {
@@ -61,7 +68,6 @@ fn main() -> anyhow::Result<()> {
 
 fn run_uni(cli: &Cli) -> anyhow::Result<()> {
     let sh = Shell::new()?;
-    let root_path = sh.current_dir();
 
     match &cli.command {
         Commands::Uni { app, run_type } => {
@@ -78,7 +84,6 @@ fn run_uni(cli: &Cli) -> anyhow::Result<()> {
 
 fn run_batch(cli: &Cli) -> anyhow::Result<()> {
     let sh = Shell::new()?;
-    let root_path = sh.current_dir();
 
     // make batch_apps
     sh.create_dir("payload")?;
@@ -109,11 +114,24 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
     let debug = cli.debug;
 
     let run_mode = if debug {
-        if !std::process::Command::new("which").arg("zellij").status()?.success() {
-            panic!("Debug mode need install zellij. Please install zellij first. See https://zellij.dev/");
+        if !Command::new("which")
+            .arg("zellij")
+            .status()?
+            .success()
+        {
+            panic!(
+                "Debug mode need install zellij. Please install zellij first. See https://zellij.dev/"
+            );
         }
-        if !PathBuf::new().join("target").join("debug").join("qemu_monitor").exists() {
-            std::process::Command::new("cargo").args(&["build","--package","qemu_monitor"]).spawn()?;
+        if !PathBuf::new()
+            .join("target")
+            .join("debug")
+            .join("qemu_monitor")
+            .exists()
+        {
+            Command::new("cargo")
+                .args(&["build", "--package", "qemu_monitor"])
+                .spawn()?;
         }
 
         unsafe {
@@ -128,7 +146,7 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
         "{run_mode} ARCH={arch} A=examples/loader_lib LOG={log} QEMU_LOG={qemu_log} APP_FEATURES={feat}"
     );
     let args = args_str.split(" ").collect::<Vec<&str>>();
-    let mut cmd = std::process::Command::new("make")
+    let mut cmd = Command::new("make")
         .args(args.as_slice())
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
@@ -137,4 +155,39 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
     // wait until qemu quit
     cmd.wait()?;
     Ok(())
+}
+
+fn install_musl_riscv64() -> anyhow::Result<()> {
+    if check_installation() {
+        return Ok(());
+    }
+    let sh = Shell::new()?;
+    sh.change_dir("xtask");
+
+    cmd!(sh, "wget -N https://musl.cc/riscv64-linux-musl-cross.tgz").run()?;
+
+    cmd!(sh, "tar -xzf riscv64-linux-musl-cross.tgz").run()?;
+
+    println!("Musl RISC-V64 toolchain installation complete");
+    sh.remove_path(
+        DIR.get()
+            .unwrap()
+            .join("xtask")
+            .join("riscv64-linux-musl-cross.tgz"),
+    )?;
+
+    Ok(())
+}
+fn check_installation() -> bool {
+    Command::new("which")
+        .arg("riscv64-linux-musl-gcc")
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+        || DIR
+            .get()
+            .unwrap()
+            .join("xtask")
+            .join("riscv64-linux-musl-cross")
+            .exists()
 }
