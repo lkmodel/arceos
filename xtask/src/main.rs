@@ -50,6 +50,7 @@ fn main() -> anyhow::Result<()> {
         env!("CARGO_MANIFEST_DIR").strip_suffix("xtask").unwrap(),
     ))
     .unwrap();
+
     let cli = Cli::parse();
     match &cli.command {
         Commands::Batch { script } => {
@@ -68,14 +69,11 @@ fn main() -> anyhow::Result<()> {
 
 fn run_uni(cli: &Cli) -> anyhow::Result<()> {
     let sh = Shell::new()?;
-
-    match &cli.command {
-        Commands::Uni { app, run_type } => {
-            // build app and apps.bin
-            sh.change_dir("mockc_apps");
-            cmd!(sh, "make DIR={app} TYPE={run_type}").run()?;
-        }
-        _ => {}
+    install_musl_riscv64(&sh)?;
+    if let Commands::Uni { app, run_type } = &cli.command {
+        // build app and apps.bin
+        sh.change_dir("mockc_apps");
+        cmd!(sh, "make DIR={app} TYPE={run_type}").run()?;
     }
 
     run_qemu(cli, "unikernel")?;
@@ -88,18 +86,15 @@ fn run_batch(cli: &Cli) -> anyhow::Result<()> {
     // make batch_apps
     sh.create_dir("payload")?;
     sh.change_dir("batch_apps");
-    match &cli.command {
-        Commands::Batch { script } => {
-            if let Some(script) = script {
-                let temp_dir = sh.create_temp_dir()?;
-                let temp_file = temp_dir.path().join("scripts.tmp");
-                sh.write_file(&temp_file, &script)?;
-                cmd!(sh, "make SCRIPT={temp_file}").run()?;
-            } else {
-                cmd!(sh, "make").run()?;
-            }
+    if let Commands::Batch { script } = &cli.command {
+        if let Some(script) = script {
+            let temp_dir = sh.create_temp_dir()?;
+            let temp_file = temp_dir.path().join("scripts.tmp");
+            sh.write_file(&temp_file, script)?;
+            cmd!(sh, "make SCRIPT={temp_file}").run()?;
+        } else {
+            cmd!(sh, "make").run()?;
         }
-        _ => {}
     }
 
     // run ArceOS
@@ -114,11 +109,8 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
     let debug = cli.debug;
 
     let run_mode = if debug {
-        if !Command::new("which")
-            .arg("zellij")
-            .status()?
-            .success()
-        {
+        install_riscv64_gdb()?;
+        if !Command::new("which").arg("zellij").status()?.success() {
             panic!(
                 "Debug mode need install zellij. Please install zellij first. See https://zellij.dev/"
             );
@@ -130,12 +122,8 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
             .exists()
         {
             Command::new("cargo")
-                .args(&["build", "--package", "qemu_monitor"])
+                .args(["build", "--package", "qemu_monitor"])
                 .spawn()?;
-        }
-
-        unsafe {
-            std::env::set_var("RUST_GDB", "riscv64-unknown-elf-gdb");
         }
         "debug MODE=debug GDB=rust-gdb"
     } else {
@@ -157,11 +145,25 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn install_musl_riscv64() -> anyhow::Result<()> {
+fn install_riscv64_gdb() -> anyhow::Result<()> {
+    let sh=Shell::new()?;
+    sh.change_dir(DIR.get().unwrap().join("xtask"));
+    if !sh.path_exists("riscv"){
+        cmd!(sh, "wget https://mirror.iscas.ac.cn/riscv-toolchains/release/riscv-collab/riscv-gnu-toolchain/LatestRelease/riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz").run()?;
+        cmd!(sh,"tar xf riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz").run()?;
+        sh.remove_path("riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz")?;
+    }
+
+    Ok(())
+}
+fn install_musl_riscv64(sh:&Shell) -> anyhow::Result<()> {
     if check_installation() {
         return Ok(());
     }
-    let sh = Shell::new()?;
+
+    // Install [cargo-binutils](https://github.com/rust-embedded/cargo-binutils) to use `rust-objcopy` and `rust-objdump` tools, and [axconfig-gen](https://github.com/arceos-org/axconfig-gen) for kernel configuration:
+    cmd!(sh, "cargo install cargo-binutils axconfig-gen").run()?;
+
     sh.change_dir("xtask");
 
     cmd!(sh, "wget -N https://musl.cc/riscv64-linux-musl-cross.tgz").run()?;

@@ -1,3 +1,6 @@
 [alias]
 xtask = "run --package xtask --"
 qmp = "run --package qemu_monitor --"
+
+[env]
+RUST_GDB = "xtask/riscv/bin/riscv64-unknown-elf-gdb"

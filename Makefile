@@ -108,7 +108,6 @@ export AX_GW=$(GW)
 
 define ZELLIJ_CONFIG
 layout {
-    cwd "/home/ridesun/arceos_mocklibc"
     tab name="Tab #1" focus=true {
         pane split_direction="vertical" {
             pane name="QEMU" command="qemu-system-$(ARCH)" size="40%" {
