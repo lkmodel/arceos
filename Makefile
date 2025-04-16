@@ -122,6 +122,7 @@ layout {
         }
     }
 }
+on_force_close "quit"
 default_mode "locked"
 show_startup_tips false
 simplified_ui true
