@@ -35,7 +35,7 @@ ArceOS Lib Loader was inspired a lot by [Starry-OS](https://github.com/Arceos-mo
 * [ ] Interrupt driven device I/O
 * [ ] Async I/O
 
-## More details and `REAADME`
+## More details and `README`
 
 [`LibLoader`](./examples/loader_lib/README.md)
 [`MockLibC`](./ulib/mocklibc_lib/README.md)

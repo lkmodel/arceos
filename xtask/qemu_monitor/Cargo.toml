@@ -1,0 +1,16 @@
+[package]
+name = "qemu_monitor"
+version.workspace = true
+edition.workspace = true
+authors=["Yiyao Wang <ridesungg@gmail.com>"]
+license.workspace = true
+
+[dependencies]
+env_logger = "0.11.8"
+futures = "0.3.31"
+qapi = { version = "0.15.0",features = ["async-tokio-all","qmp"] }
+tokio = { version = "1.44.2", features = ["full"] }
+
+
+
+
