@@ -4,6 +4,7 @@ use std::process::{Command, Stdio};
 use std::sync::OnceLock;
 use xshell::{Shell, cmd};
 
+#[allow(unused)]
 const MUSL: &str = "xtask/riscv64-linux-musl-cross/bin/";
 static DIR: OnceLock<PathBuf> = OnceLock::new();
 #[derive(Parser)]
@@ -16,11 +17,11 @@ struct Cli {
     #[arg(long, short, default_value = "off")]
     log: String,
 
-    /// Architecture to use (e.g., riscv64)
+    /// Architecture to use (e.g., `riscv64`)
     #[arg(long, default_value = "riscv64")]
     arch: String,
 
-    /// Enable QEMU logging (y/n)
+    /// Enable `QEMU` logging (`y/n`)
     #[arg(long, default_value = "n")]
     qemu_log: String,
 
@@ -31,18 +32,15 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Run with batch mode
+    /// Run with `batch mode`
     Batch {
         /// Overwrite the script file and run a separate line of command
         script: Option<String>,
     },
-    /// Run with uni mode
+    /// Run with `uni mode`
     Uni {
-        /// Which APP need to be run
-        app: String,
-        /// app link method(e.g.,dynamic,static)
-        #[arg(value_name = "type", default_value = "dynamic")]
-        run_type: String,
+        /// Overwrite the script file and run a separate line of command
+        script: Option<String>,
     },
 }
 fn main() -> anyhow::Result<()> {
@@ -57,11 +55,8 @@ fn main() -> anyhow::Result<()> {
             println!("Running Batch Mode with script {:?}", script);
             run_batch(&cli)
         }
-        Commands::Uni { app, run_type } => {
-            println!(
-                "Running Uni Mode with app {} and link type:{}",
-                app, run_type
-            );
+        Commands::Uni { script } => {
+            println!("Running Uni Mode with script {:?}", script);
             run_uni(&cli)
         }
     }
@@ -69,13 +64,24 @@ fn main() -> anyhow::Result<()> {
 
 fn run_uni(cli: &Cli) -> anyhow::Result<()> {
     let sh = Shell::new()?;
-    install_musl_riscv64(&sh)?;
-    if let Commands::Uni { app, run_type } = &cli.command {
-        // build app and apps.bin
-        sh.change_dir("mockc_apps");
-        cmd!(sh, "make DIR={app} TYPE={run_type}").run()?;
+
+    // make `uni_apps`
+    sh.create_dir("payload")?;
+    sh.change_dir("uni_apps");
+    if let Commands::Uni { script } = &cli.command {
+        if let Some(script) = script {
+            let temp_dir = sh.create_temp_dir()?;
+            let temp_file = temp_dir.path().join("scripts.tmp");
+            sh.write_file(&temp_file, script)?;
+            cmd!(sh, "make SCRIPT={temp_file}").run()?;
+        } else {
+            cmd!(sh, "make").run()?;
+        }
     }
 
+    install_musl_riscv64(&sh)?;
+
+    // run `ArceOS`
     run_qemu(cli, "unikernel")?;
     Ok(())
 }
@@ -83,7 +89,7 @@ fn run_uni(cli: &Cli) -> anyhow::Result<()> {
 fn run_batch(cli: &Cli) -> anyhow::Result<()> {
     let sh = Shell::new()?;
 
-    // make batch_apps
+    // make `batch_apps`
     sh.create_dir("payload")?;
     sh.change_dir("batch_apps");
     if let Commands::Batch { script } = &cli.command {
@@ -97,7 +103,7 @@ fn run_batch(cli: &Cli) -> anyhow::Result<()> {
         }
     }
 
-    // run ArceOS
+    // run `ArceOS`
     run_qemu(cli, "batch")?;
     Ok(())
 }
@@ -140,23 +146,27 @@ fn run_qemu(cli: &Cli, feat: &str) -> anyhow::Result<()> {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .spawn()?;
-    // wait until qemu quit
+    // wait until `qemu` quit
     cmd.wait()?;
     Ok(())
 }
 
 fn install_riscv64_gdb() -> anyhow::Result<()> {
-    let sh=Shell::new()?;
+    let sh = Shell::new()?;
     sh.change_dir(DIR.get().unwrap().join("xtask"));
-    if !sh.path_exists("riscv"){
+    if !sh.path_exists("riscv") {
         cmd!(sh, "wget https://mirror.iscas.ac.cn/riscv-toolchains/release/riscv-collab/riscv-gnu-toolchain/LatestRelease/riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz").run()?;
-        cmd!(sh,"tar xf riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz").run()?;
+        cmd!(
+            sh,
+            "tar xf riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz"
+        )
+        .run()?;
         sh.remove_path("riscv64-elf-ubuntu-24.04-gcc-nightly-2025.01.20-nightly.tar.xz")?;
     }
 
     Ok(())
 }
-fn install_musl_riscv64(sh:&Shell) -> anyhow::Result<()> {
+fn install_musl_riscv64(sh: &Shell) -> anyhow::Result<()> {
     if check_installation() {
         return Ok(());
     }

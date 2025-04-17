@@ -331,9 +331,9 @@ const ABI_RT_BSWAPSI2: usize = 285;
 const ABI_RT_BSWAPDI2: usize = 286;
 
 // Bit-precise integer arithmetic functions[287, 288]
-const _ABI_RT_MULBITINT3: usize = 287;
+const ABI_RT_MULBITINT3: usize = 287;
 
-const _ABI_RT_DIVMODBITINT4: usize = 288;
+const ABI_RT_DIVMODBITINT4: usize = 288;
 
 pub static mut ABI_TABLE: [usize; 300] = [ABI_NOIMPL; 300];
 
@@ -391,8 +391,6 @@ pub fn init_abis() {
 
     abi_float();
     abi_integer();
-
-    // ----------------
 }
 
 fn register_abi(name: &str, num: usize, handle: usize) {
@@ -711,4 +709,13 @@ pub fn abi_integer() {
 
     register_abi("rt_popcountti2", ABI_RT_BSWAPSI2, __bswapsi2 as usize);
     register_abi("rt_popcountti2", ABI_RT_BSWAPDI2, __bswapdi2 as usize);
+
+    // Bit-precise integer arithmetic functions[287, 288]
+    register_abi("rt_mulbitint3", ABI_RT_MULBITINT3, abi_noimpl as usize);
+
+    register_abi(
+        "rt_divmodbitint4",
+        ABI_RT_DIVMODBITINT4,
+        abi_noimpl as usize,
+    );
 }

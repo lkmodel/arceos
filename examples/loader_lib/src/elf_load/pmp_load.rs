@@ -29,6 +29,7 @@ use crate::{
 };
 
 /// The segment of the elf file, which is used to map the elf file to the memory space
+#[allow(dead_code)]
 pub struct ELFSegment {
     /// The start virtual address of the segment
     pub start_vaddr: VirtAddr,
@@ -43,6 +44,7 @@ pub struct ELFSegment {
 }
 
 /// The information of a given ELF file
+#[allow(dead_code)]
 pub struct ELFInfo {
     /// The entry point of the ELF file
     pub entry: VirtAddr,
@@ -58,6 +60,7 @@ pub struct ELFInfo {
 /// - The first return value is the entry point of the user app.
 /// - The second return value is the top of the user stack.
 /// - The third return value is the address space of the user app.
+#[allow(dead_code)]
 pub fn load_user_app(
     memory_set: &mut AddrSpace,
     app_name: &str,
@@ -208,6 +211,7 @@ pub fn load_user_app(
     }
 }
 
+#[allow(dead_code)]
 pub fn load_lib(base_addr: VirtAddr, elf_slice: &'static [u8], main_entry: usize) -> ELFInfo {
     debug!("Load lib ...");
     let elf: ElfBytes<'_, LittleEndian> =
@@ -264,6 +268,7 @@ pub fn load_lib(base_addr: VirtAddr, elf_slice: &'static [u8], main_entry: usize
     }
 }
 
+#[allow(dead_code)]
 pub fn load_app(
     base_addr: VirtAddr,
     elf_slice: &'static [u8],
@@ -340,6 +345,7 @@ pub fn load_app(
 /// * `elf_offset` The offset lib should be loaded
 /// * `segment_vaddr` -
 /// * `main_entry` - Initialize app main function entry
+#[allow(dead_code)]
 fn modify_lib_segment(
     elf: &ElfBytes<LittleEndian>,
     segment_data: &mut [u8],
@@ -462,6 +468,7 @@ fn modify_lib_segment(
     }
 }
 
+#[allow(dead_code)]
 fn modify_app_segment(
     app_elf: &ElfBytes<LittleEndian>,
     segment_data: &mut [u8],
@@ -617,6 +624,7 @@ fn modify_app_segment(
 /// # Return
 ///
 /// The real base address for ELF file loaded into the memory.
+#[allow(dead_code)]
 pub fn get_elf_base_addr(elf: &ElfBytes<LittleEndian>, given_base: usize) -> Result<usize, String> {
     // Some elf will load ELF Header (offset == 0) to `vaddr` 0. In that case, base_addr will be added to all the LOAD.
     if elf.ehdr.e_type == ET_EXEC {
@@ -650,6 +658,7 @@ pub fn get_elf_base_addr(elf: &ElfBytes<LittleEndian>, given_base: usize) -> Res
 ///
 /// # Return
 /// 查询结果被包装到了Option之中
+#[allow(dead_code)]
 pub fn get_func_sym(elf_file: &'static [u8], func_name: &str) -> Option<Symbol> {
     let app_elf: ElfBytes<'_, LittleEndian> =
         ElfBytes::<LittleEndian>::minimal_parse(elf_file).expect("Failed to parse ELF");
@@ -664,6 +673,7 @@ pub fn get_func_sym(elf_file: &'static [u8], func_name: &str) -> Option<Symbol> 
 }
 
 /// 将flags转换为MappingFlags
+#[allow(dead_code)]
 pub fn into_mapflag(f: u32) -> MappingFlags {
     let mut ret = MappingFlags::WRITE;
     if f == PF_R {
@@ -683,6 +693,7 @@ pub fn into_mapflag(f: u32) -> MappingFlags {
 /// Copy the segment into the executable zone
 /// TODO:
 /// If `memsz` is larger than `filesz`, zero out the rest
+#[allow(dead_code)]
 fn load_segment(
     run_code: &mut [u8],
     data: &Vec<u8>,

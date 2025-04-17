@@ -278,6 +278,11 @@
 #define ABI_RT_BSWAPSI2 285
 #define ABI_RT_BSWAPDI2 286
 
+// Bit-precise integer arithmetic functions[287, 288]
+#define ABI_RT_MULBITINT3 287
+
+#define ABI_RT_DIVMODBITINT4 288
+
 extern unsigned long volatile abi_entry;
 
 #define __DEBUG__

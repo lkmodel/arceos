@@ -89,7 +89,7 @@ Although unmodified code from musl is generally trusted, the deviations introduc
 
 * `../../batch_apps/` (**Frozen**): Handles application packaging for batch mode. See its `README.md` for details.
 * `../../examples/loader_lib/` (**Current directory**): Contains the core source code of `loader_lib`.
-* `../../mockc_apps/` (**To be revised**): A simple compilation/packaging script for "uni" loading mode. Planned to be revised and renamed to `uni_apps`. See its `README.md` for details.
+* `../../uni_apps/` (**To be revised**): A simple compilation/packaging script for "uni" loading mode.
 * `../../mocksrc/` (**Under development**): The planned future location for all source code compilation and linking scripts. See its `README.md` for details.
 * `../../ulib/mocklibc_lib/` (**Lib library source code**): Our modified `mocklibc` library used for loading dynamically linked musl-based applications. See its `README.md` for details.
 
@@ -261,30 +261,39 @@ Build options and features can be configured through `Cargo.toml`. Please refer 
     # Optional log levels: -l <debug|warn|info|off|trace>
     # Whether to use QEMU graphical interface: -q <y|n>
     ```
+
 5. **Execute using `cargo-xtask`**
-  * **Uni Mode:**
+
+* **Uni Mode:**
+
    ```bash
-   cargo xtask uni <app_name> [dynamic(default)|static]
+   cargo xtask uni [SCRIPT]
    # e.g. cargo xtask string
    # Performs compilation, packaging, and execution in sequence
    ```
-  * **Batch Mode:**
+
+* **Batch Mode:**
+
    ```bash
    cargo xtask batch [SCRIPT]
    # Performs compilation, packaging, and execution in sequence
    # Specifying [SCRIPT] overrides the script.txt under batch_app for packaging and execution
    # e.g. cargo xtask batch "busybox echo Hello,ArceOS!"
    ```
-  * **Debug Mode**
+
+* **Debug Mode**
+
    ```bash
    cargo xtask --debug <batch|uni>
    # Requires installation zellij
    ```
+
   Also supports:
   
-  * -l <debug|warn|info|off|trace> (log level configuration)
+* -l <debug|warn|info|off|trace> (log level configuration)
   
-  * -q <y|n> (quiet mode toggle)
+* -q <y|n> (quiet mode toggle)
+
 ## 11. Code Improvement Suggestions
 
 * Directory Structure Refactoring (as described in README):
