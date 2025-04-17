@@ -221,47 +221,70 @@ Build options and features can be configured through `Cargo.toml`. Please refer 
 
 1. **Clone the Repository:**
 
-```bash
-git clone [https://github.com/inchinaxiaofeng/arceos.git](https://github.com/inchinaxiaofeng/arceos.git) # Or the core repository lkmodel/arceos
-cd arceos/
-```
+    ```bash
+    git clone [https://github.com/inchinaxiaofeng/arceos.git](https://github.com/inchinaxiaofeng/arceos.git) # Or the core repository lkmodel/arceos
+    cd arceos/
+    ```
 
 2. **Compile `mocklibc` (if updates are needed):**
 
-```bash
-cd ulib/mocklibc/
-make
-cd ../../
-```
+    ```bash
+    cd ulib/mocklibc/
+    make
+    cd ../../
+    ```
 
 3. **Package Applications:**
 
-* **Uni Mode (Example):**
-
-```bash
-cd mockc_apps/ # Will be renamed to uni_apps later
-make SRC=<app_name> TYPE=<dynamic|static> # For example: make SRC=sqlite3 TYPE=dynamic
-cd ..
-```
-
-* **Batch Mode:**
-
-```bash
-cd batch_apps/
-make
-cd ..
-```
+     * **Uni Mode (Example):**
+  
+    ```bash
+    cd mockc_apps/ # Will be renamed to uni_apps later
+    make SRC=<app_name> TYPE=<dynamic|static> # For example: make SRC=sqlite3 TYPE=dynamic
+    cd ..
+    ```
+  
+    * **Batch Mode:**
+  
+    ```bash
+    cd batch_apps/
+    make
+    cd ..
+    ```
 
 4. **Run `loader_lib`:**
 
-```bash
-# Default parameters: -l warn -q y
-# Recommended parameters for running complex applications:
-./loader_lib.sh -l off -q n
-# Optional log levels: -l <debug|warn|info|off|trace>
-# Whether to use QEMU graphical interface: -q <y|n>
-```
-
+    ```bash
+    # Default parameters: -l warn -q y
+    # Recommended parameters for running complex applications:
+    ./loader_lib.sh -l off -q n
+    # Optional log levels: -l <debug|warn|info|off|trace>
+    # Whether to use QEMU graphical interface: -q <y|n>
+    ```
+5. **Execute using `cargo-xtask`**
+  * **Uni Mode:**
+   ```bash
+   cargo xtask uni <app_name> [dynamic(default)|static]
+   # e.g. cargo xtask string
+   # Performs compilation, packaging, and execution in sequence
+   ```
+  * **Batch Mode:**
+   ```bash
+   cargo xtask batch [SCRIPT]
+   # Performs compilation, packaging, and execution in sequence
+   # Specifying [SCRIPT] overrides the script.txt under batch_app for packaging and execution
+   # e.g. cargo xtask batch "busybox echo Hello,ArceOS!"
+   ```
+  * **Debug Mode**
+   ```bash
+   cargo xtask --debug <batch|uni>
+   # Requires installation zellij
+   ```
+  Also supports:
+  
+  * -l <debug|warn|info|off|trace> (log level configuration)
+  
+  * -q <y|n> (quiet mode toggle)
 ## 11. Code Improvement Suggestions
 
 * Directory Structure Refactoring (as described in README):

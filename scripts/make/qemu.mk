@@ -80,7 +80,7 @@ ifeq ($(QEMU_LOG), y)
   qemu_args-y += -D qemu.log -d in_asm,int,mmu,pcall,cpu_reset,guest_errors
 endif
 
-qemu_args-debug := $(qemu_args-y) -s -S
+qemu_args-debug := $(qemu_args-y) -s -S -qmp unix:/tmp/qmp.socket,server,nowait #enable qmp with socket
 
 ifeq ($(ACCEL),)
   ifneq ($(findstring -microsoft, $(shell uname -r | tr '[:upper:]' '[:lower:]')),)
@@ -109,4 +109,8 @@ endef
 define run_qemu_debug
   @printf "    $(CYAN_C)Debugging$(END_C) on qemu...\n"
   $(call run_cmd,$(QEMU),$(qemu_args-debug))
+endef
+
+define get_qemu_arg_debug
+	$(qemu_args-debug)
 endef
