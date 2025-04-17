@@ -37,3 +37,29 @@ In the `mocksrc` directory, you can use the `make` command to compile and link a
 
 ```bash
 make TYPE=<static|dynamic> DIR=<app_source_dir> OUTFILE=<output_name>
+```
+
+## Specific Example
+
+To compile an application named `sqlite3_speedtest1`, statically link it to `mocklibc`, name the output file `sqlite3_speedtest1`, and finally copy the compiled executable file to the `batch_apps` and `uni_apps` directories, use the following command:
+
+```bash
+make TYPE=static DIR=sqlite3_speedtest1 OUTFILE=sqlite3_speedtest1
+```
+
+### Note
+
+* Ensure that the `config.mk` file in the root directory has been correctly configured before executing the make command, especially that variables like `RISCV_PREFIX` point to the correct path of your `musl` tool chain.
+The `DIR` parameter specifies a subdirectory within the `mocksrc` directory that should contain the application's source code and corresponding build scripts (typically a `Makefile`).
+
+## Relationship with Other Components
+
+* Depends on:
+  * `ulib/mocklibc_lib`: Provides the `mocklibc` library and header files, which applications need to link against to use C standard library functions.
+  * RISC-V Tool chain (e.g., `riscv64-unknown-elf-gcc`, `riscv64-unknown-elf-ld`, etc.): Used for compiling and linking source code, currently primarily supporting the `musl` tool chain.
+  * `config.mk`: Provides global build configuration information.
+* Serves:
+  * `batch_apps`: Provides compiled executable files suitable for `Batch Mode`, which are packaged into `apps.bin`.
+  * `uni_apps`: Provides compiled executable files suitable for `Uni Mode`, which are packaged into apps.bin.
+* Target Environment:
+  * `examples/loader_lib`: The compiled applications are ultimately loaded and executed by `loader_lib` on `ArceOS`.
