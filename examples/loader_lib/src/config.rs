@@ -24,3 +24,8 @@ pub const PHYS_MEMORY_SIZE: usize = 0x800_0000; // 0x800_0000;
 
 /// 最大堆体积
 pub const MAX_HEAP_SIZE: usize = 0x20000;
+
+// 魔数 `_header_`
+pub const HEADER_MAGIC: u64 = 0x5F7265646165685F;
+// 魔数 `_script_`
+pub const SCRIPT_MAGIC: u64 = 0x5F7470697263735F;

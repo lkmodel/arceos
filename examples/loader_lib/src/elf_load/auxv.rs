@@ -4,7 +4,7 @@ use alloc::collections::BTreeMap;
 use elf::{ElfBytes, abi::PT_LOAD, endian::LittleEndian};
 use memory_addr::PAGE_SIZE_4K;
 
-use crate::elf_load::load::get_elf_base_addr;
+use crate::elf_load::pmp_load::get_elf_base_addr;
 
 const AT_PHDR: u8 = 3;
 const AT_PHENT: u8 = 4;

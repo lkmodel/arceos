@@ -20,7 +20,7 @@ use memory_addr::{PAGE_SIZE_4K, PhysAddr, VirtAddr};
 use crate::{
     abi::ABI_TABLE,
     config::TASK_STACK_SIZE,
-    elf_load::load::load_user_app,
+    elf_load::pmp_load::load_user_app,
     linux_env::{
         axfs_ext::api::{FileIO, OpenFlags},
         linux_api::{
@@ -44,10 +44,10 @@ pub struct Process {
     /// 进程号
     pub pid: AtomicU64,
     /// 父进程号
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub parent: AtomicU64,
     /// 子进程
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub children: Mutex<Vec<Arc<Process>>>,
     /// 所管理的线程
     pub tasks: Mutex<Vec<AxTaskRef>>,
@@ -60,14 +60,16 @@ pub struct Process {
     /// 是否被`vfork`阻塞
     pub blocked_by_vfork: Mutex<bool>,
     /// 地址空间
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub memory_set: Mutex<Arc<Mutex<AddrSpace>>>,
     /// The page table token of the process which the task belongs to
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub page_table_token: AtomicU64,
     /// 该进程可执行文件所在的路径
     pub file_path: Mutex<String>,
 }
+
+#[allow(unused)]
 impl Process {
     /// Get the process ID
     pub fn pid(&self) -> u64 {
@@ -75,19 +77,19 @@ impl Process {
     }
 
     /// Get the page table token
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub fn page_table_token(&self) -> u64 {
         self.page_table_token.load(Ordering::Acquire)
     }
 
     /// Get the parent process id
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub fn get_parent(&self) -> u64 {
         self.parent.load(Ordering::Acquire)
     }
 
     /// Set the parent process id
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub fn set_parent(&self, parent: u64) {
         self.parent.store(parent, Ordering::Release)
     }
@@ -103,6 +105,7 @@ impl Process {
     }
 
     /// Set the heap bottom of the process
+    #[allow(unused)]
     pub fn set_heap_bottom(&self, bottom: u64) {
         self.heap_bottom.store(bottom, Ordering::Release)
     }
@@ -124,23 +127,22 @@ impl Process {
     }
 
     /// Set the page table token of the process
-    #[allow(unused)]
-    #[cfg(feature = "pseudo_multi_process")]
+    #[cfg(feature = "pmp")]
     pub fn set_page_table_token(&self, token: u64) {
         self.page_table_token.store(token, Ordering::Release);
     }
 }
 
+#[allow(unused)]
 impl Process {
     /// 创建一个新的进程
-    #[allow(unused)]
     pub fn new(
-        #[cfg(feature = "pseudo_multi_process")] parent: u64,
-        #[cfg(feature = "pseudo_multi_process")] memory_set: Mutex<Arc<Mutex<AddrSpace>>>,
+        #[cfg(feature = "pmp")] parent: u64,
+        #[cfg(feature = "pmp")] memory_set: Mutex<Arc<Mutex<AddrSpace>>>,
         heap_bottom: u64,
         fd_table: Vec<Option<Arc<dyn FileIO>>>,
     ) -> Self {
-        #[cfg(feature = "pseudo_multi_process")]
+        #[cfg(feature = "pmp")]
         let page_table_token = {
             let ms = memory_set.lock();
             let token = ms.as_ref().lock().page_table_root().as_usize();
@@ -149,26 +151,26 @@ impl Process {
 
         Self {
             pid: AtomicU64::new(0),
-            #[cfg(feature = "pseudo_multi_process")]
+            #[cfg(feature = "pmp")]
             parent: AtomicU64::new(parent),
-            #[cfg(feature = "pseudo_multi_process")]
+            #[cfg(feature = "pmp")]
             children: Mutex::new(Vec::new()),
             tasks: Mutex::new(Vec::new()),
             fd_manager: FdManager::new(fd_table, FD_LIMIT_ORIGIN),
             heap_bottom: AtomicU64::new(heap_bottom),
             heap_top: AtomicU64::new(heap_bottom),
             blocked_by_vfork: Mutex::new(false),
-            #[cfg(feature = "pseudo_multi_process")]
+            #[cfg(feature = "pmp")]
             memory_set,
 
-            #[cfg(feature = "pseudo_multi_process")]
+            #[cfg(feature = "pmp")]
             page_table_token,
             file_path: Mutex::new(String::new()),
         }
     }
 }
 
-#[cfg(feature = "pseudo_multi_process")]
+#[cfg(feature = "pmp")]
 impl Process {
     /// 根据给定参数创建一个新的进程
     #[allow(unused)]
@@ -425,6 +427,7 @@ impl Process {
 }
 
 /// 与文件相关的进程方法
+#[allow(unused)]
 impl Process {
     /// 为进程分配一个文件描述符
     pub fn alloc_fd(&self, fd_table: &mut Vec<Option<Arc<dyn FileIO>>>) -> AxResult<usize> {

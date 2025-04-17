@@ -33,87 +33,29 @@ use elf::{
     abi::{ET_DYN, ET_EXEC},
     endian::LittleEndian,
 };
-use elf_load::batch::run_loop;
+use elf_load::{batch::run_loop, uni::run};
 use linux_env::process_ext::{KERNEL_GP, context::save_gp, process::Process};
 
 use crate::{
     abi::{ABI_TABLE, ABI_TERMINATE, init_abis},
     config::{MAX_APP_SIZE, MAX_LIB_SIZE, PLASH_START},
-    elf_load::load::load_user_app,
-    elf_load::uni_load::load_elf,
+    elf_load::pmp_load::load_user_app,
     init::init_all,
 };
 
 // 准备参数 p，这里我们直接在代码中指定参数
 static mut PARAMS: [u64; 10] = [0; 10];
 
-// fn call_c_start(args: &[&str], entry: usize) {
-//     let argc = args.len() as c_int;
-//     let mut argv_pointers = Vec::new();
-//     let mut arg_strings = Vec::new();
-//
-//     for arg in args {
-//         match CString::new(*arg) {
-//             Ok(c_str) => {
-//                 argv_pointers.push(c_str.as_ptr() as uintptr_t);
-//                 arg_strings.push(c_str);
-//             }
-//             Err(e) => {
-//                 panic!("Error creating CString: {}", e);
-//             }
-//         }
-//     }
-//
-//     let mut params: Vec<c_long> = Vec::new();
-//     params.push(argc as c_long);
-//     for ptr in argv_pointers {
-//         params.push(ptr as c_long);
-//     }
-//     params.push(ptr::null() as c_long); // Optional null terminator for `argv`
-//
-//     unsafe {
-//         // 这里entry就是执行函数的地址
-//         let func: extern "C" fn(*const c_long) = axstd::mem::transmute(entry);
-//         func(params.as_ptr());
-//     }
-//
-//     // 'arg_strings' Vec 在此处被 drop，这将释放 CString 实例。
-//     // 只要 C 代码不需要保留这些字符串，这就是安全的。
-// }
-
 #[unsafe(no_mangle)]
 fn main() {
-    #[cfg(not(any(
-        feature = "unikernel",
-        feature = "batch",
-        feature = "pseudo_multi_process"
-    )))]
-    compile_error!(
-        "You must enable exactly one of `unikernel`, `batch` or `multi_process_unchecked`."
-    );
+    #[cfg(not(any(feature = "unikernel", feature = "batch",)))]
+    compile_error!("You must enable exactly one of `unikernel`, `batch`.");
 
     #[cfg(all(feature = "unikernel", feature = "batch"))]
     compile_error!("You cannot enable both `unikernel` and `batch` at the same time.");
 
-    #[cfg(all(feature = "unikernel", feature = "pseudo_multi_process"))]
-    compile_error!(
-        "You cannot enable both `unikernel` and `pseudo_multi_process` at the same time."
-    );
-
-    #[cfg(all(feature = "batch", feature = "pseudo_multi_process"))]
-    compile_error!("You cannot enable both `batch` and `pseudo_multi_process` at the same time.");
-
-    #[cfg(not(any(feature = "placeholder_signal", feature = "signal",)))]
-    compile_error!("You must enable exactly one of `placeholder_***` or `***`.");
-
-    #[cfg(all(feature = "placeholder_signal", feature = "signal"))]
-    compile_error!("You cannot enable both `placeholder_***` and `***` at the same time.");
-
-    #[cfg(not(any(feature = "multi_process", feature = "uni_process",)))]
-    compile_error!("You must enable exactly one of `multi` or `uni`.");
-
-    #[cfg(all(feature = "multi_process", feature = "uni_process"))]
-    compile_error!("You cannot enable both `multi` and `uni` at the same time.");
+    #[cfg(all(feature = "hmp", feature = "pmp"))]
+    compile_error!("You cannot enable both `hmp` and `pmp` at the same time.");
 
     #[cfg(feature = "pseudo_multi_process")]
     {
@@ -174,67 +116,7 @@ fn main() {
     {
         init_all();
         init_abis();
-        let run_entry = load_elf();
-
-        unsafe {
-            PARAMS[0] = 0;
-            PARAMS[1] = "arg1\0".as_ptr() as u64;
-        }
-
-        println!("Entry: 0x{:x} and RUN", run_entry);
-        unsafe {
-            core::arch::asm!("
-            // 保存更多上下文信息
-            addi    sp, sp, -128
-
-            // 保存通用寄存器
-            sd      ra, 0(sp)
-            sd      a7, 8(sp)
-            sd      a6, 16(sp)
-            sd      a5, 24(sp)
-            sd      a4, 32(sp)
-            sd      a3, 40(sp)
-            sd      a2, 48(sp)
-            sd      a1, 56(sp)
-            sd      a0, 64(sp)
-            sd      t6, 72(sp)
-            sd      t5, 80(sp)
-            sd      t4, 88(sp)
-            sd      t3, 96(sp)
-            sd      t2, 104(sp)
-            sd      t1, 112(sp)
-            sd      t0, 120(sp)
-
-            mv      t2, {entry}
-            la      a0, {param}     // 将参数p的地址加载到a0
-            la      a7, {abi_table}
-            jalr    t2
-
-            ld      ra, 0(sp)
-            ld      a7, 8(sp)
-            ld      a6, 16(sp)
-            ld      a5, 24(sp)
-            ld      a4, 32(sp)
-            ld      a3, 40(sp)
-            ld      a2, 48(sp)
-            ld      a1, 56(sp)
-            ld      a0, 64(sp)
-            ld      t6, 72(sp)
-            ld      t5, 80(sp)
-            ld      t4, 88(sp)
-            ld      t3, 96(sp)
-            ld      t2, 104(sp)
-            ld      t1, 112(sp)
-            ld      t0, 120(sp)
-
-            addi    sp, sp, 128
-            ",
-                abi_table = sym ABI_TABLE,
-                param = sym PARAMS,
-                entry = in(reg) run_entry,
-                options(nostack)
-            )
-        }
+        run();
     }
 
     #[cfg(feature = "batch")]

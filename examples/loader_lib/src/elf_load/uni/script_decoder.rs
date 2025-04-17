@@ -13,7 +13,6 @@ use axlog::{debug, info};
 use axstd::string::{String, ToString};
 
 use crate::{config::SCRIPT_MAGIC, elf_load::decoder::Decoder};
-const HEADER_MARKER: u8 = 0xFF; // 每行开头的验证字节
 
 /// 解码器，用于从二进制数据中解析出指令行列表
 #[derive(Debug)]
@@ -28,21 +27,17 @@ impl<'a> ScriptDecoder<'a> {
         }
     }
 
-    /// 从头部解析魔术和行数
-    fn parse_header(&mut self) -> Result<(u64, u32), String> {
+    /// 从头部解析魔术
+    fn parse_header(&mut self) -> Result<u64, String> {
         let magic = self.decoder.read_u64()?;
         if magic != SCRIPT_MAGIC {
             return Err("Invalid magic number!".to_string());
         }
-        let num_lines = self.decoder.read_u32()?;
-        Ok((magic, num_lines))
+        Ok(magic)
     }
 
     /// 解析每个指令行，返回 C 风格的 argv 数组
     fn parse_command_line(&mut self) -> Result<Vec<CString>, String> {
-        if self.decoder.read_u8()? != HEADER_MARKER {
-            return Err("Invalid line header marker!".to_string());
-        }
         let argc = self.decoder.read_u32()?;
         // `argv` 在栈上创建，但是 `Vec` 在堆上
         // 此时 argv 的所有权属于 parse_command_line 这个函数。
@@ -113,45 +108,21 @@ impl Drop for ArgvStorage {
 /// # 返回值
 /// 0: `Vec<CString>` 的直接命令名字，方便查找
 /// 1: 在 `mem` 中，存放 `argc` 地址的 `Vec<*mut u64>`，每个地址存放一组连续的 `argc` 和 `argv` 数据
-pub fn decode_script(script_slice: &[u8]) -> (u32, Vec<(CString, ArgvStorage)>) {
+fn decode_script(script_slice: &[u8]) -> ArgvStorage {
     debug!("decode by script_slice");
     // 解码二进制脚本文件
     debug!("script_slice_addr {:?}", script_slice.as_ptr());
     let mut decoder = ScriptDecoder::new(script_slice);
-    let mut line_num = 0;
-    let mut result = Vec::new();
 
-    if let Ok((_magic, num_lines)) = decoder.parse_header() {
-        info!("Magic verified, number of command lines: {}", num_lines);
-
-        // 解码每一行指令行
-        for i in 0..num_lines {
-            // argv 获得了 Vec<CString> 的所有权
-            if let Ok(argv) = decoder.parse_command_line() {
-                info!("Line {} parsed with args: {:?}", i, argv);
-                let storage = unsafe { ArgvStorage::new(argv) };
-                // storage 被存入 result，它的生命周期会跟随 result
-                result.push((storage.args[0].clone(), storage));
-            }
-        }
-
-        line_num = num_lines;
-    }
-
-    line_num.eq(&0).then(|| panic!("Line num is zero"));
-    result.is_empty().then(|| panic!("Script line is empty"));
-
-    (line_num, result)
-}
-
-/// 解码之后的脚本数据
-#[derive(Debug, Clone)]
-pub struct ScriptDecoded {
-    /// 用于指定脚本行的行数
-    pub line_num: u32,
-    /// 0: `Vec<CString>` 的直接命令名字，方便查找
-    /// 1: 在 `mem` 中，存放 `argc` 地址的 `Vec<*mut u64>`，每个地址存放一组连续的 `argc` 和 `argv` 数据
-    pub lines_meta: Vec<(CString, ArgvStorage)>,
+    let _ = decoder
+        .parse_header()
+        .expect("Failed to check script magic");
+    let argv = decoder
+        .parse_command_line()
+        .expect("Failed to load command line");
+    info!("Parsed with args: {:?}", argv);
+    let storage = unsafe { ArgvStorage::new(argv) };
+    storage
 }
 
 /// 解码执行脚本
@@ -162,7 +133,7 @@ pub struct ScriptDecoded {
 ///
 /// # 返回
 /// 返回解码后的脚本数据
-pub fn script_decoded(script_start: usize, script_size: usize) -> ScriptDecoded {
+pub fn script_decoded(script_start: usize, script_size: usize) -> ArgvStorage {
     debug!("Decode script...");
     info!(
         "script_start: 0x{:x}, script_size: 0x{:x}",
@@ -170,11 +141,8 @@ pub fn script_decoded(script_start: usize, script_size: usize) -> ScriptDecoded 
     );
     // NOTE: 这里应该加上PLASH的偏移，否则就是在低地址区取值了
     let script_slice = unsafe { from_raw_parts(script_start as *const u8, script_size) };
-    let (line_num, lines_meta) = decode_script(script_slice);
+    let line_meta = decode_script(script_slice);
 
     debug!("Decode script done");
-    ScriptDecoded {
-        line_num,
-        lines_meta,
-    }
+    line_meta
 }

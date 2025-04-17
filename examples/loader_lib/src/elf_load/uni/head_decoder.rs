@@ -1,23 +1,90 @@
-// use axstd::string::String;
-//
-// use crate::elf_load::decoder::Decoder;
-//
-// /// 解码器，用于从二进制数据中解析出指令行列表
-// pub struct HeadDecoder<'a> {
-//     decoder: Decoder<'a>,
-// }
-// const MAGIC_NUMBER: u64 = 0x5F7265646165685F; // 魔数 `_header_`
-//
-// impl<'a> HeadDecoder<'a> {
-//     pub fn new(data: &'a [u8]) -> Self {
-//         HeadDecoder {
-//             decoder: Decoder::new(data),
-//         }
-//     }
-//
-//     pub fn get_app_size(&mut self) -> Result<usize, String> {
-//         let app_elf_size = self.decoder.read_u64()? as usize;
-//
-//         Ok(app_elf_size)
-//     }
-// }
+use alloc::{ffi::CString, vec::Vec};
+use axlog::debug;
+use axstd::string::{String, ToString};
+use core::slice::from_raw_parts;
+
+use crate::elf_load::decoder::Decoder;
+
+const MAGIC_NUMBER: u64 = 0x5F7265646165685F; // 魔数 `_header_`
+
+/// 解码器，用于从二进制数据中解析出指令行列表
+#[derive(Debug)]
+pub struct HeadDecoder<'a> {
+    decoder: Decoder<'a>,
+}
+
+impl<'a> HeadDecoder<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        HeadDecoder {
+            decoder: Decoder::new(data),
+        }
+    }
+
+    /// 從頭部判斷魔數
+    fn parse_header(&mut self) -> Result<u64, String> {
+        let magic = self.decoder.read_u64()?;
+        if magic != MAGIC_NUMBER {
+            return Err("Invalid magic number!".to_string());
+        }
+        Ok(magic)
+    }
+
+    /// 解析应用数据行
+    fn parse_app_line(&mut self) -> Result<(u64, CString, u64), String> {
+        let app_size = self.decoder.read_u64()?;
+        let app_name = self.decoder.read_c_string()?;
+        let app_offset = self.decoder.read_u64()?;
+
+        Ok((app_size, app_name, app_offset))
+    }
+
+    /// 解析lib库数据行
+    fn parse_lib_line(&mut self) -> Result<(u64, u64), String> {
+        let lib_size = self.decoder.read_u64()?;
+        let lib_offset = self.decoder.read_u64()?;
+
+        Ok((lib_size, lib_offset))
+    }
+
+    /// 解析 script 数据行
+    fn parse_script_line(&mut self) -> Result<(u64, u64), String> {
+        let script_size = self.decoder.read_u64()?;
+        let script_offset = self.decoder.read_u64()?;
+
+        Ok((script_size, script_offset))
+    }
+}
+
+/// 解码之后的头文件
+#[derive(Debug)]
+pub struct HeadDecoded {
+    /// 存放多个应用的（应用大小，`C` 风格字符串，应用在 `PLASH` 中的偏移）
+    pub app: (u64, CString, u64),
+    /// (`Lib` 库大小, 库在 `PLASH` 中的偏移)
+    pub lib: (u64, u64),
+    /// (脚本大小, 脚本在 `PLASH` 中的偏移)
+    pub script: (u64, u64),
+}
+
+/// 头结构解码
+/// # 参数
+/// * `plash_start` - `PLASH` 的起始地址
+/// * `plash_size` - `PLASH` 的大小
+///
+/// # 返回值
+/// 解码后的头文件
+pub fn head_decoded(plash_start: usize, plash_size: usize) -> HeadDecoded {
+    debug!("Decode head...");
+    let plash = unsafe { from_raw_parts(plash_start as *const u8, plash_size) };
+    let mut decode = HeadDecoder::new(plash);
+
+    let _ = decode.parse_header().expect("Failed to parse header");
+    let app = decode.parse_app_line().expect("Failed to parse app line");
+    let lib = decode.parse_lib_line().expect("Failed to parse lib line");
+    let script = decode
+        .parse_script_line()
+        .expect("Failed to parse script line");
+
+    debug!("Decode head done");
+    HeadDecoded { app, lib, script }
+}

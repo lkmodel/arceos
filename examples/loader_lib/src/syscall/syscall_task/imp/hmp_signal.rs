@@ -11,7 +11,6 @@ use axlog::{error, warn};
 /// * `signum` - `usize`: 信号编号
 /// * `action` - `usize`: 指向新动作结构体的指针 (地址)
 /// * `old_action` - `usize`: 指向存储旧动作结构体的指针 (地址)
-#[cfg(feature = "placeholder_signal")]
 pub fn syscall_sigaction(args: [usize; 6]) -> SyscallResult {
     let signum = args[0];
     let action_ptr = args[1]; // action 参数作为地址值
@@ -49,7 +48,6 @@ pub fn syscall_sigaction(args: [usize; 6]) -> SyscallResult {
 /// 它通常返回 -1 并将 `errno` 设置为 EINTR。
 /// # 参数
 /// * `mask` - *const `usize`
-#[cfg(feature = "placeholder_signal")]
 pub fn syscall_sigsuspend(args: [usize; 6]) -> SyscallResult {
     // 标记为未使用，但保留以匹配签名
     // Mark as unused, but keep for signature
@@ -75,7 +73,6 @@ pub fn syscall_sigsuspend(args: [usize; 6]) -> SyscallResult {
 /// syscall_sigreturn 的占位符。
 /// 此函数对于信号处理程序返回后恢复状态至关重要。
 /// 它无法被有意义地 stub。
-#[cfg(feature = "placeholder_signal")]
 pub fn syscall_sigreturn() -> SyscallResult {
     error!(
         "syscall_sigreturn(placeholder): This syscall cannot be meaningfully stubbed! It's essential for exiting signal handlers correctly. Returning ENOSYS."
@@ -101,7 +98,6 @@ pub fn syscall_sigreturn() -> SyscallResult {
 /// # 参数
 /// * `pid` - `isize`: 进程 ID
 /// * `signum` - `isize`: 信号编号
-#[cfg(feature = "placeholder_signal")]
 pub fn syscall_kill(args: [usize; 6]) -> SyscallResult {
     // `isize` conversion needs platform awareness, but `usize` -> `isize` is generally safe
     // `isize` 转换需要注意平台差异，但通常 `usize` -> `isize` 是安全的

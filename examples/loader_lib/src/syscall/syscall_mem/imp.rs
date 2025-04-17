@@ -163,14 +163,14 @@ pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_munmap(args: [usize; 6]) -> SyscallResult {
     let start = args[0];
     let len = args[1];
-    unsafe {
-        if start != 0 && len > 0 {
+    if start != 0 && len > 0 {
+        unsafe {
             let layout = Layout::from_size_align(len, 8).map_err(|_| SyscallError::EINVAL)?;
             dealloc(start as *mut u8, layout);
             info!("Unikernel munmap at 0x{:x}, len 0x{:x}", start, len);
         }
-        Ok(0)
     }
+    Ok(0)
 }
 
 /// 同步内存映射到文件 (`Unikernel` 版本)

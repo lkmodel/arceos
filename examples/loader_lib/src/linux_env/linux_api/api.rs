@@ -8,14 +8,14 @@ use axtask::current;
 use lazyinit::LazyInit;
 
 use crate::elf_load::batch::reentry_label;
-#[cfg(feature = "pseudo_multi_process")]
+#[cfg(feature = "pmp")]
 use crate::linux_env::process_ext::api::current_process;
 use crate::linux_env::process_ext::process::Process;
 
-#[cfg(any(feature = "unikernel", feature = "batch"))]
+#[cfg(feature = "hmp")]
 pub static UNI_API: LazyInit<Arc<Process>> = LazyInit::new();
 
-#[cfg(any(feature = "unikernel", feature = "batch"))]
+#[cfg(feature = "hmp")]
 pub fn process_api() -> Arc<Process> {
     UNI_API.get().unwrap().clone()
 }
@@ -30,12 +30,12 @@ pub fn exit_current_task(exit_code: i32) -> ! {
     reentry_label(); // 这里回到OS
 }
 
-#[cfg(feature = "pseudo_multi_process")]
+#[cfg(feature = "pmp")]
 pub fn process_api() -> Arc<Process> {
     current_process()
 }
 
-#[cfg(feature = "pseudo_multi_process")]
+#[cfg(feature = "pmp")]
 pub fn exit_current_task(exit_code: i32) -> ! {
     unimplemented!();
 }

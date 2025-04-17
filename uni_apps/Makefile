@@ -24,7 +24,7 @@ PAYLOAD_DIR = ../payload
 
 # 处理 Lib 选项
 ifeq ($(INCLUDE_LIB), 1)
-	LIB_ARG = --lib_file $(MOCK_LIBC_SO)
+	LIB_ARG = --lib $(MOCK_LIBC_SO)
 else
 	LIB_ARG =
 endif
@@ -35,26 +35,14 @@ all: toplash
 toplash:
 	mkdir -p $(BUILD_DIR) # 创建构建目录
 	rm -f $(OUTPUT)
-	
-	# 调用 `python` 脚本编码执行脚本
-	python3 script_encoder.py \
-		--infile $(SCRIPT) \
-		--outfile $(ENCODED_SCRIPT)
 
-	# 调用 `python` 脚本生成头部元信息
-	python3 generate_header.py \
+	python3 package_app.py \
 		--apps_dir $(APP_DIR) \
+		--script $(SCRIPT) \
 		$(LIB_ARG) \
-		--script_file $(ENCODED_SCRIPT) \
-		--out_file $(HEADER)
-
-	# 调用打包脚本，将头部、应用、Lib库和脚本按顺序写入到 `apps.bin`
-	python3 pack_apps.py \
-		--header_file $(HEADER) \
-		--apps_dir $(APP_DIR) \
-		$(LIB_ARG) \
-		--script_file $(ENCODED_SCRIPT) \
-		--out_file $(OUTPUT)
+		--script_out $(ENCODED_SCRIPT) \
+		--header_out $(HEADER) \
+		--outfile $(OUTPUT)
 
 	# 通过 `dd` 填充空字节，确保最终文件大小为 `32MB`
 	dd if=/dev/zero bs=1 count=0 seek=32M of=$(OUTPUT)

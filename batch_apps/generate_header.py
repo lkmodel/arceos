@@ -49,19 +49,19 @@ def generate_header(apps_dir, lib_path, script_path, output_file):
     script_offset = offset
 
     # 构建头部
-    header_data.append(struct.pack("L", MAGIC_NUMBER))  # 魔数
+    header_data.append(struct.pack("Q", MAGIC_NUMBER))  # 魔数
     header_data.append(struct.pack("I", len(apps_offsets)))  # 应用总数
-    header_data.append(struct.pack("L", base_offset))  # 头部大小
+    header_data.append(struct.pack("Q", base_offset))  # 头部大小
 
     for app_size, app_name, app_offset in apps_offsets:
-        header_data.append(struct.pack("L", app_size))  # 应用大小
+        header_data.append(struct.pack("Q", app_size))  # 应用大小
         header_data.append(app_name)  # 应用名字，变长，包含尾部的 `\0`
-        header_data.append(struct.pack("L", app_offset))  # 应用起始地址
+        header_data.append(struct.pack("Q", app_offset))  # 应用起始地址
 
-    header_data.append(struct.pack("L", lib_size))  # Lib库大小
-    header_data.append(struct.pack("L", lib_offset))  # Lib库起始地址
-    header_data.append(struct.pack("L", script_size))  # 执行脚本大小
-    header_data.append(struct.pack("L", script_offset))  # 执行脚本起始地址
+    header_data.append(struct.pack("Q", lib_size))  # Lib库大小
+    header_data.append(struct.pack("Q", lib_offset))  # Lib库起始地址
+    header_data.append(struct.pack("Q", script_size))  # 执行脚本大小
+    header_data.append(struct.pack("Q", script_offset))  # 执行脚本起始地址
 
     # 将头部写入文件
     with open(output_file, "wb") as f:

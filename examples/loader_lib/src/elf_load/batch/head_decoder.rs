@@ -3,9 +3,7 @@ use axlog::debug;
 use axstd::string::{String, ToString};
 use core::slice::from_raw_parts;
 
-use crate::elf_load::decoder::Decoder;
-
-const MAGIC_NUMBER: u64 = 0x5F7265646165685F; // 魔数 `_header_`
+use crate::{config::HEADER_MAGIC, elf_load::decoder::Decoder};
 
 /// 解码器，用于从二进制数据中解析出指令行列表
 #[derive(Debug)]
@@ -23,7 +21,7 @@ impl<'a> HeadDecoder<'a> {
     /// 从头部解析魔术和行数
     fn parse_header(&mut self) -> Result<(u64, u32, u64), String> {
         let magic = self.decoder.read_u64()?;
-        if magic != MAGIC_NUMBER {
+        if magic != HEADER_MAGIC {
             return Err("Invalid magic number!".to_string());
         }
         let app_lines = self.decoder.read_u32()?;
@@ -48,7 +46,7 @@ impl<'a> HeadDecoder<'a> {
         Ok((lib_size, lib_offset))
     }
 
-    /// 解析lib库数据行
+    /// 解析 script 数据行
     fn parse_script_line(&mut self) -> Result<(u64, u64), String> {
         let script_size = self.decoder.read_u64()?;
         let script_offset = self.decoder.read_u64()?;
