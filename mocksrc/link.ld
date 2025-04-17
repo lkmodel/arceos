@@ -2,7 +2,11 @@
 ENTRY(_start)
 OUTPUT_ARCH(riscv)
 
-BASE_ADDRESS = 0xffffffc080600000;
+/* 定義基地址，應用程式將被加載到這個地址 */
+BASE_ADDRESS = 0xffffffc087000000;
+
+/* 定義頁對齊大小 */
+PAGE_SIZE = 4K;
 
 SECTIONS
 {

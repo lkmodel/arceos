@@ -13,8 +13,9 @@ all: subdir toapps
 subdir:
 	$(MAKE) -C $(DIR) $(TYPE) OUTFILE=$(OUTFILE)
 
+# 添加尾部的.bin以便避免被git跟蹤
 toapps:
-	cp $(DIR)/$(OUTFILE) $(BATCH_APPS)
-	cp $(DIR)/$(OUTFILE) $(UNI_APPS)
+	cp $(DIR)/$(OUTFILE).bin $(BATCH_APPS)$(OUTFILE)
+	cp $(DIR)/$(OUTFILE).bin $(UNI_APPS)$(OUTFILE)
 
 .PHONY: all

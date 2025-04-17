@@ -21,6 +21,6 @@ dynamic:
 	$(CC) $(SRC_C) -o $(SRC_BIN)
 	#
 	$(STRIP) -s $(SRC_BIN)
-	mv -f $(SRC_BIN) $(OUTFILE)
+	mv -f $(SRC_BIN) $(OUTFILE).bin
 
 .PHONY: all static dynamic

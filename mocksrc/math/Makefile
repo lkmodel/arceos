@@ -3,7 +3,7 @@ include ../config.mk
 
 OUTFILE?=apps.bin
 
-SRC_NAME?=task
+SRC_NAME?=math
 SRC_C=$(SRC_NAME).c
 SRC_O=$(SRC_NAME).o
 SRC_BIN=$(SRC_NAME).bin
