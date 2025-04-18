@@ -228,12 +228,12 @@ pub fn syscall_getuid() -> SyscallResult {
 
 /// To get the parent process id
 pub fn syscall_getppid() -> SyscallResult {
-    #[cfg(feature = "uni_process")]
+    #[cfg(feature = "hmp")]
     {
         warn!("Pretending to successfully getppid.");
         Ok(0)
     }
-    #[cfg(feature = "multi_process")]
+    #[cfg(feature = "pmp")]
     {
         Ok(process_api().get_parent() as isize)
     }
@@ -263,13 +263,13 @@ pub fn syscall_setpgid(args: [usize; 6]) -> SyscallResult {
 /// # Arguments
 /// * `tid` - usize
 pub fn syscall_set_tid_address(args: [usize; 6]) -> SyscallResult {
-    #[cfg(feature = "multi_process")]
+    #[cfg(feature = "pmp")]
     {
         let tid = args[0];
         set_child_tid(tid);
         Ok(current_task().id().as_u64() as isize)
     }
-    #[cfg(feature = "uni_process")]
+    #[cfg(feature = "hmp")]
     {
         Ok(current_task().id().as_u64() as isize)
     }

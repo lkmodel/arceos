@@ -8,7 +8,7 @@ from pathlib import Path
 def parse_args():
     parser = argparse.ArgumentParser(description="比较两个目录的文件内容差异")
     parser.add_argument(
-        "--dir1", type=str, default="./c/", help="第一个目录（默认: ./c/）"
+        "--dir1", type=str, default="../c/", help="第一个目录（默认: ../c/）"
     )
     parser.add_argument(
         "--dir2",

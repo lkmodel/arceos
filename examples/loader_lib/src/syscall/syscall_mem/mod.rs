@@ -1,11 +1,12 @@
 //! 与内存相关的系统调用
 
-mod imp;
+#[cfg(feature = "hmp")]
+mod hmp_imp;
+#[cfg(feature = "hmp")]
+use hmp_imp::*;
 
 mod mem_syscall_id;
 pub use mem_syscall_id::MemSyscallId::{self, *};
-
-use imp::*;
 
 use super::SyscallResult;
 /// 与内存相关的系统调用

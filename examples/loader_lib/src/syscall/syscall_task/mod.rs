@@ -27,19 +27,19 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         GETPPID => syscall_getppid(),
         WAIT4 => syscall_wait4(args),
         GETRANDOM => syscall_getrandom(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         SIGSUSPEND => syscall_sigsuspend(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         SIGACTION => syscall_sigaction(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         KILL => syscall_kill(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         TKILL => syscall_tkill(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         TGKILL => syscall_tkill(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         SIGPROCMASK => syscall_sigprocmask(args),
-        #[cfg(any(feature = "signal", feature = "placeholder_signal"))]
+        #[cfg(feature = "signal")]
         SIGRETURN => syscall_sigreturn(),
         EXIT_GROUP => syscall_exit(args),
         SET_TID_ADDRESS => syscall_set_tid_address(args),

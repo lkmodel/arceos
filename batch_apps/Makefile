@@ -2,8 +2,6 @@
 #
 # 应用程序目录
 APP_DIR ?= APPS
-# 应用程序原码目录
-SRC_DIR ?= SRCS
 # 是否包含 Lib，默认包含 (1)
 INCLUDE_LIB ?= 1
 # 库目录

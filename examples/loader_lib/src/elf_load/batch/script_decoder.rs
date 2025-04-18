@@ -12,9 +12,7 @@ use alloc::{
 use axlog::{debug, info};
 use axstd::string::{String, ToString};
 
-use crate::elf_load::decoder::Decoder;
-
-const MAGIC: u64 = 0x5F7470697263735F; // 魔数 `_script_`
+use crate::{config::SCRIPT_MAGIC, elf_load::decoder::Decoder};
 const HEADER_MARKER: u8 = 0xFF; // 每行开头的验证字节
 
 /// 解码器，用于从二进制数据中解析出指令行列表
@@ -33,7 +31,7 @@ impl<'a> ScriptDecoder<'a> {
     /// 从头部解析魔术和行数
     fn parse_header(&mut self) -> Result<(u64, u32), String> {
         let magic = self.decoder.read_u64()?;
-        if magic != MAGIC {
+        if magic != SCRIPT_MAGIC {
             return Err("Invalid magic number!".to_string());
         }
         let num_lines = self.decoder.read_u32()?;

@@ -89,7 +89,7 @@
 
 * `../../batch_apps/` (**已冻结**): 处理批处理模式的应用打包。详见其 `README.md`。
 * `../../examples/loader_lib/` (**当前目录**): 包含 `loader_lib` 的核心源代码。
-* `../../mockc_apps/` (**待修订**): 一个用于 "uni" 加载模式的简单编译/打包脚本。计划修订并重命名为 `uni_apps`。详见其 `README.md`。
+* `../../uni_apps/` (**待修订**): 一个用于 "uni" 加载模式的简单编译/打包脚本。
 * `../../mocksrc/` (**开发中**): 规划中未来存放所有源码编译和链接脚本的位置。详见其 `README.md`。
 * `../../ulib/mocklibc_lib/` (**Lib库源码**): 我们修改的 `mocklibc` 库，用于加载基于 musl 的动态链接应用。详见其 `README.md`。
 
@@ -260,6 +260,35 @@
     # 可选日志级别: -l <debug|warn|info|off|trace>
     # 是否使用 QEMU 图形界面: -q <y|n>
     ```
+
+5. **使用`cargo-xtask`来运行**
+   * **Uni Mode:**
+
+   ```bash
+   cargo xtask uni [SCRIPT]
+   # e.g. cargo xtask string
+   #会连续执行编译打包并运行
+   ```
+
+   * **Batch Mode:**
+
+   ```bash
+   cargo xtask batch [SCRIPT]
+   #会连续执行编译打包并运行
+   #后面跟上SCRIPT后会替代batch_app下的script.txt来进行打包运行
+   # e.g. cargo xtask batch "busybox echo Hello,ArceOS!"
+   ```
+
+   * **Debug Mode**
+
+   ```bash
+   cargo xtask --debug <batch|uni>
+   #需要安装zellij
+   ```
+
+   同样也支持
+   * -l <debug|warn|info|off|trace>
+   * -q <y|n>
 
 ## 11. 代码改进建议
 

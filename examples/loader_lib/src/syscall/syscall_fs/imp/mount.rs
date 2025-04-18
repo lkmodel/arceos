@@ -1,11 +1,11 @@
 use axstd::string::ToString;
 
-use axlog::{debug, error};
+use axlog::debug;
 
 use crate::{
     linux_env::linux_api::{
         link::{AT_FDCWD, raw_ptr_to_ref_str},
-        utils::{UtilsError, deal_path},
+        utils::deal_path,
     },
     syscall::{
         SyscallError, SyscallResult,
@@ -28,41 +28,9 @@ pub fn syscall_mount(args: [usize; 6]) -> SyscallResult {
     let fs_type = args[2] as *const u8;
     let _flags = args[3];
     let _data = args[4] as *const u8;
-    let device_path = match deal_path(AT_FDCWD, Some(special), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                error!("panic me {:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-            _ => {
-                error!("{:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-        },
-    };
+    let device_path = deal_path(AT_FDCWD, Some(special), false)?;
     // 这里dir必须以"/"结尾,但在shell中输入时,不需要以"/"结尾
-    let mount_path = match deal_path(AT_FDCWD, Some(dir), true) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                error!("panic me {:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-            _ => {
-                error!("{:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-        },
-    };
+    let mount_path = deal_path(AT_FDCWD, Some(dir), true)?;
 
     // if process
     //     .manual_alloc_for_lazy((fs_type as usize).into())
@@ -133,23 +101,7 @@ pub fn syscall_mount(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_umount(args: [usize; 6]) -> SyscallResult {
     let dir = args[0] as *const u8;
     let flags = args[1];
-    let mount_path = match deal_path(AT_FDCWD, Some(dir), true) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty | UtilsError::NoEntryInTable => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                error!("panic me {:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-            _ => {
-                error!("{:?}", e);
-                return Err(SyscallError::EPERM);
-            }
-        },
-    };
+    let mount_path = deal_path(AT_FDCWD, Some(dir), true)?;
 
     if flags != 0 {
         debug!("flags unimplemented");

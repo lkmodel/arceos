@@ -3,7 +3,7 @@ use axstd::string::ToString;
 use crate::{
     linux_env::linux_api::{
         link::{FilePath, new_link, remove_link},
-        utils::{UtilsError, deal_path},
+        utils::deal_path,
     },
     syscall::{SyscallError, SyscallResult, UnlinkatFlags},
 };
@@ -28,36 +28,8 @@ pub fn sys_linkat(args: [usize; 6]) -> SyscallResult {
     let new_path = args[3] as *const u8;
     let _flags = args[4];
 
-    let old_path = match deal_path(old_dir_fd, Some(old_path), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::NULL | UtilsError::CannotAcce => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::InvalidArg => return Err(SyscallError::ENOTDIR),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
-    let new_path = match deal_path(new_dir_fd, Some(new_path), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::NULL | UtilsError::CannotAcce => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::InvalidArg => return Err(SyscallError::ENOTDIR),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let old_path = deal_path(old_dir_fd, Some(old_path), false)?;
+    let new_path = deal_path(new_dir_fd, Some(new_path), false)?;
 
     match metadata(old_path.path()) {
         Ok(_) => {}
@@ -104,21 +76,7 @@ pub fn syscall_unlinkat(args: [usize; 6]) -> SyscallResult {
     let dir_fd = args[0];
     let path = args[1] as *const u8;
     let flags = args[2];
-    let path = match deal_path(dir_fd, Some(path), false) {
-        Ok(t) => t,
-        Err(e) => match e {
-            UtilsError::NULL | UtilsError::CannotAcce => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::InvalidArg => return Err(SyscallError::ENOTDIR),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let path = deal_path(dir_fd, Some(path), false)?;
 
     let flags = if let Some(ans) = UnlinkatFlags::from_bits(flags as u32) {
         ans

@@ -29,6 +29,8 @@ members = [
     "examples/httpserver",
     "examples/shell",
     "examples/loader_lib",
+    "xtask",
+    "xtask/qemu_monitor"
 ]
 
 [workspace.package]

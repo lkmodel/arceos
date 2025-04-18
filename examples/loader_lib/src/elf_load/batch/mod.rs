@@ -1,18 +1,17 @@
 pub mod head_decoder;
-pub mod load;
 pub mod script_decoder;
 
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 use axlog::{debug, info};
 
+use super::load::{load_app_dyn, load_exec, load_lib, modify_lib_main};
 use elf::{
     ElfBytes,
     abi::{ET_DYN, ET_EXEC},
     endian::LittleEndian,
 };
 use head_decoder::head_decoded;
-use load::{load_app_dyn, load_exec, load_lib, modify_lib_main};
 use script_decoder::script_decoded;
 
 use crate::{

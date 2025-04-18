@@ -3,7 +3,7 @@ use axfs::api::Permissions;
 use axlog::debug;
 
 use crate::{
-    config::{FILE_NAME_LENGTH, SPACE_BOTTOM, SPACE_TOP},
+    config::{FILE_NAME_LENGTH, PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE},
     linux_env::{
         axfs_ext::api::FileIOType,
         linux_api::{
@@ -11,6 +11,7 @@ use crate::{
             link::{AT_FDCWD, FilePath, raw_ptr_to_ref_str},
         },
     },
+    syscall::SyscallError,
 };
 
 /// The error type used by `utils`.
@@ -42,6 +43,9 @@ pub enum UtilsError {
     /// 无法找到某个东西
     #[allow(unused)]
     NotFound,
+    /// Path is invalid.
+    /// 路徑非法
+    InvalidPath,
     /// Other invalid parameters not marked by UtilsError
     /// 非UtilsError标出的其他非法参数
     InvalidArg,
@@ -52,6 +56,27 @@ pub enum UtilsError {
 
 /// A specialized [`Result`] type with [`UtilsError`] as the error type.
 pub type UtilsResult<T = ()> = Result<T, UtilsError>;
+
+impl From<UtilsError> for SyscallError {
+    fn from(error: UtilsError) -> Self {
+        match error {
+            UtilsError::StrTooLong => SyscallError::ENAMETOOLONG,
+            UtilsError::StrEmpty | UtilsError::NULL | UtilsError::CannotAcce => {
+                SyscallError::EFAULT
+            }
+            UtilsError::OutOfTable => SyscallError::EBADF,
+            UtilsError::NoEntryInTable => SyscallError::ENOENT,
+            UtilsError::InvalidPath => SyscallError::EINVAL,
+            UtilsError::InvalidArg => SyscallError::ENOTDIR,
+            UtilsError::PanicMe => {
+                panic!("Unhandled critical error {:?}", error);
+            }
+            _ => {
+                panic!("Unhandled error: {:?}", error);
+            }
+        }
+    }
+}
 
 /// To handle common file or directory paths and encapsulates them into a `UtilsError`.
 /// Under normal circumstances, it converts each provided address into a standardized path in the form of an absolute address.
@@ -65,7 +90,6 @@ pub type UtilsResult<T = ()> = Result<T, UtilsError>;
 /// # Returns
 ///
 /// Only return follows:
-///
 pub fn deal_path(
     dir_fd: usize,
     path_addr: Option<*const u8>,
@@ -75,7 +99,7 @@ pub fn deal_path(
 
     let process = process_api();
     if let Some(path_addr) = path_addr {
-        is_in_valid_space(path_addr as usize)?;
+        is_valid_addr(path_addr as usize)?;
         path = unsafe { raw_ptr_to_ref_str(path_addr) }.to_string().clone();
     }
 
@@ -116,7 +140,7 @@ pub fn deal_path(
     }
     match FilePath::new(path.as_str()) {
         Ok(path) => Ok(path),
-        Err(_) => Err(UtilsError::PanicMe),
+        Err(_) => Err(UtilsError::InvalidPath),
     }
 }
 
@@ -142,12 +166,12 @@ pub fn has_permission(mode: Permissions, perm: Permissions) -> bool {
     true
 }
 
-pub fn is_in_valid_space(addr: usize) -> UtilsResult {
+pub fn is_valid_addr(addr: usize) -> UtilsResult<usize> {
     if addr == 0 {
-        return Err(UtilsError::NULL);
-    } else if addr.lt(&SPACE_BOTTOM) || addr.ge(&SPACE_TOP) {
-        return Err(UtilsError::CannotAcce);
+        Err(UtilsError::NULL)
+    } else if !(addr.ge(&PHYS_MEMORY_BASE) && addr.lt(&(PHYS_MEMORY_BASE + PHYS_MEMORY_SIZE))) {
+        Err(UtilsError::CannotAcce)
     } else {
-        Ok(())
+        Ok(addr)
     }
 }

@@ -89,7 +89,7 @@ Although unmodified code from musl is generally trusted, the deviations introduc
 
 * `../../batch_apps/` (**Frozen**): Handles application packaging for batch mode. See its `README.md` for details.
 * `../../examples/loader_lib/` (**Current directory**): Contains the core source code of `loader_lib`.
-* `../../mockc_apps/` (**To be revised**): A simple compilation/packaging script for "uni" loading mode. Planned to be revised and renamed to `uni_apps`. See its `README.md` for details.
+* `../../uni_apps/` (**To be revised**): A simple compilation/packaging script for "uni" loading mode.
 * `../../mocksrc/` (**Under development**): The planned future location for all source code compilation and linking scripts. See its `README.md` for details.
 * `../../ulib/mocklibc_lib/` (**Lib library source code**): Our modified `mocklibc` library used for loading dynamically linked musl-based applications. See its `README.md` for details.
 
@@ -221,46 +221,78 @@ Build options and features can be configured through `Cargo.toml`. Please refer 
 
 1. **Clone the Repository:**
 
-```bash
-git clone [https://github.com/inchinaxiaofeng/arceos.git](https://github.com/inchinaxiaofeng/arceos.git) # Or the core repository lkmodel/arceos
-cd arceos/
-```
+    ```bash
+    git clone [https://github.com/inchinaxiaofeng/arceos.git](https://github.com/inchinaxiaofeng/arceos.git) # Or the core repository lkmodel/arceos
+    cd arceos/
+    ```
 
 2. **Compile `mocklibc` (if updates are needed):**
 
-```bash
-cd ulib/mocklibc/
-make
-cd ../../
-```
+    ```bash
+    cd ulib/mocklibc/
+    make
+    cd ../../
+    ```
 
 3. **Package Applications:**
 
-* **Uni Mode (Example):**
-
-```bash
-cd mockc_apps/ # Will be renamed to uni_apps later
-make SRC=<app_name> TYPE=<dynamic|static> # For example: make SRC=sqlite3 TYPE=dynamic
-cd ..
-```
-
-* **Batch Mode:**
-
-```bash
-cd batch_apps/
-make
-cd ..
-```
+     * **Uni Mode (Example):**
+  
+    ```bash
+    cd mockc_apps/ # Will be renamed to uni_apps later
+    make SRC=<app_name> TYPE=<dynamic|static> # For example: make SRC=sqlite3 TYPE=dynamic
+    cd ..
+    ```
+  
+    * **Batch Mode:**
+  
+    ```bash
+    cd batch_apps/
+    make
+    cd ..
+    ```
 
 4. **Run `loader_lib`:**
 
-```bash
-# Default parameters: -l warn -q y
-# Recommended parameters for running complex applications:
-./loader_lib.sh -l off -q n
-# Optional log levels: -l <debug|warn|info|off|trace>
-# Whether to use QEMU graphical interface: -q <y|n>
-```
+    ```bash
+    # Default parameters: -l warn -q y
+    # Recommended parameters for running complex applications:
+    ./loader_lib.sh -l off -q n
+    # Optional log levels: -l <debug|warn|info|off|trace>
+    # Whether to use QEMU graphical interface: -q <y|n>
+    ```
+
+5. **Execute using `cargo-xtask`**
+
+* **Uni Mode:**
+
+   ```bash
+   cargo xtask uni [SCRIPT]
+   # e.g. cargo xtask string
+   # Performs compilation, packaging, and execution in sequence
+   ```
+
+* **Batch Mode:**
+
+   ```bash
+   cargo xtask batch [SCRIPT]
+   # Performs compilation, packaging, and execution in sequence
+   # Specifying [SCRIPT] overrides the script.txt under batch_app for packaging and execution
+   # e.g. cargo xtask batch "busybox echo Hello,ArceOS!"
+   ```
+
+* **Debug Mode**
+
+   ```bash
+   cargo xtask --debug <batch|uni>
+   # Requires installation zellij
+   ```
+
+  Also supports:
+  
+* -l <debug|warn|info|off|trace> (log level configuration)
+  
+* -q <y|n> (quiet mode toggle)
 
 ## 11. Code Improvement Suggestions
 

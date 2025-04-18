@@ -1,38 +1,37 @@
-
 # 📂 compare_dirs.py
 
-对比两个目录中的文件差异，支持：
+Compares file differences between two directories, supporting:
 
-- 排除指定目录
-- 控制最大比较深度
-- 显示详细差异（`--verbose`）
-- 自动保存报告为 `.txt` 和 `.json`
+- Excluding specified directories
+- Controlling the maximum comparison depth
+- Showing detailed differences (`--verbose`)
+- Automatically saving reports as `.txt` and `.json`
 
 ---
 
-## 📦 用法
+## 📦 Usage
 
 ```bash
 python3 compare_dirs.py \
-  [--dir1 路径1] \
-  [--dir2 路径2] \
-  [--exclude 子目录1 子目录2 ...] \
-  [--depth 最大深度] \
+  [--dir1 path1] \
+  [--dir2 path2] \
+  [--exclude subdirectory1 subdirectory2 ...] \
+  [--depth max_depth] \
   [--verbose]
 ```
 
-## 🆕 参数详解
+## 🆕 Parameter Details
 
-| 参数 | 说明 |
+| Parameter | Description |
 | --- | --- |
-| --dir1 | 第一个比较目录，默认 ./c/ |
-| --dir2 | 第二个比较目录，默认 /home/.../src/ |
-| --exclude | 排除的子目录列表（默认值已预设） |
-| --depth | 最大比较深度，默认 2 |
-| --verbose | 启用后输出所有不同和独有的文件名 |
+| --dir1 | The first directory to compare, default ../c/ |
+| --dir2 |  The second directory to compare, default /home/.../src/ |
+| --exclude | List of subdirectories to exclude (default values are preset) |
+| --depth | Maximum comparison depth, default 2 |
+| --verbose | Output all different and unique filenames when enabled |
 
-## 💾 自动报告生成
+## 💾 Automatic Report Generation
 
-* 文本报告：compare_report.txt
+- Text Report: compare_report.txt
 
-* JSON 报告：compare_report.json
+- JSON Report: compare_report.json

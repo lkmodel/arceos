@@ -5,17 +5,21 @@ authors = ["Marina Zhang <inchinaxiaofeng@gmail.com>"]
 edition.workspace = true
 
 [features]
-default = ["fs", "driver-ramdisk", "batch"]
+default = ["batch", "hmp"]
 
 # 一级可选项目
 
+# 這兩個選項，必須啓動一個
 # 单进程模式
-unikernel = ["placeholder_signal", "uni_process"]
+unikernel = ["fs", "driver-ramdisk"]
 # 单进程，但是批处理模式
-batch = ["placeholder_signal", "uni_process"]
-# `WIP` 不要使用，正在开发！
-# 无特权级的多进程模式
-pseudo_multi_process = ["signal", "multi_process"]
+batch = ["fs", "driver-ramdisk"]
+
+# 這兩個選項，允許都不啓動或啓動一個
+# 多進程相關內容通過hypervisor層實現 hypervisor multi process
+hmp = ["signal", "process"]
+# 无特权级的多进程模式 pseudo_multi_process
+pmp = ["signal", "process", "axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process"] # `WIP` 不要使用，正在开发！
 
 ## 二级可选项目（不应该直接选择，可以包含三级）
 fs = ["alloc", "paging", "axruntime/fs", "axdriver/virtio-blk"]
@@ -23,10 +27,8 @@ paging = ["alloc", "axhal/paging"]
 
 ### 三级可选特性（只能包含依赖，不应该包含其他特性）
 
-uni_process = [] # 假装支持
-multi_process = ["axruntime/multitask", "axruntime/paging", "axhal/pseudo_multi_process"] # 开启这个选项后，将会实质上支持（伪）多进程。`WIP`
-signal = [] # 开启这个选项后，将会实质上支持signal模式。 `WIP`
-placeholder_signal = [] # 假装支持
+signal = [] # 开启这个选项后，将会啓動signal處理。
+process = [] # 开启这个选项后，将会啓動process處理。
 
 alloc = ["axalloc", "axruntime/alloc"]
 driver-ramdisk = ["axdriver?/ramdisk", "axfs/use-ramdisk"]

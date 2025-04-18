@@ -77,36 +77,26 @@ pub fn syscall_fstatat(args: [usize; 6]) -> SyscallResult {
 
     let file_path = match deal_path(dir_fd, Some(path), false) {
         Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty => {
-                if !flags.contains(FSTATATFlags::FSTATAT_EMPTY_PATH) {
-                    return Err(SyscallError::ENOENT);
-                } else {
-                    // ```
-                    // x86 下应用会调用 newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0xe), ...}, AT_EMPTY_PATH) = 0
-                    // 去尝试检查 STDOUT 的属性。这里暂时先特判，以后再改成真正的 stdout 的属性
-                    let path = unsafe { raw_ptr_to_ref_str(path) };
-                    if path.is_empty() && dir_fd == 1 {
-                        unsafe {
-                            (*kst).st_mode = 0o20000 | 0o220u32;
-                            (*kst).st_ino = 1;
-                            (*kst).st_nlink = 1;
-                        }
-                        return Ok(0);
+        Err(UtilsError::StrEmpty) => {
+            if !flags.contains(FSTATATFlags::FSTATAT_EMPTY_PATH) {
+                return Err(SyscallError::ENOENT);
+            } else {
+                // ```
+                // x86 下应用会调用 newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0xe), ...}, AT_EMPTY_PATH) = 0
+                // 去尝试检查 STDOUT 的属性。这里暂时先特判，以后再改成真正的 stdout 的属性
+                let path = unsafe { raw_ptr_to_ref_str(path) };
+                if path.is_empty() && dir_fd == 1 {
+                    unsafe {
+                        (*kst).st_mode = 0o20000 | 0o220u32;
+                        (*kst).st_ino = 1;
+                        (*kst).st_nlink = 1;
                     }
-                    panic!("Wrong path at syscall_fstatat: {}(dir_fd={})", path, dir_fd);
+                    return Ok(0);
                 }
+                panic!("Wrong path at syscall_fstatat: {}(dir_fd={})", path, dir_fd);
             }
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
+        }
+        Err(e) => return Err(e.into()),
     };
 
     info!("path : {}", file_path.path());
@@ -144,21 +134,7 @@ pub fn syscall_fstatat(args: [usize; 6]) -> SyscallResult {
 pub fn syscall_statfs(args: [usize; 6]) -> SyscallResult {
     let path = args[0] as *const u8;
     let stat = args[1] as *mut FsStat;
-    let file_path = match deal_path(AT_FDCWD, Some(path), false) {
-        Ok(path) => path,
-        Err(e) => match e {
-            UtilsError::CannotAcce | UtilsError::NULL => return Err(SyscallError::EFAULT),
-            UtilsError::StrTooLong => return Err(SyscallError::ENAMETOOLONG),
-            UtilsError::OutOfTable | UtilsError::NoEntryInTable => return Err(SyscallError::EBADF),
-            UtilsError::StrEmpty => return Err(SyscallError::ENOENT),
-            UtilsError::PanicMe => {
-                panic!("{:?}", e);
-            }
-            _ => {
-                panic!("{:?}", e);
-            }
-        },
-    };
+    let file_path = deal_path(AT_FDCWD, Some(path), false)?;
     if file_path.equal_to(&FilePath::new("/").unwrap()) {
         // 目前只支持访问根目录文件系统的信息
         unsafe {
